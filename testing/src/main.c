@@ -21,12 +21,10 @@ void uint_print(uint const *x)
     printf("\n");
 }
 
-
-
-
 int main() {
     uint a = p; 
-    uint b = {{0x00000002, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0x2000000000000000}};
+    uint b = p;
+    //uint b = {{0x0, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0xF000000000000000}};
     uint c = {{0}};
     add_numbers(a.c, b.c, c.c);
 

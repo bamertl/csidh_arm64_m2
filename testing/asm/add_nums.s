@@ -46,6 +46,11 @@ add_numbers:
     LDR x17, p512 + 40
     LDR x18, p512 + 48
     LDR x19, p512 + 56
+
+    b _check_bigger_prime
+
+
+_check_bigger_prime:
     /*
     Check if the addition is greater than the prime
      If greater -> branch _addition_greater_then_prime:
@@ -85,8 +90,8 @@ _addition_greater_then_prime:
     SBCS x8, x8, x17
     SBCS x9, x9, x18
     SBCS x10, x10, x19
-    b _store_exit
-
+    SBC x11, x11, xzr
+    b _check_bigger_prime
 
 _store_exit:
     stp x3, x4,  [x2,#0]
