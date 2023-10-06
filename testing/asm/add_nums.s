@@ -51,7 +51,7 @@ add_numbers:
      If greater -> branch _addition_greater_then_prime:
     */
     CMP x11, #0
-    b.gt _addition_greater_then_prime
+    b.hi _addition_greater_then_prime
     CMP x10, x19
     b.ne _not_equal
     CMP x9, x18
@@ -72,7 +72,7 @@ add_numbers:
     b _store_exit
 
 _not_equal:
-    b.gt _addition_greater_then_prime
+    b.hi _addition_greater_then_prime
     b _store_exit
 
 /* We need to subtract p*/
@@ -94,6 +94,3 @@ _store_exit:
     stp x7, x8,  [x2,#32]
     stp x9, x10, [x2,#48]
     ret
-
-
-
