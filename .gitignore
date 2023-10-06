@@ -1,0 +1,55 @@
+# Compiled binaries
+*.out
+*.bin
+*.exe
+*.elf
+
+# Object files
+*.o
+*.obj
+*.ko
+*.so
+
+# Assembly listing files
+*.lst
+
+# Map files
+*.map
+
+# Archives
+*.lib
+*.a
+
+# Shared objects
+*.dll
+*.so
+*.dylib
+
+# Dependency files
+*.dep
+*.d
+
+# Temporary files created by editors
+*~
+*.swp
+*.swo
+
+# Backup files
+*.bak
+*.old
+*.sik
+
+# IDE/Editor folders
+.vscode/
+.idea/
+
+# Other
+*.log
+*.tmp
+
+# Build folders
+Debug/
+Release/
+build/
+dist/
+obj/
