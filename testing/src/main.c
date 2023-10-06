@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 extern void add_numbers(uint64_t *a, uint64_t *b, uint64_t *c);
-
+extern void minus_number(uint64_t *a, uint64_t *b);
 #define LIMBS 8
 
 typedef struct uint { uint64_t c[LIMBS]; } uint;
@@ -23,12 +23,18 @@ void uint_print(uint const *x)
 
 int main() {
     uint a = p; 
-    uint b = p;
-    //uint b = {{0x0, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0xF000000000000000}};
+    uint b = {{0x0, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0xF000000000000000}};
     uint c = {{0}};
     add_numbers(a.c, b.c, c.c);
 
     uint_print(&c);
     uint_print(&p);
+    printf("Now subtract\n");
+    
+    uint z = {{0x0, 0x0, 0x0, 0x0, 0x0, 0x0,0x0, 0x0}};
+    minus_number(z.c, c.c);
+    uint_print(&c);
+
     return 0;
+
 }
