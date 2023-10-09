@@ -19,7 +19,7 @@ minus_number:
     SBCS x6, x14, x6
     SBCS x7, x15, x7
     SBCS x8, x16, x8
-    SBCS x9, x17, x9
+    SBC x9, x17, x9
 
     STORE_8_WORD_NUMBER x2, x3, x4, x5, x6, x7, x8, x9, x1
     ret

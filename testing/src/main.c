@@ -22,8 +22,8 @@ void uint_print(uint const *x)
 }
 
 int main() {
-    uint a = p; 
-    uint b = {{0x0, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0x1000000000000000}};
+    uint a = {{0}}; 
+    uint b = {{0x0, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0x0000000000000000}};
     uint c = {{0}};
     add_numbers(a.c, b.c, c.c);
 
@@ -31,9 +31,9 @@ int main() {
     uint_print(&p);
     printf("Now subtract\n");
     
-    uint z = {{0x0, 0x0, 0x0, 0x0, 0x0, 0x0,0x0, 0x111111111111}};
-    minus_number(z.c, c.c);
-    uint_print(&c);
+    //uint z = {{0x0, 0x0, 0x0, 0x0, 0x0, 0x0,0x0, 0x111111111111}};
+    //minus_number(z.c, c.c);
+    //uint_print(&c);
 
     return 0;
 
