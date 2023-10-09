@@ -9,3 +9,6 @@ p511:
 .quad   0xb42d083aedc88c42
 .quad   0xfc8ab0d15e3e4c4a
 .quad   0x65b48e8f740f89bf
+
+// where is phi ? phi = -p^-1 mod 2^512
+// The modulus N is such that r^(n−1) ≤ p < r^n and r and N are coprime. R = r^n

@@ -42,7 +42,7 @@ test: $(TEST_EXECUTABLES)
 	done
 
 $(TEST_DIR)/%: $(TEST_DIR)/%.c $(C_OBJECTS_NO_MAIN) $(ASM_OBJECTS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(C_OBJECTS_NO_MAIN) $(ASM_OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(C_OBJECTS_NO_MAIN) $(ASM_OBJECTS) 
 
 # Targets
 all: main
@@ -62,5 +62,6 @@ $(OBJ_DIR)/%.o: $(ASM_DIR)/%.s
 clean:
 	rm -f $(OBJ_DIR)/*.o main
 
+	find $(TEST_DIR) -type f ! -name "*.*" ! -name "*.c" -exec rm -f {} \;
 run: main
 	qemu-aarch64 ./main

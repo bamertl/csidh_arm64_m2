@@ -60,6 +60,6 @@ void test_small_add() {
 int main() {
     add_0();
     test_p_overflow();
-    printf("All tests passed successfully!\n");
+    printf("All add_number tests passed successfully!\n");
     return 0;
 }
