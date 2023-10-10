@@ -1,4 +1,4 @@
-.global p511
+.global p511 mu n
 
 p511:
 .quad   0x1b81b90533c6c87b
@@ -10,5 +10,17 @@ p511:
 .quad   0xfc8ab0d15e3e4c4a
 .quad   0x65b48e8f740f89bf
 
-// where is phi ? phi = -p^-1 mod 2^512
+// mu = -p^-1 mod 2^512
+mu:
+.quad   0x66c1301f632e294d
+.quad   0xfe025ed7d0d3b1aa
+.quad   0xf6fe2bc33e915395
+.quad   0xd8c3904b18371bcd
+.quad   0x3512da337a97b345
+.quad   0x1232b9eb013dee1e
+.quad   0xb081b3aba7d05f85
+.quad   0x34ed3ea7f1de34c4
+
+n:
+.word 512
 // The modulus N is such that r^(n−1) ≤ p < r^n and r and N are coprime. R = r^n
