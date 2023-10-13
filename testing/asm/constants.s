@@ -1,4 +1,6 @@
-.global p511 mu n
+.global p511
+.global mu
+.global r_squared_mod_p
 
 p511:
 .quad   0x1b81b90533c6c87b
@@ -21,6 +23,12 @@ mu:
 .quad   0xb081b3aba7d05f85
 .quad   0x34ed3ea7f1de34c4
 
-n:
-.word 512
-// The modulus N is such that r^(n−1) ≤ p < r^n and r and N are coprime. R = r^n
+r_squared_mod_p:
+.quad 0x36905b572ffc1724 
+.quad 0x67086f4525f1f27d
+.quad 0x4faf3fbfd22370ca
+.quad 0x192ea214bcc584b1
+.quad 0x5dae03ee2f5de3d0
+.quad 0x1e9248731776b371
+.quad 0xad5f166e20e4f52d
+.quad 0x4ed759aea6f3917e

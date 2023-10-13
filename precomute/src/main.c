@@ -14,6 +14,21 @@ const struct uint p = {{
 }};
 
 
+/* Compute R^2 mod p, R = r^LIMBS* r = 2^64*/
+void compute_R2_mod_N(mpz_t R2_mod_N, const mpz_t N) {
+    mpz_t R;
+    mpz_init(R);
+
+    // Compute R = 2^(64*LIMBS)
+    mpz_ui_pow_ui(R, 2, 64*LIMBS);
+
+    // Compute R^2 mod N
+    mpz_powm_ui(R2_mod_N, R, 2, N);
+
+    mpz_clear(R);
+}
+
+
 /* This computes mu = -N^(-1) mod r*/
 void find_mu(mpz_t mu, mpz_t N_mpz, mpz_t r, unsigned int w) {
     mpz_t y, temp, two_i, two_i_minus_1;
@@ -110,11 +125,6 @@ void print_mpz_in_chunks(const mpz_t num) {
     mpz_clear(mask);
 }
 
-
-
-
-
-
 void init_mpz_from_uint(mpz_t N, const uint p) {
     mpz_init(N);  // Initialize N to 0
     for (int i = LIMBS-1; i >= 0; i--) {
@@ -124,7 +134,7 @@ void init_mpz_from_uint(mpz_t N, const uint p) {
 }
 
 int main() {
-    unsigned int w = 512;
+    unsigned int w = 64;
     mpz_t N;
     mpz_t r;
     mpz_init(r);
@@ -144,6 +154,20 @@ int main() {
    
     // Clear GMP variables
     mpz_clear(mu);
+
+
+    /*Calculating R^2 mod p*/
+    mpz_t R2_mod_N;
+    mpz_init(R2_mod_N);
+
+    compute_R2_mod_N(R2_mod_N, N);
+
+    gmp_printf("R^2 mod N = %Zx\n", R2_mod_N);
+
+    mpz_clear(R2_mod_N);
+
+
+
 
     return 0;
 }
