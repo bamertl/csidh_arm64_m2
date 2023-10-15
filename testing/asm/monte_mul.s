@@ -246,12 +246,14 @@ x0 = uint A, x1= uintB B, x2=result pointer
 */
 monte_mul:
     sub sp, sp, #264
+    str lr, [sp, #256]
     str x2, [sp, #0]
     add x2, sp, 8
     bl mul
     mov x0, x2 // copy result address to x0
     ldr x2, [sp, #0]
     bl monte_reduce
+    ldr lr, [sp, #256]
     sub sp, sp, #264
     ret
 
@@ -268,6 +270,7 @@ monte_reduce:
     
     // Make place in the stack for 16 words
     sub     sp, sp, #512
+    str     lr, [sp, #504]
     // Store the 8 words starting form the address in x0 into stack
     str    x0, [sp, #256]
     // a mod R = Lower 8 words of a
@@ -330,6 +333,6 @@ monte_reduce:
 
     // Store result in x2
     STORE_8_WORD_NUMBER x3, x4, x5, x6, x7, x8, x9, x10, x2    
-
+    ldr lr, [sp, #504]
     add sp, sp, #512
     ret
