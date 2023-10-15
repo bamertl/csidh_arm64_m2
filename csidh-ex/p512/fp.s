@@ -186,6 +186,7 @@ fp_enc:
     lea rdx, [rip + r_squared_mod_p]
     jmp fp_mul3
 
+
 .global fp_dec
 fp_dec:
     lea rdx, [rip + uint_1]

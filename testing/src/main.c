@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-extern void add_numbers(uint64_t *a, uint64_t *b, uint64_t *c);
+extern void fp_add2(uint64_t *a, uint64_t *b, uint64_t *c);
 extern void minus_number(uint64_t *a, uint64_t *b);
 #define LIMBS 8
 
@@ -25,11 +25,8 @@ int main() {
     uint a = {{0}}; 
     uint b = {{0x0, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0x0000000000000000}};
     uint c = {{0}};
-    add_numbers(a.c, b.c, c.c);
+    fp_add2(a.c, b.c, c.c);
 
-    uint_print(&c);
-    uint_print(&p);
-    printf("Now subtract\n");
     
     //uint z = {{0x0, 0x0, 0x0, 0x0, 0x0, 0x0,0x0, 0x111111111111}};
     //minus_number(z.c, c.c);

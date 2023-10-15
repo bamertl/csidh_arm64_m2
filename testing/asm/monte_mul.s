@@ -1,5 +1,7 @@
 .include "asm/macros.s"
 .global mul
+.global monte_mul
+.global monte_reduce
 .text
 .align 2
 
@@ -103,6 +105,7 @@
 /* 
 mul a la https://github.com/microsoft/PQCrypto-SIDH/blob/master/src/P503/ARM64/fp_arm64_asm.S
 //  Operation: c [x2] = a [x0] * b [x1]
+a = 8 words, b = 8 words, c = 16 words
 */
 mul:
     sub     sp, sp, #96
@@ -239,18 +242,97 @@ mul:
 
 /*
 x0 = uint A, x1= uintB B, x2=result pointer
-This calculates A*B mod P
+//  Operation: c [x2] = a [x0] * b [x1] mod p
 */
 monte_mul:
+    sub sp, sp, #264
+    str lr, [sp, #256]
+    str x2, [sp, #0]
+    add x2, sp, 8
+    bl mul
+    mov x0, x2 // copy result address to x0
+    ldr x2, [sp, #0]
+    bl monte_reduce
+    ldr lr, [sp, #256]
+    sub sp, sp, #264
     ret
-
 
 /*
-Input: AB such that 0 <= AB < p^2 
-Output: AB*R^(-1)modp
+Input: 
+    a such that 0 <= a < p^2
+    R = 2^256
+    mu_big = -p^(-1) mod R
+Output: 
+    C ≡ a*R^(−1) mod p such that 0 ≤ C < p
+// Operation: c[x1] = a [x0] mod p
  */
 monte_reduce:
+    
+    // Make place in the stack for 16 words
+    sub     sp, sp, #512
+    str     lr, [sp, #504]
+    // Store the 8 words starting form the address in x0 into stack
+    str    x0, [sp, #256]
+    // a mod R = Lower 8 words of a
+    // load mu into x1 
+    adr x1, mu
+    add x2, sp, #0
+    // mu [x1] * ( a [x0] mod R )
+    bl mul
+    mov x0, x2 // copy result address to x0
+    // q = lower 8 words of x0
+
+    // C ← (a + p*q)/R
+    adr x1, p511
+    add x2, sp, #128
+    bl mul
+    mov x0, x2
+    ldr x1, [sp, #256] // load a
+    add x2, sp, #0
+    bl add2_16_words
+    // Result again in lower 8 words
+
+
+    // If C >= p then C = C - p
+    LOAD_8_WORD_NUMBER x3, x4, x5, x6, x7, x8, x9, x10, x2
+    LOAD_511_PRIME x12, x13, x14, x15, x16, x17, x19, x20
+
+     //Subtract Prime from a + b into register x3-x11, not(carry) into x30
+    SUBS x3, x3, x12
+    SBCS x4, x4, x13
+    SBCS x5, x5, x14
+    SBCS x6, x6, x15
+    SBCS x7, x7, x16
+    SBCS x8, x8, x17
+    SBCS x9, x9, x19
+    SBCS x10, x10, x20
+    SBCS x11, x11, xzr
+    // The carry into x21
+    SBC x21, xzr, xzr
+
+    // Add x30 with register x12 - x20
+    // If the result of a + b - p was negative, the mask will be 1, otherwise 0
+    and x12, x12, x21
+    and x13, x13, x21
+    and x14, x14, x21
+    and x15, x15, x21
+    and x16, x16, x21
+    and x17, x17, x21
+    and x19, x19, x21
+    and x20, x20, x21
+
+    // Add masked p to a + b - p (masked p = p | 0)
+    ADDS x3, x3, x12
+    ADCS x4, x4, x13
+    ADCS x5, x5, x14
+    ADCS x6, x6, x15
+    ADCS x7, x7, x16
+    ADCS x8, x8, x17
+    ADCS x9, x9, x19
+    ADC x10, x10, x20
+
+    // Store result in x2
+    STORE_8_WORD_NUMBER x3, x4, x5, x6, x7, x8, x9, x10, x2    
+    ldr lr, [sp, #504]
+    add sp, sp, #512
     ret
-
-
-
