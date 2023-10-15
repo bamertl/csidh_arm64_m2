@@ -15,7 +15,7 @@ void uint_print(uint const *x)
        printf("%02hhx", i[(unsigned char *) x->c]);
     printf("\n");
 }
-extern void add_numbers(uint64_t *a, uint64_t *b, uint64_t *c);
+extern void fp_add2(uint64_t *a, uint64_t *b, uint64_t *c);
 
 // a = 0 and b = 0
 void add_0() {
@@ -24,7 +24,7 @@ void add_0() {
     struct uint c = {{0}};
     struct uint result = {{0x0, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0x0000000000000000}};
 
-    add_numbers(a.c, b.c, c.c);
+    fp_add2(a.c, b.c, c.c);
     for(int i = 0; i < LIMBS; i++) {
         assert(c.c[i] == result.c[i]);
     }
@@ -37,7 +37,7 @@ void test_p_overflow() {
     struct uint result = {{0x1, 0x0, 0x0, 0x2, 0x0, 0x0,0x0, 0x0}};
     struct uint c = {{0}};
     
-    add_numbers(a.c, b.c, c.c);
+    fp_add2(a.c, b.c, c.c);
     
     for(int i = 0; i < LIMBS; i++) {
         assert(c.c[i] == result.c[i]);
@@ -49,7 +49,7 @@ void test_small_add() {
     struct uint b = {{0x0, 0x1, 0x0,0x0,0x0,0x0,0x0,0x0}};
     struct uint c = {{0}};
     struct uint result = {{0x0, 0x3, 0x0,0x0,0x0,0x0,0x0,0x0}}; 
-    add_numbers(a.c, b.c, c.c);
+    fp_add2(a.c, b.c, c.c);
  
     
     for(int i = 0; i < LIMBS; i++) {
@@ -60,6 +60,6 @@ void test_small_add() {
 int main() {
     add_0();
     test_p_overflow();
-    printf("All add_number tests passed successfully!\n");
+    printf("All fp_add2 tests passed successfully!\n");
     return 0;
 }

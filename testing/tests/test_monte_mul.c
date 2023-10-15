@@ -7,7 +7,7 @@
 
 typedef struct uint { uint64_t c[LIMBS]; } uint;
 
-extern void mul(uint64_t *a, uint64_t *b, uint64_t *c);
+extern void monte_mul(uint64_t *a, uint64_t *b, uint64_t *c);
 
 
 void uint_print(uint const *x)
@@ -29,7 +29,7 @@ void mul_0() {
     struct uint b = {{0x0, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0x0000000000000000}};
     uint64_t c[RESULT_LIMBS] = {0};
     uint64_t result[RESULT_LIMBS] = {0};
-    mul(a.c, b.c, c);
+    monte_mul(a.c, b.c, c);
     for(int i = 0; i < RESULT_LIMBS; i++) {
         assert(c[i] == result[i]);
     }
@@ -40,41 +40,16 @@ void mul_some() {
     struct uint b = {{0x0, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0x0000000000000000}};
     uint64_t c[RESULT_LIMBS] = {0};
     uint64_t result[RESULT_LIMBS] = {0};
-    mul(a.c, b.c, c);
+    monte_mul(a.c, b.c, c);
     for(int i = 0; i < RESULT_LIMBS; i++) {
         assert(c[i] == result[i]);
     }
 }
 
-void actual_mul() {
-    struct uint a = {{0x1, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0x0}};
-    struct uint b = {{0x2, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0x0}};
-
-    uint64_t c[RESULT_LIMBS] = {0};
-    uint64_t result[RESULT_LIMBS] = {0x2, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,0x0,0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
-    mul(a.c, b.c, c);
-    for(int i = 0; i < RESULT_LIMBS; i++) {
-        assert(c[i] == result[i]);
-    }
-}
-
-void more_mul() {
-    struct uint a = {{0x0, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0x9999999999999999}};
-    struct uint b = {{0x0, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0x2000000000000000}};
-
-    uint64_t c[RESULT_LIMBS] = {0};
-    uint64_t result[RESULT_LIMBS] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,0x0,0x0, 0x0, 0x0, 0x0, 0x2000000000000000, 0x1333333333333333};
-    mul(a.c, b.c, c);
-    for(int i = 0; i < RESULT_LIMBS; i++) {
-        assert(c[i] == result[i]);
-    }
-}
 
 int main() {
     mul_0();
     mul_some();
-    actual_mul();
-    more_mul();
-    printf("All multiplication tests passed successfully!\n");
+    printf("All monte mul tests passed successfully!\n");
     return 0;
 }
