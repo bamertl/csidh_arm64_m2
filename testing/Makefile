@@ -4,8 +4,8 @@ AS := aarch64-linux-gnu-as
 
 
 # Flags
-CFLAGS = -Wall -static
-LDFLAGS = -Wall -static
+CFLAGS = -Wall -static -I/usr/include
+LDFLAGS = -Wall -static -L/usr/lib
 
 # Folders
 SRC_DIR = src
@@ -48,13 +48,13 @@ $(TEST_DIR)/%: $(TEST_DIR)/%.c $(C_OBJECTS_NO_MAIN) $(ASM_OBJECTS)
 all: main
 
 main: $(C_OBJECTS) $(ASM_OBJECTS)
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^ -lgmp
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $< 
 
 $(OBJ_DIR)/%.o: $(ASM_DIR)/%.s
-	$(AS) $(ASFLAGS) -o $@ $<
+	$(AS) $(ASFLAGS) -o $@ $< 
 
 # Phony targets
 .PHONY: clean run	

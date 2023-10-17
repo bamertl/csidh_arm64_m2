@@ -2,6 +2,7 @@
 .global mul
 .global monte_mul
 .global monte_reduce
+.global fp_enc
 .text
 .align 2
 
@@ -245,16 +246,31 @@ x0 = uint A, x1= uintB B, x2=result pointer
 //  Operation: c [x2] = a [x0] * b [x1] mod p
 */
 monte_mul:
-    sub sp, sp, #264
-    str lr, [sp, #256]
-    str x2, [sp, #0]
-    add x2, sp, 8
+    sub sp, sp, #188 // make place for 18 words
+    str lr, [sp, #0] // store lr
+    str x2, [sp, #8] // store result address
+    add x2, sp, #16 // result for mul = stack address + 16 - (16+8*16) words
     bl mul
     mov x0, x2 // copy result address to x0
-    ldr x2, [sp, #0]
+    ldr x1, [sp, #8] // load back initial result address to x1
     bl monte_reduce
-    ldr lr, [sp, #256]
-    sub sp, sp, #264
+    ldr lr, [sp, #0]
+    add sp, sp, #188
+    ret
+
+/* 
+Operation: c [x2] = (a [x0] * R^2 mod p) mod p
+
+*/
+fp_enc:
+    sub sp, sp, #8
+    str lr, [sp, #0] // store the lr (needed if we bl)
+    mov x2, x1 // move result address to x2
+    adrp x1, r_squared_mod_p // loads page address
+    add x1, x1, :lo12:r_squared_mod_p   // Adds the offset within the page
+    bl monte_mul
+    ldr lr, [sp, #0]
+    add sp, sp, #8
     ret
 
 /*
@@ -264,40 +280,39 @@ Input:
     mu_big = -p^(-1) mod R
 Output: 
     C ≡ a*R^(−1) mod p such that 0 ≤ C < p
-// Operation: c[x1] = a [x0] mod p
+    Operation: c[x1] = a [x0] mod p
  */
 monte_reduce:
-    
-    // Make place in the stack for 16 words
-    sub     sp, sp, #512
-    str     lr, [sp, #504]
-    // Store the 8 words starting form the address in x0 into stack
-    str    x0, [sp, #256]
+    // Make place in the stack for
+    sub sp, sp, #512
+    str lr, [sp, #0] // store lr 
+    str x1, [sp, #8] // store result address
+    str x0, [sp, #16] // store a
     // a mod R = Lower 8 words of a
     // load mu into x1 
-    adr x1, mu
-    add x2, sp, #0
+    adrp x1, mu
+    add  x1, x1, :lo12:mu
+    add x2, sp, #24 // result of multiplication 16 words -> sp #24 - sp# 152
     // mu [x1] * ( a [x0] mod R )
     bl mul
-    mov x0, x2 // copy result address to x0
-    // q = lower 8 words of x0
-
+    mov x1, x2 // copy result address to x1
+    // q = lower 8 words of x1
     // C ← (a + p*q)/R
-    adr x1, p511
-    add x2, sp, #128
+    // x0 = p
+    adrp x0, p511
+    add  x0, x0, :lo12:p511
+    add x2, sp, #152 // result of multiplication p*q 16 words from sp#152-280
     bl mul
-    mov x0, x2
-    ldr x1, [sp, #256] // load a
-    add x2, sp, #0
+    mov x0, x2 // x0 = p*q
+    ldr x1, [sp, #16] // load a into x1
+    add x2, sp, #280 // result again 16 words from sp #280-408
     bl add2_16_words
-    // Result again in lower 8 words
-
-
+    // Result again in lower 8 words of x2
     // If C >= p then C = C - p
     LOAD_8_WORD_NUMBER x3, x4, x5, x6, x7, x8, x9, x10, x2
     LOAD_511_PRIME x12, x13, x14, x15, x16, x17, x19, x20
 
-     //Subtract Prime from a + b into register x3-x11, not(carry) into x30
+     //Subtract Prime from a + b into register x3-x11, not(carry)
     SUBS x3, x3, x12
     SBCS x4, x4, x13
     SBCS x5, x5, x14
@@ -310,7 +325,6 @@ monte_reduce:
     // The carry into x21
     SBC x21, xzr, xzr
 
-    // Add x30 with register x12 - x20
     // If the result of a + b - p was negative, the mask will be 1, otherwise 0
     and x12, x12, x21
     and x13, x13, x21
@@ -330,9 +344,9 @@ monte_reduce:
     ADCS x8, x8, x17
     ADCS x9, x9, x19
     ADC x10, x10, x20
-
-    // Store result in x2
-    STORE_8_WORD_NUMBER x3, x4, x5, x6, x7, x8, x9, x10, x2    
-    ldr lr, [sp, #504]
+    // load result address
+    ldr x1, [sp, #8]
+    STORE_8_WORD_NUMBER x3, x4, x5, x6, x7, x8, x9, x10, x1    
+    ldr lr, [sp, #0]
     add sp, sp, #512
     ret
