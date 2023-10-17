@@ -67,7 +67,7 @@ void multiply_modulo(const uint64_t a[8], const uint64_t b[8], const uint64_t mo
 
 int main(){
     uint_print(p.c);
-    uint64_t a[8] = {0x0000000000000001, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0x0};
+    uint64_t a[8] = {0x0000000000000002, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0x0};
     uint64_t c[8] = {0};
     multiply_modulo(a, R_squared_mod.c, p.c, c);
     uint_print(c);
