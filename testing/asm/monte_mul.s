@@ -258,7 +258,6 @@ monte_mul:
     add sp, sp, #188
     ret
 
-
 /* 
 Operation: c [x2] = (a [x0] * R^2 mod p) mod p
 
@@ -268,7 +267,7 @@ fp_enc:
     str lr, [sp, #0] // store the lr (needed if we bl)
     mov x2, x1 // move result address to x2
     adrp x1, r_squared_mod_p // loads page address
-    add  x1, x1, :lo12:r_squared_mod_p   // Adds the offset within the page
+    add x1, x1, :lo12:r_squared_mod_p   // Adds the offset within the page
     bl monte_mul
     ldr lr, [sp, #0]
     add sp, sp, #8
@@ -281,10 +280,9 @@ Input:
     mu_big = -p^(-1) mod R
 Output: 
     C ≡ a*R^(−1) mod p such that 0 ≤ C < p
-// Operation: c[x1] = a [x0] mod p
+    Operation: c[x1] = a [x0] mod p
  */
 monte_reduce:
-    
     // Make place in the stack for
     sub sp, sp, #512
     str lr, [sp, #0] // store lr 
@@ -294,30 +292,22 @@ monte_reduce:
     // load mu into x1 
     adrp x1, mu
     add  x1, x1, :lo12:mu
-
     add x2, sp, #24 // result of multiplication 16 words -> sp #24 - sp# 152
     // mu [x1] * ( a [x0] mod R )
     bl mul
     mov x1, x2 // copy result address to x1
     // q = lower 8 words of x1
-
     // C ← (a + p*q)/R
-
     // x0 = p
     adrp x0, p511
-    add  x0, x0, :lo12:511
-
+    add  x0, x0, :lo12:p511
     add x2, sp, #152 // result of multiplication p*q 16 words from sp#152-280
     bl mul
-    
-
     mov x0, x2 // x0 = p*q
     ldr x1, [sp, #16] // load a into x1
     add x2, sp, #280 // result again 16 words from sp #280-408
     bl add2_16_words
     // Result again in lower 8 words of x2
-
-
     // If C >= p then C = C - p
     LOAD_8_WORD_NUMBER x3, x4, x5, x6, x7, x8, x9, x10, x2
     LOAD_511_PRIME x12, x13, x14, x15, x16, x17, x19, x20
@@ -354,7 +344,6 @@ monte_reduce:
     ADCS x8, x8, x17
     ADCS x9, x9, x19
     ADC x10, x10, x20
-
     // load result address
     ldr x1, [sp, #8]
     STORE_8_WORD_NUMBER x3, x4, x5, x6, x7, x8, x9, x10, x1    

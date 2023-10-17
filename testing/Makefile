@@ -5,7 +5,7 @@ AS := aarch64-linux-gnu-as
 
 # Flags
 CFLAGS = -Wall -static -I/usr/include
-LDFLAGS = -static -L/usr/lib
+LDFLAGS = -Wall -static -L/usr/lib
 
 # Folders
 SRC_DIR = src

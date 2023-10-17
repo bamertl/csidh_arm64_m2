@@ -64,7 +64,7 @@ void test_encode(){
     uint a = {{0x1, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0x1}};
     
     uint encoded = {{0}};
-  
+    fp_enc(a.c, encoded.c);
     uint_print(&encoded);
 }
 
