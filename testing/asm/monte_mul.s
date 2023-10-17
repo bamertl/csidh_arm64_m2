@@ -257,6 +257,17 @@ monte_mul:
     sub sp, sp, #264
     ret
 
+
+/* 
+Operation: c [x2] = (a [x0] * R^2 mod p) mod p
+
+*/
+fp_enc:
+    sub sp, sp, #8
+    str lr, [sp, #0] // store the lr (needed if we bl)
+    adrp x1, r_squared_mod_p // i hope this loads the address of r_squared_mod_p
+    
+
 /*
 Input: 
     a such that 0 <= a < p^2
@@ -297,7 +308,7 @@ monte_reduce:
     LOAD_8_WORD_NUMBER x3, x4, x5, x6, x7, x8, x9, x10, x2
     LOAD_511_PRIME x12, x13, x14, x15, x16, x17, x19, x20
 
-     //Subtract Prime from a + b into register x3-x11, not(carry) into x30
+     //Subtract Prime from a + b into register x3-x11, not(carry)
     SUBS x3, x3, x12
     SBCS x4, x4, x13
     SBCS x5, x5, x14
@@ -310,7 +321,6 @@ monte_reduce:
     // The carry into x21
     SBC x21, xzr, xzr
 
-    // Add x30 with register x12 - x20
     // If the result of a + b - p was negative, the mask will be 1, otherwise 0
     and x12, x12, x21
     and x13, x13, x21

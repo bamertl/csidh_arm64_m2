@@ -5,5 +5,5 @@
 qemu-aarch64 -g 1234 ./main
 
 # Terminal 2
-gdb-multiarch ./main
+gdbgui -g gdb-multiarch ./main
 target remote :1234

@@ -127,7 +127,7 @@ fp_add2:
     //Load prime
     LOAD_511_PRIME x12, x13, x14, x15, x16, x17, x19, x20
 
-    //Subtract Prime from a + b into register x3-x11, not(carry) into x30
+    //Subtract Prime from a + b into register x3-x11, not(carry)
     SUBS x3, x3, x12
     SBCS x4, x4, x13
     SBCS x5, x5, x14
@@ -140,7 +140,6 @@ fp_add2:
     // The carry into x21
     SBC x21, xzr, xzr
 
-    // Add x30 with register x12 - x20
     // If the result of a + b - p was negative, the mask will be 1, otherwise 0
     and x12, x12, x21
     and x13, x13, x21
