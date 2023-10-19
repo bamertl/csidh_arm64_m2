@@ -71,7 +71,7 @@ void test_encode(){
     uint64_t a[8] = {0x1, 0x0,0x0,0x0,0x0,0x0,0x0,0x0};
     uint64_t result[8] = {0x0};
     monte_mul(a, r_squared_mod_p_here.c,result);
-    
+    uint_print(result);
 }
 
 int main() {

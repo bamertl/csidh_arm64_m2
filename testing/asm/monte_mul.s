@@ -257,7 +257,6 @@ monte_mul:
     ldr lr, [sp, #0] // get back lr
     add sp, sp, #188
     ret
-.global half_mul
 
 /*
 Input: 

@@ -14,14 +14,14 @@ p511:
 
 // mu = -p^-1 mod 2^512
 mu:
-.quad   0x66c1301f632e294d
-.quad   0xfe025ed7d0d3b1aa
-.quad   0xf6fe2bc33e915395
-.quad   0xd8c3904b18371bcd
-.quad   0x3512da337a97b345
-.quad   0x1232b9eb013dee1e
-.quad   0xb081b3aba7d05f85
-.quad   0x34ed3ea7f1de34c4
+.quad 0x66c1301f632e294d 
+.quad 0xfe025ed7d0d3b1aa
+.quad 0xf6fe2bc33e915395
+.quad 0x34ed3ea7f1de34c4
+.quad 0xb081b3aba7d05f85
+.quad 0x1232b9eb013dee1e
+.quad 0x3512da337a97b345
+.quad 0xd8c3904b18371bcd
 
 r_squared_mod_p:
 .quad 0x36905b572ffc1724 
