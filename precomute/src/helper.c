@@ -31,9 +31,19 @@ const struct uint fp_1 = {{
 }};
 
 uint64_t r[9] = {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1};
-const struct uint mu = {{0x66c1301f632e294d,0xfe025ed7d0d3b1aa,0xf6fe2bc33e915395,0xd8c3904b18371bcd,0x3512da337a97b345,0x1232b9eb013dee1e,0xb081b3aba7d05f85,0x34ed3ea7f1de34c4}};
 
-const struct uint a = {{0x1, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0x0}};
+const struct uint mu = {{
+    0x66c1301f632e294d,
+    0xfe025ed7d0d3b1aa,
+    0xf6fe2bc33e915395,
+    0x34ed3ea7f1de34c4,
+    0xb081b3aba7d05f85,
+    0x1232b9eb013dee1e,
+    0x3512da337a97b345,
+    0xd8c3904b18371bcd
+    }};
+
+const struct uint a = {{0x0000000000000001, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0x0}};
 
 void uint_print(uint64_t const *x)
 {
@@ -99,7 +109,7 @@ void mpz_to_uint_large(mpz_t N, uint64_t result[16]) {
 
 
 void test_mul(){
-    mpz_t mr_squared_mod, mmu, mresult, q, mr, PQ, mp, ma, temp, C;
+    mpz_t mr_squared_mod, mmu, mresult, q, mr, PQ, mp, ma, temp, C, amodr;
     init_mpz_from_uint(mr_squared_mod, R_squared_mod.c);
     init_mpz_from_uint(mmu, mu.c);
     init_mpz_from_r(mr, r);
@@ -109,12 +119,13 @@ void test_mul(){
     mpz_init(q);
     mpz_init(PQ);
     mpz_init(temp);
-    mpz_init(C); 
-    
+    mpz_init(C);
+    mpz_init(amodr);
+    gmp_printf("r in hex: %Zx\n", mr);
+    gmp_printf("p in hex: %Zx\n", mp);
+    mpz_mod(amodr, mr_squared_mod, mr);
 
-
-    mpz_mul(mresult, mr_squared_mod, mmu);
-    gmp_printf("mr in hex: %Zx\n", mr);
+    mpz_mul(mresult, amodr, mmu);
     mpz_mod(q, mresult, mr);
 
     gmp_printf("q in hex: %Zx\n", q);
@@ -122,10 +133,16 @@ void test_mul(){
     gmp_printf("PQ in hex: %Zx\n", PQ);
 
     mpz_add(temp, PQ, ma);
+    gmp_printf("added a %Zx\n", temp);
     mpz_div(C, temp, mr);
-    mpz_mod(C, C, mr);
+    mpz_mod(C, C, mp);
 
-    gmp_printf("C in hex: %Zx\n", C);
+    gmp_printf("C monte mul in hex: %Zx\n", C);
+
+    mpz_mul(C, C, mr);
+    mpz_mod(C, C, mp);
+    gmp_printf("C * r monte mul in hex: %Zx\n", C);
+
     //print_larger(result);
 }
 
@@ -138,17 +155,9 @@ void easy_result(){
     init_mpz_from_r(mr, r);
     mpz_init(result);
 
-    mpz_mul(result, ma, mr);
-    mpz_mod(result, result, mp);
+    mpz_mul(result, ma, mr); // a * r
+    mpz_mod(result, result, mp); // a*r mod p
     gmp_printf("a*r mod p in hex: %Zx\n", result);
-
-    //gmp_printf("ma in hex: %Zx\n", ma);
-    //gmp_printf("mr_squared_mod in hex: %Zx\n", mr_squared_mod);
-
-    mpz_mul(result, mr_squared_mod, ma);
-    mpz_mod(result, mr_squared_mod, mp);
-    gmp_printf("r_sqaured_mod * a in hex: %Zx\n", result);
-
 
 }
 
