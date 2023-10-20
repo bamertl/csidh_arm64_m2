@@ -258,6 +258,7 @@ monte_mul:
     add sp, sp, #188
     ret
 
+
 /*
 Input: 
     a such that 0 <= a < p^2
@@ -308,7 +309,7 @@ monte_reduce:
     SBCS x8, x8, x17
     SBCS x9, x9, x19
     SBCS x10, x10, x20
-    SBCS x11, x11, xzr
+    //SBCS x11, x11, xzr // this is the error.
     // The carry into x21
     SBC x21, xzr, xzr
 

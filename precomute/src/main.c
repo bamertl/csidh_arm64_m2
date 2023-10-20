@@ -73,11 +73,11 @@ void find_mu(const uint_custom p) {
     mpz_init(temp);
     init_mpz_from_uint(mp, p);
     mpz_init_set_si(r, 2);
-    mpz_pow_ui(r, r, 512);
+    mpz_pow_ui(r, r, 512); // r = 2^512
     gmp_printf("r = %Zx\n", r);
     gmp_printf("p = %Zx\n", mp);
-    mpz_neg(mp, mp);
-    mpz_invert(result, mp, r);
+    mpz_neg(mp, mp); // p -> -p
+    mpz_invert(result, mp, r); // -p^(-1) mod r
     gmp_printf("result %Zx\n", result);
     mpz_mul(temp, mp, result);
     mpz_mod(result, temp, r);

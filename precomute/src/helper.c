@@ -123,7 +123,7 @@ void test_mul(){
     mpz_init(amodr);
     gmp_printf("r in hex: %Zx\n", mr);
     gmp_printf("p in hex: %Zx\n", mp);
-    mpz_mod(amodr, ma, mr);
+    mpz_mod(amodr, mr_squared_mod, mr);
 
     mpz_mul(mresult, amodr, mmu);
     mpz_mod(q, mresult, mr);
