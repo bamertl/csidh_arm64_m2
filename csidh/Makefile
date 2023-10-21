@@ -2,7 +2,7 @@
 
 BITS?=512
 
-.PHONY: main bench clean
+.PHONY: main bench clean tests
 
 
 $(info CC: $(CC))
@@ -28,13 +28,18 @@ else ifeq "$(ARCH)" "ARM64"
 endif
 
 
-sources = src/p${BITS}/constants.c
+sources = ./src/p${BITS}/constants.c
 sources += src/rng.c
 sources += ${UINT_IMPL} ${FP_IMPL}
 sources += src/mont.c
 sources += src/csidh.c
 
 includes = $(wildcard src/*.h src/p${BITS}/*.h)
+
+
+TEST_SRC = $(wildcard tests/*.c)
+TEST_OUT = $(TEST_SRC:.c=)
+
 
 main: ${includes} ${sources} src/main.c
 	@cc \
@@ -64,7 +69,7 @@ bench: ${includes} ${sources} src/bench.c
 		$(if ${BENCH_ITS},-DBENCH_ITS=${BENCH_ITS}) \
 		$(if ${BENCH_VERBOSE},-DBENCH_VERBOSE=${BENCH_VERBOSE}) \
 		-I ./ \
-		-I p${BITS}/ \
+		-I src/p${BITS}/ \
 		-std=c99 -pedantic \
 		-Wall -Wextra \
 		-march=native -O3 \
@@ -73,9 +78,25 @@ bench: ${includes} ${sources} src/bench.c
 		src/bench.c \
 		-o bench
 
+tests: $(TEST_OUT)
+	@for test in $^ ; do \
+		echo "Running $$test" ; \
+		./$$test ; \
+	done
+
+tests/%: src/p${BITS}/params.h ${includes} ${sources} tests/%.c
+	@cc \
+        -I ./src/ \
+        -I ./src/p${BITS}/ \
+        -I ./tests/ \
+        -std=c99 -pedantic \
+		-Wall -Wextra \
+        -g \
+        $(sources) tests/test_example.c $< -o $@
+	chmod +x $@
 
 clean:
-	@rm -f main debug bench libcsidh.so
+	@rm -f main debug bench libcsidh.so $(TEST_OUT)
 
 
 
