@@ -3,7 +3,9 @@
 *.bin
 *.exe
 *.elf
-
+tests/*.bin
+csidh/*.bin
+csidh/*.exe
 # Object files
 *.o
 *.obj
