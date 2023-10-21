@@ -93,7 +93,6 @@ tests/%: src/p${BITS}/params.h ${includes} ${sources} tests/%.c
 		-Wall -Wextra \
         -g \
         $(sources) tests/test_example.c $< -o $@
-	chmod +x $@
 
 clean:
 	@rm -f main debug bench libcsidh.so $(TEST_OUT)
