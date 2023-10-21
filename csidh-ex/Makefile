@@ -40,7 +40,7 @@ main: libcsidh.so
 		-o main
 
 libcsidh.so: ${includes} ${sources}
-	@cc \
+	cc \
 		-shared \
 		-fPIC -fvisibility=hidden \
 		-I ./ \
