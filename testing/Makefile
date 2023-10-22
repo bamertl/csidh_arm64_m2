@@ -1,5 +1,5 @@
 # Define cross-compiler and assembler
-CC = cc
+CC = clang
 # Flags
 
 # Folders
@@ -34,7 +34,7 @@ test: $(TEST_EXECUTABLES)
 	done
 
 $(TEST_DIR)/%: $(TEST_DIR)/%.c $(C_SOURCES_NO_MAIN) $(ASM_SOURCES)
-	@cc \
+	${CC} \
 	-I ./src \
 	-g \
 	-o $@ $< $(C_SOURCES_NO_MAIN) $(ASM_SOURCES) 
@@ -43,7 +43,7 @@ $(TEST_DIR)/%: $(TEST_DIR)/%.c $(C_SOURCES_NO_MAIN) $(ASM_SOURCES)
 all: main
 
 main: $(C_SOURCES) $(ASM_SOURCES)
-	cc \
+	@${CC} \
 		-I ./src  \
 		-I ./asm \
 		-o main $(C_SOURCES) $(ASM_SOURCES)
