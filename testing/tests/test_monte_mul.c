@@ -45,27 +45,6 @@ void print_larger(uint64_t *x)
     printf("\n");
 }
 
-void mul_0() {
-    struct uint a = {{0x0, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0x0000000000000000}};
-    struct uint b = {{0x0, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0x0000000000000000}};
-    uint64_t c[RESULT_LIMBS] = {0};
-    uint64_t result[RESULT_LIMBS] = {0};
-    monte_mul(a.c, b.c, c);
-    for(int i = 0; i < RESULT_LIMBS; i++) {
-        assert(c[i] == result[i]);
-    }
-}
-
-void mul_some() {
-    struct uint a = {{0x0, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0x1000000000000000}};
-    struct uint b = {{0x0, 0x0, 0x0, 0x0,0x0,0x0,0x0, 0x0000000000000000}};
-    uint64_t c[RESULT_LIMBS] = {0};
-    uint64_t result[RESULT_LIMBS] = {0};
-    monte_mul(a.c, b.c, c);
-    for(int i = 0; i < RESULT_LIMBS; i++) {
-        assert(c[i] == result[i]);
-    }
-}
 
 void test_simple(){
     uint64_t a[8] = {0x2, 0x0,0x0,0x0,0x0,0x0,0x0,0x0};

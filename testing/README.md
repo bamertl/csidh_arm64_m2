@@ -2,8 +2,4 @@
 
 
 # Terminal 1
-qemu-aarch64 -g 1234 ./main
-
-# Terminal 2
-gdb-multiarch ./main
-target remote :1234
+gdb -tui -ex "layout regs" -ex "layout asm" ./tests/test_monte_mul
