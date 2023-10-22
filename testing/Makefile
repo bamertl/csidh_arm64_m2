@@ -36,6 +36,7 @@ test: $(TEST_EXECUTABLES)
 $(TEST_DIR)/%: $(TEST_DIR)/%.c $(C_SOURCES_NO_MAIN) $(ASM_SOURCES)
 	@cc \
 	-I ./src \
+	-g \
 	-o $@ $< $(C_SOURCES_NO_MAIN) $(ASM_SOURCES) 
 
 # Targets

@@ -246,7 +246,7 @@ x0 = uint A, x1= uintB B, x2=result pointer
 //  Operation: c [x2] = a [x0] * b [x1] mod p
 */
 monte_mul:
-    sub sp, sp, #188 // make place for 18 words
+    sub sp, sp, #192 // 
     str lr, [sp, #0] // store lr
     str x2, [sp, #8] // store result address
     add x2, sp, #16 // result for mul = stack address + 16 - (16+8*16) words
@@ -255,7 +255,7 @@ monte_mul:
     ldr x1, [sp, #8] // load back initial result address to x1
     bl monte_reduce
     ldr lr, [sp, #0] // get back lr
-    add sp, sp, #188
+    add sp, sp, #192
     ret
 
 
