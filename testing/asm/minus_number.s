@@ -1,6 +1,6 @@
-.include "asm/macros.s"
+.extern p511
 .global minus_number
-.section .text
+.text
 
 // it calculated p - a
 // Gets the number from x0 and stores the result to x1

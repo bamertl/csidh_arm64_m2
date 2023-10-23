@@ -26,7 +26,7 @@ void priv_print(private_key const *k)
     printf("\x1b[0m");
 }
 
-int main()
+int main(void)
 {
     bool ret; (void) ret;
     clock_t t0, t1;

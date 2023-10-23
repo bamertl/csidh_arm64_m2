@@ -15,11 +15,8 @@ C_SOURCES_NO_MAIN = $(filter-out $(SRC_DIR)/main.c, $(C_SOURCES))
 TEST_SOURCES = $(wildcard $(TEST_DIR)/test_*.c)
 TEST_EXECUTABLES = $(patsubst $(TEST_DIR)/%.c, $(TEST_DIR)/%, $(TEST_SOURCES))
 
-# Test target
-.PHONY: test
-
 # Build targets
-ASM_SOURCES = $(wildcard $(ASM_DIR)/*.s)
+ASM_SOURCES = $(wildcard $(ASM_DIR)/*.S)
 
 test: $(TEST_EXECUTABLES)
 	@echo "Running tests..."
@@ -34,19 +31,15 @@ test: $(TEST_EXECUTABLES)
 	done
 
 $(TEST_DIR)/%: $(TEST_DIR)/%.c $(C_SOURCES_NO_MAIN) $(ASM_SOURCES)
-	${CC} \
-	-I ./src \
-	-g \
-	-o $@ $< $(C_SOURCES_NO_MAIN) $(ASM_SOURCES) 
+	${CC} -g  -I ./src/asm/ $(ASM_SOURCES) $(C_SOURCES_NO_MAIN) $<  -o $@ 
 
 # Targets
 all: main
 
 main: $(C_SOURCES) $(ASM_SOURCES)
 	@${CC} \
-		-I ./src  \
-		-I ./asm \
-		-o main $(C_SOURCES) $(ASM_SOURCES)
+		$(C_SOURCES) $(ASM_SOURCES) \
+		-o main
 
 # Phony targets
 .PHONY: clean run	

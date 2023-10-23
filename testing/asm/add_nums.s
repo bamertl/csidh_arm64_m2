@@ -1,6 +1,8 @@
-.include "asm/macros.s"
+.include "asm/helper/macros.s"
+
 .global fp_add2
 .global add2_16_words
+.extern p511
 .text
 
 // Operation: c[x2] = a[x0] + b[x1]
@@ -106,7 +108,7 @@ add2_16_words:
 
 /* a + b mod p */
 // Operation: c[x2] = a[x0] + b[x1] mod p511
-fp_add2:
+_fp_add2:
 
     // Load first Number in register X3-X10
     LOAD_8_WORD_NUMBER x3, x4, x5, x6, x7, x8, x9, x10, x0

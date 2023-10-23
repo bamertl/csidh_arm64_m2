@@ -1,8 +1,17 @@
-.include "asm/macros.s"
+#if defined(__APPLE__)
+    #define fmt(f)    _##f
+#else
+    #define fmt(f)    f
+#endif
+
+.include "asm/helper/macros.s"
+.include "asm/add_nums.s"
 .global mul
-.global monte_mul
-.global monte_reduce
-.global fp_enc
+.global fmt(monte_mul)
+.extern mu
+.extern p511
+.extern r_squared_mod_p
+.extern add2_16_words
 .text
 .align 2
 
@@ -245,7 +254,7 @@ mul:
 x0 = uint A, x1= uintB B, x2=result pointer
 //  Operation: c [x2] = a [x0] * b [x1] mod p
 */
-monte_mul:
+fmt(monte_mul):
     sub sp, sp, #192 // 
     str lr, [sp, #0] // store lr
     str x2, [sp, #8] // store result address
@@ -276,8 +285,8 @@ monte_reduce:
     str x0, [sp, #16] // store adress of a
     // a mod R = Lower 8 words of a
     // load mu into x1 
-    adrp x1, mu
-    add  x1, x1, :lo12:mu
+    adrp x1, mu@PAGE
+    //add  x1, x1, :lo12:mu
     add x2, sp, #24 // result of multiplication 16 words -> sp #24 - sp# 152
     // mu [x1] * ( a [x0] mod R )
     bl mul
@@ -285,8 +294,8 @@ monte_reduce:
     // q = lower 8 words of x1
     // C ← (a + p*q)/R
     // x0 = p
-    adrp x0, p511
-    add  x0, x0, :lo12:p511
+    adrp x0, p511@PAGE
+    //add  x0, x0, :lo12:p511
     add x2, sp, #152 // result of multiplication p*q 16 words from sp#152-280
     bl mul
     mov x0, x2 // x0 = p*q
