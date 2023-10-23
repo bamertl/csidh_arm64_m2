@@ -98,11 +98,13 @@ uint_sub3:
     movzx eax, al
     ret
 
-
+/*
+rdi = rdx * rsi
+ */
 .global uint_mul3_64
 uint_mul3_64:
 
-    mulx r10, rax, [rsi +  0]
+    mulx r10, rax, [rsi +  0] //result in r10, rax
     mov [rdi +  0], rax
 
     mulx r11, rax, [rsi +  8]
@@ -135,7 +137,12 @@ uint_mul3_64:
 
     ret
 
+/*
+rdi = x0
+rsi = m = x1
+esi = lower half of rsi
 
+ */
 .global uint_random
 uint_random:
     test rsi, rsi

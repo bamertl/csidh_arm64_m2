@@ -2,6 +2,7 @@
 .global mu
 .global r_squared_mod_p
 
+.text
 p511:
 .quad   0x1b81b90533c6c87b
 .quad   0xc2721bf457aca835

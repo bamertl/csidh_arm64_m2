@@ -1,3 +1,6 @@
+
+
+.extern p511
 // Macro to load a 8 Word Number into 8 registers from a num_pointer
 .macro LOAD_8_WORD_NUMBER, reg1, reg2, reg3, reg4, reg5, reg6, reg7, reg8, num_pointer
     LDP \reg1, \reg2, [\num_pointer,#0] 

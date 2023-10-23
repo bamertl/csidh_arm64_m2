@@ -78,21 +78,10 @@ bench: ${includes} ${sources} src/bench.c
 		src/bench.c \
 		-o bench
 
-tests: $(TEST_OUT)
-	@for test in $^ ; do \
-		echo "Running $$test" ; \
-		./$$test ; \
-	done
 
-tests/%: src/p${BITS}/params.h ${includes} ${sources} tests/%.c
-	@cc \
-        -I ./src/ \
-        -I ./src/p${BITS}/ \
-        -I ./tests/ \
-        -std=c99 -pedantic \
-		-Wall -Wextra \
-        -g \
-        $(sources) tests/test_example.c $< -o $@
+test_uint: src/p${BITS}/params.h ${includes} ${sources} tests/test_uint.c
+	cc -I ./src/ -I ./src/p${BITS}/ -I ./tests/ -std=c99 -pedantic -g $(sources) src/fp.c tests/test_uint.c -o tests/test_uint
+	./tests/test_uint
 
 clean:
 	@rm -f main debug bench libcsidh.so $(TEST_OUT)
