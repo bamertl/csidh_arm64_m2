@@ -21,14 +21,14 @@ void fp_add2(fp *x, fp const *y);
 
 // x = x-y
 void fp_sub2(fp *x, fp const *y);
-void fp_mul2(fp *x, fp const *y);
+void fp_mul2(fp *x, fp const *y); // x = x * y
 
-void fp_add3(fp *x, fp const *y, fp const *z);
-void fp_sub3(fp *x, fp const *y, fp const *z);
-void fp_mul3(fp *x, fp const *y, fp const *z);
+void fp_add3(fp *x, fp const *y, fp const *z); // x = y + z mod p
+void fp_sub3(fp *x, fp const *y, fp const *z); // x = y - z mod p
+void fp_mul3(fp *x, fp const *y, fp const *z);  // x = y * z mod p
 
-void fp_sq1(fp *x);
-void fp_sq2(fp *x, fp const *y);
+void fp_sq1(fp *x); x = x^2 mod p
+void fp_sq2(fp *x, fp const *y); x = y*y mod p
 void fp_inv(fp *x);
 bool fp_issquare(fp *x); /* destroys input! */
 

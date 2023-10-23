@@ -344,6 +344,14 @@ _fp_dec:
 
 
 /*
+Monti x0 = x1 * x0
+ */
+.global _fp_mul2
+_fp_mul2:
+    mov x2, x0
+    b _fp_mul3
+
+/*
 Mongommery multiplication
 x0 = x1 * x2
  */
@@ -685,3 +693,20 @@ _minus_number:
 
     STORE_8_WORD_NUMBER2 x2, x3, x4, x5, x6, x7, x8, x9, x1
     ret
+
+/*
+todo mul counter?
+x0 = x1^2 mod p
+ */
+.global _fp_sq2
+_fp_sq2:
+    mov x2, x1 // x2 = x1
+    b fp_mul3 // x0 = x1 * x2
+
+/*
+x0 = x0^2
+ */
+.global _fp_sq1
+_fp_sq1:
+    mov x1, x0
+    b _fp_sq2
