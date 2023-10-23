@@ -209,6 +209,10 @@ x0 = carry
  */
 .global _uint_add3
 _uint_add3:
+
+    sub sp, sp, #16
+    stp x19, x20, [sp, #0]
+
     LOAD_8_WORD_NUMBER x3, x4, x5, x6, x7, x8, x9, x10, x1 // load number x1
     LOAD_8_WORD_NUMBER x12, x13, x14, x15, x16, x17, x19, x20, x2 // load number x2
 
@@ -225,6 +229,10 @@ _uint_add3:
 
     STORE_8_WORD_NUMBER x3, x4, x5, x6, x7, x8, x9, x10, x0 // store a + b into x0
     mov x0, x11
+
+    ldp x19, x20, [sp, #0]
+    add sp, sp, #16
+
     ret
 
 /*

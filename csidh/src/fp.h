@@ -10,6 +10,7 @@ extern const fp fp_1;
 
 bool fp_eq(fp const *x, fp const *y);
 
+// this does also encode, not only set
 void fp_set(fp *x, uint64_t y);
 
 void fp_enc(fp *x, uint const *y); /* encode to Montgomery representation */
