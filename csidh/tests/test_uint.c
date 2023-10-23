@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h> 
 #include "extras.h"
 #include "uint.h"
 
@@ -19,13 +20,17 @@ void print_random_number(void){
 }
 
 void test_add(void){
-    uint a = {{1,0,0,0,0,0, 0, 0}};
-    uint b = {{0,0,0,0,0,0,1,0}};
-    uint result = {0};
+    uint a = {{1,1,1,1,1,1, 1, 1}};
+    uint b = {{0,1,1,1,1,1,1,1}};
+    uint result = {{0}};
+    uint expected = {{1,2,2,2,2,2,2,2}};
     uint_add3(&result, &a, &b);
-    uint_print(&result);
-}
 
+    for(int i = 0; i < LIMBS; i++) {
+        assert(expected.c[i] == result.c[i]);
+    }
+
+}
 
 int main(void)
 {

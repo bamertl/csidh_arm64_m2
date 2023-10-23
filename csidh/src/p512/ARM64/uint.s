@@ -22,7 +22,6 @@ _uint_1:
     .quad 0x0000000000000000
 
 
-
 .macro LOAD_8_WORD_NUMBER, reg1, reg2, reg3, reg4, reg5, reg6, reg7, reg8, num_pointer
     LDP \reg1, \reg2, [\num_pointer,#0] 
     LDP \reg3, \reg4, [\num_pointer,#16]
@@ -209,6 +208,10 @@ x0 = carry
  */
 .global _uint_add3
 _uint_add3:
+
+    sub sp, sp, #16
+    stp x19, x20, [sp, #0]
+
     LOAD_8_WORD_NUMBER x3, x4, x5, x6, x7, x8, x9, x10, x1 // load number x1
     LOAD_8_WORD_NUMBER x12, x13, x14, x15, x16, x17, x19, x20, x2 // load number x2
 
@@ -225,6 +228,10 @@ _uint_add3:
 
     STORE_8_WORD_NUMBER x3, x4, x5, x6, x7, x8, x9, x10, x0 // store a + b into x0
     mov x0, x11
+
+    ldp x19, x20, [sp, #0]
+    add sp, sp, #16
+
     ret
 
 /*
