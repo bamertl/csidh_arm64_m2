@@ -22,7 +22,6 @@ _uint_1:
     .quad 0x0000000000000000
 
 
-
 .macro LOAD_8_WORD_NUMBER, reg1, reg2, reg3, reg4, reg5, reg6, reg7, reg8, num_pointer
     LDP \reg1, \reg2, [\num_pointer,#0] 
     LDP \reg3, \reg4, [\num_pointer,#16]

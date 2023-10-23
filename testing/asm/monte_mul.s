@@ -4,7 +4,7 @@
     #define fmt(f)    f
 #endif
 
-.include "asm/helper/macros.s"
+.include "asm/macros.s"
 .include "asm/add_nums.s"
 .global mul
 .global fmt(monte_mul)

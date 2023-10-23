@@ -16,7 +16,10 @@ void fp_set(fp *x, uint64_t y);
 void fp_enc(fp *x, uint const *y); /* encode to Montgomery representation */
 void fp_dec(uint *x, fp const *y); /* decode from Montgomery representation */
 
+// this is x = x + y
 void fp_add2(fp *x, fp const *y);
+
+// x = x-y
 void fp_sub2(fp *x, fp const *y);
 void fp_mul2(fp *x, fp const *y);
 
