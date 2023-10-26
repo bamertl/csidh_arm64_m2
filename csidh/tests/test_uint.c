@@ -3,6 +3,7 @@
 #include <assert.h> 
 #include "extras.h"
 #include "uint.h"
+#include "constants.h"
 
 
 void uint_print(uint const *x)
@@ -32,9 +33,16 @@ void test_add(void){
 
 }
 
+void test_len(void){
+    size_t lenn = uint_len(&p_minus_2);
+    assert(lenn == 511);
+}
+
+
 int main(void)
 {
     test_add();
+    test_len();
     //print_random_number();
     return PASSED;
 }

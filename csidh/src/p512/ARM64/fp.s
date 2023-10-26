@@ -1,6 +1,10 @@
-.extern r_squared_mod_p
-.extern uint_1
-.extern p
+.extern _r_squared_mod_p
+.extern _p_minus_2
+.extern _uint_1
+.extern _p_minus_1_halves
+.extern _p
+.extern _fp_1
+.extern _mu
 
 
 .macro LOAD_8_WORD_NUMBER2, reg1, reg2, reg3, reg4, reg5, reg6, reg7, reg8, num_pointer
@@ -18,14 +22,12 @@
 .endm
 
 .macro LOAD_511_PRIME, reg1, reg2, reg3, reg4, reg5, reg6, reg7, reg8
-    LDR \reg1, p
-    LDR \reg2, p + 8
-    LDR \reg3, p + 16
-    LDR \reg4, p + 24
-    LDR \reg5, p + 32
-    LDR \reg6, p + 40
-    LDR \reg7, p + 48
-    LDR \reg8, p + 56
+    ADRP \reg8, _p@PAGE
+    LDP \reg1, \reg2, [\reg8, #0]
+    LDP \reg3, \reg4, [\reg8, #16]
+    LDP \reg5, \reg6, [\reg8, #32]
+    LDP \reg7, \reg8, [\reg8, #48]
+   
 .endm
 
 //////////////////////////////////////////// MACRO
@@ -129,7 +131,8 @@ mul a la https://github.com/microsoft/PQCrypto-SIDH/blob/master/src/P503/ARM64/f
 //  Operation: c [x2] = a [x0] * b [x1]
 a = 8 words, b = 8 words, c = 16 words
 */
-_mul:
+.global _uint_mul
+_uint_mul:
     sub     sp, sp, #96
 
     //LOAD A
@@ -327,8 +330,7 @@ to encode just monte mul with r_squared_mod_p
  */
 .global _fp_enc
 _fp_enc:
-    adrp x2, r_squared_mod_p   ; Load the page address of r_squared_mod_p into x2, maybe have to add @PAGE
-    add  x2, x2, :lo12:r_squared_mod_p ; Add the offset within that page to get the full address
+    adrp x2, _r_squared_mod_p@PAGE 
     b _fp_mul3
     ret
 
@@ -338,8 +340,7 @@ x0 = dec(x1)
  */
 .global _fp_dec
 _fp_dec:
-    adrp x2, uint_1
-    add  x2, x2, :lo12:uint_1
+    adrp x2, _uint_1@PAGE
     b _fp_mul3
 
 
@@ -354,359 +355,467 @@ _fp_mul2:
 /*
 Mongommery multiplication
 x0 = x1 * x2
- */
-.global _fp_mul3
-_fp_mul3:
-    sub sp, sp, #224 // 
-    str lr, [sp, #0] // store lr
-    str x0, [sp, #8] // store result address
-    stp x19, x20, [sp, #16]
-    stp x21, x22, [sp, #32]
+    */
+    .global _fp_mul3
+    _fp_mul3:
+        sub sp, sp, #224 // 
+        str lr, [sp, #0] // store lr
+        str x0, [sp, #8] // store result address
+        stp x19, x20, [sp, #16]
+        stp x21, x22, [sp, #32]
 
-    mov x0, x2 // Move x2 to x0 for multiplication
-    add x2, sp, #64 // result for mul = stack address + 16 + (16+8*16) words
-    bl _mul // x2 = x0 * x1
-    mov x0, x2 // copy result address of mul to x0 (this points to stack + 16)
-    ldr x1, [sp, #8] // load back initial result address to x1
-    bl _monte_reduce
-    ldr lr, [sp, #0] // get back lr
-    ldp x19, x20, [sp, #16]
-    ldp x21, x22, [sp, #32]
-    add sp, sp, #224
+        mov x0, x2 // Move x2 to x0 for multiplication
+        add x2, sp, #64 // result for mul = stack address + 16 + (16+8*16) words
+        bl _uint_mul // x2 = x0 * x1
+        mov x0, x2 // copy result address of mul to x0 (this points to stack + 16)
+        ldr x1, [sp, #8] // load back initial result address to x1
+        bl _monte_reduce
+        ldr lr, [sp, #0] // get back lr
+        ldp x19, x20, [sp, #16]
+        ldp x21, x22, [sp, #32]
+        add sp, sp, #224
 
-    ret
+        ret
 
-/*
-Input: 
-    a such that 0 <= a < p^2
-    R = 2^256
-    mu_big = -p^(-1) mod R
-Output: 
-    C ≡ a*R^(−1) mod p such that 0 ≤ C < p
-    Operation: c[x1] = a [x0] mod p
- */
-_monte_reduce:
-    // Make place in the stack for
-    sub sp, sp, #512
-    str lr, [sp, #0] // store lr 
-    str x1, [sp, #8] // store result address
-    str x0, [sp, #16] // store adress of a
+    /*
+    Input: 
+        a such that 0 <= a < p^2
+        R = 2^256
+        mu_big = -p^(-1) mod R
+    Output: 
+        C ≡ a*R^(−1) mod p such that 0 ≤ C < p
+        Operation: c[x1] = a [x0] mod p
+    */
+    _monte_reduce:
+        // Make place in the stack for
+        sub sp, sp, #512
+        str lr, [sp, #0] // store lr 
+        str x1, [sp, #8] // store result address
+        str x0, [sp, #16] // store adress of a
 
-    // a mod R = Lower 8 words of a
-    // load mu into x1 
-    adrp x1, mu@PAGE
-    //add  x1, x1, :lo12:mu
-    add x2, sp, #24 // result of multiplication 16 words -> sp #24 - sp# 152
-    // mu [x1] * ( a [x0] mod R )
-    bl mul
-    mov x1, x2 // copy result address to x1
-    // q = lower 8 words of x1
-    // C ← (a + p*q)/R
-    // x0 = p
-    adrp x0, p511@PAGE
-    //add  x0, x0, :lo12:p511
-    add x2, sp, #152 // result of multiplication p*q 16 words from sp#152-280
-    bl mul
-    mov x0, x2 // x0 = p*q
-    ldr x1, [sp, #16] // load address of a into x1 
-    add x2, sp, #280 // result again 16 words from sp #280-408
-    bl _add2_16_words
-    // Result in higher 8 words of x2
-    add x2, x2, #64 // 
-    // If C >= p then C = C - p
-    LOAD_8_WORD_NUMBER x3, x4, x5, x6, x7, x8, x9, x10, x2
-    LOAD_511_PRIME x12, x13, x14, x15, x16, x17, x19, x20
+        // a mod R = Lower 8 words of a
+        // load mu into x1 
+        adrp x1, _mu@PAGE
+        //add  x1, x1, :lo12:mu
+        add x2, sp, #24 // result of multiplication 16 words -> sp #24 - sp# 152
+        // mu [x1] * ( a [x0] mod R )
+        bl _uint_mul
+        mov x1, x2 // copy result address to x1
+        // q = lower 8 words of x1
+        // C ← (a + p*q)/R
+        // x0 = p
+        adrp x0, _p@PAGE
+        add x2, sp, #152 // result of multiplication p*q 16 words from sp#152-280
+        bl _uint_mul
+        mov x0, x2 // x0 = p*q
+        ldr x1, [sp, #16] // load address of a into x1 
+        add x2, sp, #280 // result again 16 words from sp #280-408
+        bl _add2_16_words
+        // Result in higher 8 words of x2
+        add x2, x2, #64 // 
+        // If C >= p then C = C - p
+        LOAD_8_WORD_NUMBER2 x3, x4, x5, x6, x7, x8, x9, x10, x2
+        LOAD_511_PRIME x12, x13, x14, x15, x16, x17, x19, x20
 
-    
-     //Subtract Prime from a + b into register x3-x11, not(carry)
-    SUBS x3, x3, x12
-    SBCS x4, x4, x13
-    SBCS x5, x5, x14
-    SBCS x6, x6, x15
-    SBCS x7, x7, x16
-    SBCS x8, x8, x17
-    SBCS x9, x9, x19
-    SBCS x10, x10, x20
-    //SBCS x11, x11, xzr // this is the error.
-    // The carry into x21
-    SBC x21, xzr, xzr
+        
+        //Subtract Prime from a + b into register x3-x11, not(carry)
+        SUBS x3, x3, x12
+        SBCS x4, x4, x13
+        SBCS x5, x5, x14
+        SBCS x6, x6, x15
+        SBCS x7, x7, x16
+        SBCS x8, x8, x17
+        SBCS x9, x9, x19
+        SBCS x10, x10, x20
+        //SBCS x11, x11, xzr // this is the error.
+        // The carry into x21
+        SBC x21, xzr, xzr
 
-    // If the result of a + b - p was negative, the mask will be 1, otherwise 0
-    and x12, x12, x21
-    and x13, x13, x21
-    and x14, x14, x21
-    and x15, x15, x21
-    and x16, x16, x21
-    and x17, x17, x21
-    and x19, x19, x21
-    and x20, x20, x21
+        // If the result of a + b - p was negative, the mask will be 1, otherwise 0
+        and x12, x12, x21
+        and x13, x13, x21
+        and x14, x14, x21
+        and x15, x15, x21
+        and x16, x16, x21
+        and x17, x17, x21
+        and x19, x19, x21
+        and x20, x20, x21
 
-    // Add masked p to a + b - p (masked p = p | 0)
-    ADDS x3, x3, x12
-    ADCS x4, x4, x13
-    ADCS x5, x5, x14
-    ADCS x6, x6, x15
-    ADCS x7, x7, x16
-    ADCS x8, x8, x17
-    ADCS x9, x9, x19
-    ADC x10, x10, x20
+        // Add masked p to a + b - p (masked p = p | 0)
+        ADDS x3, x3, x12
+        ADCS x4, x4, x13
+        ADCS x5, x5, x14
+        ADCS x6, x6, x15
+        ADCS x7, x7, x16
+        ADCS x8, x8, x17
+        ADCS x9, x9, x19
+        ADC x10, x10, x20
 
 
-    // load result address
-    ldr x1, [sp, #8]
-    STORE_8_WORD_NUMBER x3, x4, x5, x6, x7, x8, x9, x10, x1    
+        // load result address
+        ldr x1, [sp, #8]
+        STORE_8_WORD_NUMBER2 x3, x4, x5, x6, x7, x8, x9, x10, x1    
+        ldr lr, [sp, #0]
+        add sp, sp, #512
+        ret
+
+        // Operation: c[x2] = a[x0] + b[x1]
+    // a, b, c = 16 words
+    _add2_16_words:
+        // Word 0
+        LDR x4, [x0]          // Load word 0 from a
+        LDR x5, [x1]          // Load word 0 from b
+        ADDS x6, x4, x5       // Add the two words, set flags
+        STR x6, [x2]          // Store the result word 0 to c
+
+        // Word 1
+        LDR x4, [x0, #8]      
+        LDR x5, [x1, #8]      
+        ADCS x6, x4, x5       
+        STR x6, [x2, #8]      
+        
+        // Word 2
+        LDR x4, [x0, #16]     
+        LDR x5, [x1, #16]     
+        ADCS x6, x4, x5       
+        STR x6, [x2, #16]
+
+        // Word 3
+        LDR x4, [x0, #24]
+        LDR x5, [x1, #24]
+        ADCS x6, x4, x5
+        STR x6, [x2, #24]
+
+        // Word 4
+        LDR x4, [x0, #32]
+        LDR x5, [x1, #32]
+        ADCS x6, x4, x5
+        STR x6, [x2, #32]
+
+        // Word 5
+        LDR x4, [x0, #40]
+        LDR x5, [x1, #40]
+        ADCS x6, x4, x5
+        STR x6, [x2, #40]
+
+        // Word 6
+        LDR x4, [x0, #48]
+        LDR x5, [x1, #48]
+        ADCS x6, x4, x5
+        STR x6, [x2, #48]
+
+        // Word 7
+        LDR x4, [x0, #56]
+        LDR x5, [x1, #56]
+        ADCS x6, x4, x5
+        STR x6, [x2, #56]
+
+        // Word 8
+        LDR x4, [x0, #64]
+        LDR x5, [x1, #64]
+        ADCS x6, x4, x5
+        STR x6, [x2, #64]
+
+        // Word 9
+        LDR x4, [x0, #72]
+        LDR x5, [x1, #72]
+        ADCS x6, x4, x5
+        STR x6, [x2, #72]
+
+        // Word 10
+        LDR x4, [x0, #80]
+        LDR x5, [x1, #80]
+        ADCS x6, x4, x5
+        STR x6, [x2, #80]
+
+        // Word 11
+        LDR x4, [x0, #88]
+        LDR x5, [x1, #88]
+        ADCS x6, x4, x5
+        STR x6, [x2, #88]
+
+        // Word 12
+        LDR x4, [x0, #96]
+        LDR x5, [x1, #96]
+        ADCS x6, x4, x5
+        STR x6, [x2, #96]
+
+        // Word 13
+        LDR x4, [x0, #104]
+        LDR x5, [x1, #104]
+        ADCS x6, x4, x5
+        STR x6, [x2, #104]
+
+        // Word 14
+        LDR x4, [x0, #112]
+        LDR x5, [x1, #112]
+        ADCS x6, x4, x5
+        STR x6, [x2, #112]
+
+        // Word 15
+        LDR x4, [x0, #120]
+        LDR x5, [x1, #120]
+        ADCS x6, x4, x5
+        STR x6, [x2, #120]
+        ret
+
+    /*
+    x0 = x0 + x1
+    */
+    .global _fp_add2
+    _fp_add2:
+        mov x2, x0 // x0 is now also x2
+        b _fp_add3
+
+    /*
+    x0 = x1 + x2 mod p
+    */ 
+    .global _fp_add3
+    _fp_add3:
+
+        sub sp, sp, #33
+        stp x19, x20, [sp, #0]
+        stp x21, x22, [sp, #16]
+
+        // Load first Number in register X3-X10
+        LOAD_8_WORD_NUMBER2 x3, x4, x5, x6, x7, x8, x9, x10, x1
+        // Load second Number in register X12-X19
+        LOAD_8_WORD_NUMBER2 x12, x13, x14, x15, x16, x17, x19, x20, x2
+
+        // Add a + b with carry into register X3-X11
+        ADDS x3, x3, x12 
+        ADCS x4, x4, x13
+        ADCS x5, x5, x14
+        ADCS x6, x6, x15
+        ADCS x7, x7, x16
+        ADCS x8, x8, x17
+        ADCS x9, x9, x19
+        ADCS x10, x10, x20
+        ADC x11, xzr, xzr
+
+        //Load prime
+        LOAD_511_PRIME x12, x13, x14, x15, x16, x17, x19, x20
+
+        //Subtract Prime from a + b into register x3-x11, not(carry)
+        SUBS x3, x3, x12
+        SBCS x4, x4, x13
+        SBCS x5, x5, x14
+        SBCS x6, x6, x15
+        SBCS x7, x7, x16
+        SBCS x8, x8, x17
+        SBCS x9, x9, x19
+        SBCS x10, x10, x20
+        SBCS x11, x11, xzr
+        // The carry into x21
+        SBC x21, xzr, xzr
+
+        // If the result of a + b - p was negative, the mask will be 1, otherwise 0
+        and x12, x12, x21
+        and x13, x13, x21
+        and x14, x14, x21
+        and x15, x15, x21
+        and x16, x16, x21
+        and x17, x17, x21
+        and x19, x19, x21
+        and x20, x20, x21
+
+        // Add masked p to a + b - p (masked p = p | 0)
+        ADDS x3, x3, x12
+        ADCS x4, x4, x13
+        ADCS x5, x5, x14
+        ADCS x6, x6, x15
+        ADCS x7, x7, x16
+        ADCS x8, x8, x17
+        ADCS x9, x9, x19
+        ADC x10, x10, x20
+
+        // Store result in x0
+        STORE_8_WORD_NUMBER2 x3, x4, x5, x6, x7, x8, x9, x10, x0
+
+        ldp x19, x20, [sp, #0]
+        ldp x21, x22, [sp, #16]
+        add sp, sp, #32
+        ret
+
+    /*
+    x0 = x0 - x1
+    */
+    .global _fp_sub2
+    _fp_sub2:
+        sub sp, sp, #80 // 16 + 64
+        stp lr, x0, [sp, #0] // 0 -16
+
+        add x0, sp, 16 // result 8 words 16 - 64
+        bl _minus_number // x0 = -x1 
+        mov x1, x0 // we add x1
+        ldr x0, [sp, #8] // load result addr which is also x0
+        bl _fp_add2 // x0 = x0 + x1
+
+        ldr lr, [sp, #0]
+        add sp, sp, #80
+        ret
+
+    /*
+    x0 = x1 - x2 mod p
+    */
+    .global _fp_sub3
+    _fp_sub3:
+        sub sp, sp, #88 // 16 + 64
+        stp lr, x0, [sp, #0] // 0 -16
+        str x1, [sp, #16] // store x1
+        add x0, sp, 24 // result 8 words 16 - 64
+
+        mov x1, x2
+        bl _minus_number
+        mov x2, x0
+        ldr x0, [sp, #8] // load x0
+        ldr x1, [sp, #16] // load x1
+        b _fp_add3 // x0 = x1 + x2
+
+    /*
+    x0 = -x1
+    */
+    _minus_number:
+        // Load number we want minus of into register X3-X10
+        LOAD_8_WORD_NUMBER2 x2, x3, x4, x5, x6, x7, x8, x9, x0
+
+        // Load the prime
+        LOAD_511_PRIME x10, x11, x12, x13, x14, x15, x16, x17
+
+        SUBS x2, x10, x2
+        SBCS x3, x11, x3
+        SBCS x4, x12, x4
+        SBCS x5, x13, x5
+        SBCS x6, x14, x6
+        SBCS x7, x15, x7
+        SBCS x8, x16, x8
+        SBC x9, x17, x9
+
+        STORE_8_WORD_NUMBER2 x2, x3, x4, x5, x6, x7, x8, x9, x1
+        ret
+
+    /*
+    todo mul counter?
+    x0 = x1^2 mod p
+    */
+    .global _fp_sq2
+    _fp_sq2:
+        mov x2, x1 // x2 = x1
+        b _fp_mul3 // x0 = x1 * x2
+
+    /*
+    x0 = x0^2
+    */
+    .global _fp_sq1
+    _fp_sq1:
+        mov x1, x0
+        b _fp_sq2
+
+    /*
+    Calculate the inverse of x0 with little fermat
+    x0 = x0^(p-2) mod p = x0^(-1) mod p
+    we want to override a[x0] only at the very end
+
+    */
+    .global _fp_inv
+    _fp_inv:
+        adrp x1, _p_minus_2@PAGE 
+        b _fp_pow
+
+
+    /*
+    c[x0] = a[x0]^b[x1] mod p
+    */
+    _fp_pow:
+        sub sp, sp, #128   // make place for result 8*8 (#0), lr(#64), x0(#72), x1(#80), x2(#88), x3(#96), x4(#104), x5(#112), address of b (#120)
+        stp lr, x0, [sp, #64] // store lr and adress of x0
+        str x1, [sp, #120]
+        mov x0, x1 // mov b to x0 for _uint_len function
+        mov x1, #1
+        str x1, [sp, #0] // init result with 1
+        // get position of msb 1 bit of b
+        bl _uint_len // x1 = position of last 1
+        mov x5, x0 // counter of  total len
+        mov x1, #8          ; Counter for the number of words (8 words in total)
+        mov x2, #0          ; Offset from the base address
+
+    _fp_pow_word_loop:
+        ldr x3, [sp, #120] // load adress of b
+        add x3, x3, x2 // add offset
+        ldr x3, [x3] // load the word
+        mov x4, #64 // init bit counter
+
+    _fp_pow_bit_loop:
+        subs x5, x5, #1 // dec total bit counter
+        cbz x5, _fp_pow_finished // finish if total counter = 0
+
+        stp x1, x2, [sp, #80] // store them registers
+        stp x3, x4, [sp, #96]
+        str x5, [sp, #112]
+        tst x3, #1        ; Test the least significant bit of x3
+        beq _fp_pow_bit_is_zero // branch if is zero
+        // bit is one
+
+    _fp_pow_bit_is_one:
+        add x0, sp, #0 // stack at #0 is temp result address
+        bl _fp_sq1 // x0 = x0^2
+        ldr x1, [sp, #72] // load address of x0 
+        bl _fp_mul2 // x0 = x0 * x1
+        b _fp_pow_end_of_bit
+
+    _fp_pow_bit_is_zero:
+        add x0, sp, #0 // result address from stack into x0
+        bl _fp_sq1 // x0 = x0^2
+
+    _fp_pow_end_of_bit:
+        ldp x1, x2, [sp, #80] // restore the registers
+        ldp x3, x4, [sp, #96]
+        ldr x5, [sp, #112]
+        lsr x3, x3, #1 // shift current word to the right by 1
+        subs x4, x4, #1 // decrement bit counter
+        b.ne _fp_pow_bit_loop // if not 0 get next bit
+        add x2, x2, #8 // new word offset
+        subs x1, x1, #1 // decrement word counter
+        b.ne _fp_pow_word_loop // if in the first 8 words, go normal word
+
+    _fp_pow_finished:
+        // store result in x0 address
+        add x1, sp, #0 // result address in stack
+        LOAD_8_WORD_NUMBER2 x2, x3, x4, x5, x6 , x7, x8, x9, x1
+        ldr x0, [sp, #72] // load initial result address
+        STORE_8_WORD_NUMBER2 x2, x3, x4, x5, x7, x7, x8, x9, x0
+
+        ldr lr, [sp, #64]
+        add sp, sp, #128
+        ret
+
+
+    /*
+    this will for some reason not count to the mul counter
+    todo count reset the mulcounter to the value before the function
+    */
+    .global _fp_issquare
+    _fp_issquare:
+        sub sp, sp, #8
+        str lr, [sp, #0]
+        adrp x1, _p_minus_1_halves@PAGE
+    bl _fp_pow
+    adrp x1, _fp_1@PAGE
+    mov x2, #64
+    bl _memcmp
+    cbnz x0, _not_square
+    mov x0, #1  // If memcmp returns 0, set return value to true (1)
+    b _issquare_end
+
+_not_square:
+    mov x0, #0  // Set return value to false (0)
+
+_issquare_end:
     ldr lr, [sp, #0]
-    add sp, sp, #512
+    add sp, sp, #8
     ret
 
-    // Operation: c[x2] = a[x0] + b[x1]
-// a, b, c = 16 words
-_add2_16_words:
-    // Word 0
-    LDR x4, [x0]          // Load word 0 from a
-    LDR x5, [x1]          // Load word 0 from b
-    ADDS x6, x4, x5       // Add the two words, set flags
-    STR x6, [x2]          // Store the result word 0 to c
-
-    // Word 1
-    LDR x4, [x0, #8]      
-    LDR x5, [x1, #8]      
-    ADCS x6, x4, x5       
-    STR x6, [x2, #8]      
-    
-    // Word 2
-    LDR x4, [x0, #16]     
-    LDR x5, [x1, #16]     
-    ADCS x6, x4, x5       
-    STR x6, [x2, #16]
-
-    // Word 3
-    LDR x4, [x0, #24]
-    LDR x5, [x1, #24]
-    ADCS x6, x4, x5
-    STR x6, [x2, #24]
-
-    // Word 4
-    LDR x4, [x0, #32]
-    LDR x5, [x1, #32]
-    ADCS x6, x4, x5
-    STR x6, [x2, #32]
-
-    // Word 5
-    LDR x4, [x0, #40]
-    LDR x5, [x1, #40]
-    ADCS x6, x4, x5
-    STR x6, [x2, #40]
-
-    // Word 6
-    LDR x4, [x0, #48]
-    LDR x5, [x1, #48]
-    ADCS x6, x4, x5
-    STR x6, [x2, #48]
-
-    // Word 7
-    LDR x4, [x0, #56]
-    LDR x5, [x1, #56]
-    ADCS x6, x4, x5
-    STR x6, [x2, #56]
-
-    // Word 8
-    LDR x4, [x0, #64]
-    LDR x5, [x1, #64]
-    ADCS x6, x4, x5
-    STR x6, [x2, #64]
-
-    // Word 9
-    LDR x4, [x0, #72]
-    LDR x5, [x1, #72]
-    ADCS x6, x4, x5
-    STR x6, [x2, #72]
-
-    // Word 10
-    LDR x4, [x0, #80]
-    LDR x5, [x1, #80]
-    ADCS x6, x4, x5
-    STR x6, [x2, #80]
-
-    // Word 11
-    LDR x4, [x0, #88]
-    LDR x5, [x1, #88]
-    ADCS x6, x4, x5
-    STR x6, [x2, #88]
-
-    // Word 12
-    LDR x4, [x0, #96]
-    LDR x5, [x1, #96]
-    ADCS x6, x4, x5
-    STR x6, [x2, #96]
-
-    // Word 13
-    LDR x4, [x0, #104]
-    LDR x5, [x1, #104]
-    ADCS x6, x4, x5
-    STR x6, [x2, #104]
-
-    // Word 14
-    LDR x4, [x0, #112]
-    LDR x5, [x1, #112]
-    ADCS x6, x4, x5
-    STR x6, [x2, #112]
-
-    // Word 15
-    LDR x4, [x0, #120]
-    LDR x5, [x1, #120]
-    ADCS x6, x4, x5
-    STR x6, [x2, #120]
-    ret
-
-/*
-x0 = x0 + x1
- */
-.global _fp_add2
-_fp_add2:
-    mov x2, x0 // x0 is now also x2
-    b _fp_add3
-
-/*
-x0 = x1 + x2 mod p
- */ 
-.global _fp_add3
-_fp_add3:
-
-    sub sp, sp, #33
-    stp x19, x20, [sp, #0]
-    stp x21, x22, [sp, #16]
-
-     // Load first Number in register X3-X10
-    LOAD_8_WORD_NUMBER2 x3, x4, x5, x6, x7, x8, x9, x10, x1
-    // Load second Number in register X12-X19
-    LOAD_8_WORD_NUMBER2 x12, x13, x14, x15, x16, x17, x19, x20, x2
-
-    // Add a + b with carry into register X3-X11
-    ADDS x3, x3, x12 
-    ADCS x4, x4, x13
-    ADCS x5, x5, x14
-    ADCS x6, x6, x15
-    ADCS x7, x7, x16
-    ADCS x8, x8, x17
-    ADCS x9, x9, x19
-    ADCS x10, x10, x20
-    ADC x11, xzr, xzr
-
-    //Load prime
-    LOAD_511_PRIME x12, x13, x14, x15, x16, x17, x19, x20
-
-    //Subtract Prime from a + b into register x3-x11, not(carry)
-    SUBS x3, x3, x12
-    SBCS x4, x4, x13
-    SBCS x5, x5, x14
-    SBCS x6, x6, x15
-    SBCS x7, x7, x16
-    SBCS x8, x8, x17
-    SBCS x9, x9, x19
-    SBCS x10, x10, x20
-    SBCS x11, x11, xzr
-    // The carry into x21
-    SBC x21, xzr, xzr
-
-    // If the result of a + b - p was negative, the mask will be 1, otherwise 0
-    and x12, x12, x21
-    and x13, x13, x21
-    and x14, x14, x21
-    and x15, x15, x21
-    and x16, x16, x21
-    and x17, x17, x21
-    and x19, x19, x21
-    and x20, x20, x21
-
-    // Add masked p to a + b - p (masked p = p | 0)
-    ADDS x3, x3, x12
-    ADCS x4, x4, x13
-    ADCS x5, x5, x14
-    ADCS x6, x6, x15
-    ADCS x7, x7, x16
-    ADCS x8, x8, x17
-    ADCS x9, x9, x19
-    ADC x10, x10, x20
-
-    // Store result in x0
-    STORE_8_WORD_NUMBER2 x3, x4, x5, x6, x7, x8, x9, x10, x0
-
-    ldp x19, x20, [sp, #0]
-    ldp x21, x22, [sp, #16]
-    add sp, sp, #32
-    ret
-
-/*
-x0 = x0 - x1
- */
-.global _fp_sub2
-_fp_sub2:
-    sub sp, sp, #80 // 16 + 64
-    stp lr, x0, [sp, #0] // 0 -16
-
-    add x0, sp, 16 // result 8 words 16 - 64
-    bl _minus_number // x0 = -x1 
-    mov x1, x0 // we add x1
-    ldr x0, [sp, #8] // load result addr which is also x0
-    bl fp_add2 // x0 = x0 + x1
-
-    ldr lr, [sp, #0]
-    add sp, sp, #80
-    ret
-
-/*
-x0 = x1 - x2 mod p
- */
-.global _fp_sub3
-_fp_sub3:
-    sub sp, sp, #88 // 16 + 64
-    stp lr, x0, [sp, #0] // 0 -16
-    str x1, [sp, #16] // store x1
-    add x0, sp, 24 // result 8 words 16 - 64
-
-    mov x1, x2
-    bl _minus_number
-    mov x2, x0
-    ldr x0, [sp, #8] // load x0
-    ldr x1, [sp, #16] // load x1
-    b _fp_add3 // x0 = x1 + x2
-
-/*
-x0 = -x1
- */
-_minus_number:
-     // Load number we want minus of into register X3-X10
-    LOAD_8_WORD_NUMBER2 x2, x3, x4, x5, x6, x7, x8, x9, x0
-
-    // Load the prime
-    LOAD_511_PRIME x10, x11, x12, x13, x14, x15, x16, x17
-
-    SUBS x2, x10, x2
-    SBCS x3, x11, x3
-    SBCS x4, x12, x4
-    SBCS x5, x13, x5
-    SBCS x6, x14, x6
-    SBCS x7, x15, x7
-    SBCS x8, x16, x8
-    SBC x9, x17, x9
-
-    STORE_8_WORD_NUMBER2 x2, x3, x4, x5, x6, x7, x8, x9, x1
-    ret
-
-/*
-todo mul counter?
-x0 = x1^2 mod p
- */
-.global _fp_sq2
-_fp_sq2:
-    mov x2, x1 // x2 = x1
-    b fp_mul3 // x0 = x1 * x2
-
-/*
-x0 = x0^2
- */
-.global _fp_sq1
-_fp_sq1:
-    mov x1, x0
-    b _fp_sq2
+.global _fp_random
+_fp_random:
+    adrp x1, _p@PAGE
+    b _uint_random
