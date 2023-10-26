@@ -6,3 +6,8 @@ make ARCH=ARM64
 ## Test
 make test_uint
 make ARCH=ARM64 test_uint
+
+
+lldb ...
+br set -n name
+register

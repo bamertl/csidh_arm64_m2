@@ -12,14 +12,6 @@ void uint_print(uint const *x)
         printf("%02hhx", i[(unsigned char *) x->c]);
 }
 
-void print_random_number(void){
-     uint a = {{0,0,0,0,0,0, 0, 0}};
-    uint b = {{0,0,0,0,0,0,1,0}};
-    uint_random(&a, &b);
-    printf("printing random number:");
-    uint_print(&a);
-}
-
 void test_add(void){
     uint a = {{1,1,1,1,1,1, 1, 1}};
     uint b = {{0,1,1,1,1,1,1,1}};
@@ -38,11 +30,84 @@ void test_len(void){
     assert(lenn == 511);
 }
 
+void test_eq(void){
+    uint a = {{1,1,1,1,1,1,1,1}};
+    uint b = {{1,2,3,4,5,6,7,8}};
+    bool result = uint_eq(&a, &b); 
+    bool result2 = uint_eq(&a, &a);
+    assert(result == false);
+    assert(result2 == true);
+}
+
+void test_uint_set(void){
+    uint a = {{0,0,0,0,0,0,0,0}};
+    uint_set(&a, 1);
+    uint expected = {{1,0,0,0,0,0,0,0}};
+    for(int i = 0; i < LIMBS; i++) {
+        assert(expected.c[i] == a.c[i]);
+    }
+}
+
+void test_uint_bit(void){
+    uint a = {{1,0,0,0,0,0,0,0}};
+    bool result = uint_bit(&a, 0);
+    bool result2 = uint_bit(&a, 1);
+    assert(result == true);
+    assert(result2 == false);
+}
+
+void test_uint_mul3_64(void){
+    uint a = {{1,0,0,0,0,0,0,0}};
+    uint b = {{2,0,0,0,0,0,0,0}};
+    uint64_t c = 5;
+    uint_mul3_64(&a, &b, c);
+    uint expected = {{10,0,0,0,0,0,0,0}};
+    for(int i = 0; i < LIMBS; i++) {
+        assert(expected.c[i] == a.c[i]);
+    }
+}
+
+void test_uint_add3(void){
+    uint a = {{1,0,0,0,0,0,0,1}};
+    uint b = {{2,0,0,0,0,0,0,0}};
+    uint c = {{3,0,0,0,0,0,0,0}};
+    uint_add3(&a, &b, &c);
+    uint expected = {{5,0,0,0,0,0,0,0}};
+    for(int i = 0; i < LIMBS; i++) {
+        assert(expected.c[i] == a.c[i]);
+    }
+}
+
+void test_uint_sub3(void){
+    uint a = {{1,0,0,0,0,0,0,1}};
+    uint b = {{4,0,0,0,0,0,0,5}};
+    uint c = {{2,0,0,0,0,0,0,3}};
+    uint_sub3(&a, &b, &c);
+    uint expected = {{2,0,0,0,0,0,0,2}};
+    for(int i = 0; i < LIMBS; i++) {
+        assert(expected.c[i] == a.c[i]);
+    }
+}
+
+void test_uint_random(void){
+    uint a = {{0,0,0,0,0,0,0,0}};
+    uint b = {{0,0,0,0,0,0,1,0}};
+    uint_random(&a, &b);
+    uint_print(&a); 
+}
 
 int main(void)
 {
     test_add();
     test_len();
-    //print_random_number();
+    test_eq();
+    test_uint_set();
+    test_uint_bit();
+    test_uint_mul3_64();
+    test_uint_add3();
+    test_uint_sub3();
+    //test_uint_random();
+
+
     return PASSED;
 }

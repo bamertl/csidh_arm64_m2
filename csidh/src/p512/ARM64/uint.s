@@ -240,6 +240,10 @@ x0 = carry
  */
 .global _uint_sub3
 _uint_sub3:
+
+    sub sp, sp, #16
+    stp x19, x20, [sp, #0]
+
     LOAD_8_WORD_NUMBER x3, x4, x5, x6, x7, x8, x9, x10, x1 // load number x1
     LOAD_8_WORD_NUMBER x12, x13, x14, x15, x16, x17, x19, x20, x2 // load number x2
 
@@ -255,7 +259,9 @@ _uint_sub3:
 
     STORE_8_WORD_NUMBER x3, x4, x5, x6, x7, x8, x9, x10, x0 // store a-b into x2
     mov x0, x11 // x11 to x0
-
+    ldp x19, x20, [sp, #0]
+    add sp, sp , #16
+    ret
 /*
 c[x0] = a[x1] * b[x2]
 b = direct value not address of 64 bit
@@ -317,25 +323,24 @@ _uint_mul3_64:
     adcs x4, x4, x5     // add past lower (x5) now with carry flag as well
     str x4, [x0, #56]
     umulh x5, x4, x2    // high
-
+    ret
 /*
 x0: place to store random number
 x1: uniformly distributed in (0,x1)
 for now just filling the full bytes
+
+todo we might need to change this here a bit, they have some odd logic if x1 is 0
  */
 .global _uint_random
 _uint_random:
-    cmp x1, #0           // Compare x1 with 0 ( they do this as well so we should check as well)
-    mov x16, #64
-    csel x1, x1, x16, eq // set to 64 if it was 0 (they do this for some reason)
 
-    sub sp, sp, #40
+    sub sp, sp, #48
     stp lr, x0, [sp, #0]
     str x1, [sp, #16]
-
+    mov x0, x1
     bl _uint_len //get the number of valid bits in m
 
-    mov x1, x0 // save result in x2
+    mov x1, x0 // save result in x1
     lsr x3, x1, #3        // x3 = total bits / 8 = Bytes
     and x4, x1, #0x3f      // x4 = remainder bits % 64
 
@@ -343,6 +348,7 @@ _uint_random:
     ldr x0, [sp, #8]
     bl _randombytes
 
+    ldr x0, [sp, #8] // the function does return some different value in x0
     ldr lr, [sp, #0]
-    add sp, sp, #40
+    add sp, sp, #48
     ret
