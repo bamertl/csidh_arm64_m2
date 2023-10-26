@@ -83,9 +83,15 @@ test_uint: src/p${BITS}/params.h ${includes} ${sources} tests/test_uint.c
 	cc -I ./src/ -I ./src/p${BITS}/ -I ./tests/ -std=c99 -pedantic -g $(sources) tests/test_uint.c -o tests/test_uint
 	./tests/test_uint
 
+test_fp: src/p${BITS}/params.h ${includes} ${sources} tests/test_fp.c
+	cc -I ./src/ -I ./src/p${BITS}/ -I ./tests/ -std=c99 -pedantic -g $(sources) tests/test_fp.c -o tests/test_fp
+	./tests/test_fp
+
+
 clean:
 	@rm -f main debug bench libcsidh.so $(TEST_OUT)
 	@rm -rf ./tests/test_uint.DSYM
+	@rm -rf ./tests/test_fp.DSYM
 
 
 
