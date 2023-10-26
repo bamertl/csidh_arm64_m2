@@ -109,12 +109,13 @@ todo: test this if it start by 0 or 1
 .global _uint_len
 _uint_len:
 
+    mov x3, x0
     mov x0, #0          // current result
     mov x16, #64
     // First element
     mov x2, #0          // current limb bit offset 0 - 448 (7*64)
 
-    ldr x4, [x0, #0]    // Load the 1th limb
+    ldr x4, [x3, #0]    // Load the 1th limb
     clz x5, x4          // Count leading zeros in x4
     sub x5, x16, x5     // position of first bit or 0
     add x5, x5, x2      // add limb offset
@@ -123,7 +124,7 @@ _uint_len:
 
     // Second element
     add x2, x2, x16         // add 64 to limb offset
-    ldr x4, [x0, #8]
+    ldr x4, [x3, #8]
     clz x5, x4          // Count leading zeros in x4
     sub x5, x16, x5     // position of first bit or 0
     add x5, x5, x2      // add limb offset
@@ -132,7 +133,7 @@ _uint_len:
 
     // Third
     add x2,x2, x16         // add 64 to limb offset
-    ldr x4, [x0, #16]
+    ldr x4, [x3, #16]
     clz x5, x4          // Count leading zeros in x4
     sub x5, x16, x5     // position of first bit or 0
     add x5, x5, x2      // add limb offset
@@ -141,7 +142,7 @@ _uint_len:
 
     // Fourth
     add x2, x2, x16         // add 64 to limb offset
-    ldr x4, [x0, #24]
+    ldr x4, [x3, #24]
     clz x5, x4          // Count leading zeros in x4
     sub x5, x16, x5     // position of first bit or 0
     add x5, x5, x2      // add limb offset
@@ -150,7 +151,7 @@ _uint_len:
 
     // Fifth
     add x2, x2, x16         // add 64 to limb offset
-    ldr x4, [x0, #32]
+    ldr x4, [x3, #32]
     clz x5, x4          // Count leading zeros in x4
     sub x5, x16, x5     // position of first bit or 0
     add x5, x5, x2      // add limb offset
@@ -159,7 +160,7 @@ _uint_len:
 
     // Sixth
     add x2, x2, #64         // add 64 to limb offset
-    ldr x4, [x0, #40]
+    ldr x4, [x3, #40]
     clz x5, x4          // Count leading zeros in x4
     sub x5, x16, x5     // position of first bit or 0
     add x5, x5, x2      // add limb offset
@@ -168,7 +169,7 @@ _uint_len:
 
     // Seventh
     add x2, x2, #64         // add 64 to limb offset
-    ldr x4, [x0, #48]
+    ldr x4, [x3, #48]
     clz x5, x4          // Count leading zeros in x4
     sub x5, x16, x5     // position of first bit or 0
     add x5, x5, x2      // add limb offset
@@ -177,13 +178,12 @@ _uint_len:
 
     // Eigth
     add x2, x2, #64         // add 64 to limb offset
-    ldr x4, [x0, #56]
+    ldr x4, [x3, #56]
     clz x5, x4          // Count leading zeros in x4
     sub x5, x16, x5     // position of first bit or 0
     add x5, x5, x2      // add limb offset
     cmp x5, x2          // compare if x5 == x2
     csel x0, x5, x0, ne // if x5==x2 keep result else choose new result
-
     ret
 
 /*

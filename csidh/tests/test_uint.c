@@ -35,7 +35,7 @@ void test_add(void){
 
 void test_len(void){
     size_t lenn = uint_len(&p_minus_2);
-    printf("The size is: %zu \n", lenn);
+    assert(lenn == 511);
 }
 
 
