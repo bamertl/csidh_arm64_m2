@@ -13,7 +13,7 @@ void uint_print(uint const *x)
 }
 
 void print_random_number(void){
-     uint a = {{0,0,0,0,0,0, 0, 0}};
+    uint a = {{0,0,0,0,0,0, 0, 0}};
     uint b = {{0,0,0,0,0,0,1,0}};
     uint_random(&a, &b);
     printf("printing random number:");
@@ -38,11 +38,20 @@ void test_len(void){
     assert(lenn == 511);
 }
 
+void test_eq(void){
+    uint a = {{1,1,1,1,1,1,1,1}};
+    uint b = {{1,2,3,4,5,6,7,8}};
+    bool result = uint_eq(&a, &b); 
+    bool result2 = uint_eq(&a, &a);
+    assert(result == false);
+    assert(result2 == true);
+}
 
 int main(void)
 {
     test_add();
     test_len();
+    test_eq();
     //print_random_number();
     return PASSED;
 }
