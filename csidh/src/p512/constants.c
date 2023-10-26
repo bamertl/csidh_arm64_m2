@@ -31,6 +31,19 @@ const struct fp r_squared_mod_p = {{
 /* -p^-1 mod 2^64 */
 const uint64_t inv_min_p_mod_r = 0x66c1301f632e294d;
 
+
+/* -p^-1 mod 2^512 */
+const struct uint mu = {{
+    0x66c1301f632e294d,
+    0xfe025ed7d0d3b1aa,
+    0xf6fe2bc33e915395,
+    0x34ed3ea7f1de34c4,
+    0xb081b3aba7d05f85,
+    0x1232b9eb013dee1e,
+    0x3512da337a97b345,
+    0xd8c3904b18371bcd
+    }};
+
 /* p - 2 */
 const struct uint p_minus_2 = {{
     0x1b81b90533c6c879, 0xc2721bf457aca835, 0x516730cc1f0b4f25, 0xa7aac6c567f35507,
