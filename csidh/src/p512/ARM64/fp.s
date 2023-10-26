@@ -19,14 +19,12 @@
 .endm
 
 .macro LOAD_511_PRIME, reg1, reg2, reg3, reg4, reg5, reg6, reg7, reg8
-    LDR \reg1, p
-    LDR \reg2, p + 8
-    LDR \reg3, p + 16
-    LDR \reg4, p + 24
-    LDR \reg5, p + 32
-    LDR \reg6, p + 40
-    LDR \reg7, p + 48
-    LDR \reg8, p + 56
+    ADRP \reg8, p@PAGE
+    LDP \reg1, \reg2, [\reg8, #0]
+    LDP \reg3, \reg4, [\reg8, #16]
+    LDP \reg5, \reg6, [\reg8, #32]
+    LDP \reg7, \reg8, [\reg8, #48]
+   
 .endm
 
 //////////////////////////////////////////// MACRO
@@ -328,8 +326,7 @@ to encode just monte mul with r_squared_mod_p
  */
 .global _fp_enc
 _fp_enc:
-    adrp x2, r_squared_mod_p   ; Load the page address of r_squared_mod_p into x2, maybe have to add @PAGE
-    add  x2, x2, :lo12:r_squared_mod_p ; Add the offset within that page to get the full address
+    adrp x2, r_squared_mod_p@PAGE 
     b _fp_mul3
     ret
 
@@ -339,8 +336,7 @@ x0 = dec(x1)
  */
 .global _fp_dec
 _fp_dec:
-    adrp x2, uint_1
-    add  x2, x2, :lo12:uint_1
+    adrp x2, uint_1@PAGE
     b _fp_mul3
 
 
@@ -404,8 +400,7 @@ _monte_reduce:
     // q = lower 8 words of x1
     // C ← (a + p*q)/R
     // x0 = p
-    adrp x0, p511@PAGE
-    //add  x0, x0, :lo12:p511
+    adrp x0, p@PAGE
     add x2, sp, #152 // result of multiplication p*q 16 words from sp#152-280
     bl mul
     mov x0, x2 // x0 = p*q
@@ -415,7 +410,7 @@ _monte_reduce:
     // Result in higher 8 words of x2
     add x2, x2, #64 // 
     // If C >= p then C = C - p
-    LOAD_8_WORD_NUMBER x3, x4, x5, x6, x7, x8, x9, x10, x2
+    LOAD_8_WORD_NUMBER2 x3, x4, x5, x6, x7, x8, x9, x10, x2
     LOAD_511_PRIME x12, x13, x14, x15, x16, x17, x19, x20
 
     
@@ -455,7 +450,7 @@ _monte_reduce:
 
     // load result address
     ldr x1, [sp, #8]
-    STORE_8_WORD_NUMBER x3, x4, x5, x6, x7, x8, x9, x10, x1    
+    STORE_8_WORD_NUMBER2 x3, x4, x5, x6, x7, x8, x9, x10, x1    
     ldr lr, [sp, #0]
     add sp, sp, #512
     ret
@@ -720,26 +715,35 @@ we want to override a[x0] only at the very end
  */
 .global _fp_inv
 _fp_inv:
-    sub sp, sp, #120   // make place for result 8*8 (#0), lr(#64), x0(#72), x1(#80), x2(#88), x3(#96), x4(#104), x5(#112)
+    adrp x1, p_minus_2@PAGE 
+    b _fp_pow
+
+
+/*
+c[x0] = a[x0]^b[x1] mod p
+ */
+_fp_pow
+    sub sp, sp, #128   // make place for result 8*8 (#0), lr(#64), x0(#72), x1(#80), x2(#88), x3(#96), x4(#104), x5(#112), address of b (#120)
     stp lr, x0, [sp, #64] // store lr and adress of x0
+    str x1, [sp, #120]
+    mov x0, x1 // mov b to x0 for _uint_len function
     mov x1, #1
     str x1, [sp, #0] // init result with 1
-
-    // get position of msb 1 bit of p-2
-    adrp x0, p_minus_2@PAGE   ; Load the page address of r_squared_mod_p into x2, maybe have to add @PAGE
-    add  x0, x2, :lo12:p_minus_2 ; Add the offset within that page to get the full address 
-    bl _uint_len // x0 = position of last 1
+    // get position of msb 1 bit of b
+    bl _uint_len // x1 = position of last 1
     mov x5, x0 // counter of  total len
     mov x1, #8          ; Counter for the number of words (8 words in total)
     mov x2, #0          ; Offset from the base address
-    
+
     b _normal_word_loop
 
-_fp_inv_word_loop:
-    ldr x3, [p_minus_2 + x2] // load the word
+_fp_pow_word_loop:
+    ldr x3, [sp, #120] // load adress of b
+    add x3, x3, x2 // add offset
+    ldr x3, [x3] // load the word
     mov x4, #64 // init bit counter
 
-_fp_inv_bit_loop:
+_fp_pow_bit_loop:
     subs x5, x5, #1 // dec total bit counter
     cbz x5, _fp_inv_finished_inv // finish if total counter = 0
 
@@ -750,32 +754,48 @@ _fp_inv_bit_loop:
     beq _fp_inv_bit_is_zero // branch if is zero
     // bit is one
 
-_fp_inv_bit_is_one:
+_fp_pow_bit_is_one:
     add x0, sp, #0 // stack at #0 is temp result address
     bl _fp_sq1 // x0 = x0^2
     ldr x1, [sp, #72] // load address of x0 
     bl _fp_mul2 // x0 = x0 * x1
-    b _fp_inv_end_of_bit
+    b _fp_pow_end_of_bit
 
-_fp_inv_bit_is_zero:
+_fp_pow_bit_is_zero:
     add x0, sp, #0 // result address from stack into x0
     bl _fp_sq1 // x0 = x0^2
 
-_fp_inv_end_of_bit:
+_fp_pow_end_of_bit:
     ldp x1, x2, [sp, #80] // restore the registers
     ldp x3, x4, [sp, #96]
     ldr x5, [sp, #112]
     lsr x3, x3, #1 // shift current word to the right by 1
     subs x4, x4, #1 // decrement bit counter
-    b.ne _bit_loop // if not 0 get next bit
+    b.ne _fp_pow_bit_loop // if not 0 get next bit
     add x2, x2, #8 // new word offset
     subs x1, x1, #1 // decrement word counter
-    b.ne _fp_inv_word_loop // if in the first 8 words, go normal word
+    b.ne _fp_pow_word_loop // if in the first 8 words, go normal word
 
-_fp_inv_finished_inv:
+_fp_pow_finished:
     // store result in x0 address
     add x1, sp, #0 // result address in stack
-    LOAD_8_WORD_NUMBER x2, x3, x4, x5, x6 , x7, x8, x9, x1
+    LOAD_8_WORD_NUMBER2 x2, x3, x4, x5, x6 , x7, x8, x9, x1
     ldr x0, [sp, #72] // load initial result address
-    STORE_8_WORD_NUMBER x2, x3, x4, x5, x7, x7, x8, x9, x0
+    STORE_8_WORD_NUMBER2 x2, x3, x4, x5, x7, x7, x8, x9, x0
+
+    ldr lr, [sp, #64]
+    add sp, sp, #128
     ret
+
+
+
+
+
+
+/*
+this will for some reason not count to the mul counter
+todo count reset the mulcounter to the value before the function
+ */
+.global _fp_issquare
+_fp_issquare:
+    adrp x1, p_minus_1_halves@PAGE
