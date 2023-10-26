@@ -720,58 +720,62 @@ we want to override a[x0] only at the very end
  */
 .global _fp_inv
 _fp_inv:
-    sub sp, sp, #112   // make place for result 8*8 (#0), lr(#64), x0(#72), x1(#80), x2(#88), x3(#96), x4(#104)
+    sub sp, sp, #120   // make place for result 8*8 (#0), lr(#64), x0(#72), x1(#80), x2(#88), x3(#96), x4(#104), x5(#112)
     stp lr, x0, [sp, #64] // store lr and adress of x0
     mov x1, #1
     str x1, [sp, #0] // init result with 1
-    mov x1, #7          ; Counter for the number of words (8 words in total)
+
+    // get position of msb 1 bit of p-2
+    adrp x0, p_minus_2@PAGE   ; Load the page address of r_squared_mod_p into x2, maybe have to add @PAGE
+    add  x0, x2, :lo12:p_minus_2 ; Add the offset within that page to get the full address 
+    bl _uint_len // x0 = position of last 1
+    mov x5, x0 // counter of  total len
+    mov x1, #8          ; Counter for the number of words (8 words in total)
     mov x2, #0          ; Offset from the base address
+    
     b _normal_word_loop
 
-// for the first 7 words we use this
-_fp_inv_normal_word_loop:
+_fp_inv_word_loop:
     ldr x3, [p_minus_2 + x2] // load the word
     mov x4, #64 // init bit counter
-    b _fp_inv_bit_loop
 
 _fp_inv_bit_loop:
-    tst x3, #1        ; Test the least significant bit of x3
-    beq _fp_inv_bit_is_zero
-    b _fp_inv_bit_is_one
+    subs x5, x5, #1 // dec total bit counter
+    cbz x5, _fp_inv_finished_inv // finish if total counter = 0
 
-_fp_inv_bit_is_zero:
-    add x0, sp, #0 // result address from stack into x0
     stp x1, x2, [sp, #80] // store them registers
     stp x3, x4, [sp, #96]
-    bl _fp_sq1 // x0 = x0^2
-    b _fp_inv_end_of_bit
+    str x5, [sp, #112]
+    tst x3, #1        ; Test the least significant bit of x3
+    beq _fp_inv_bit_is_zero // branch if is zero
+    // bit is one
 
 _fp_inv_bit_is_one:
     add x0, sp, #0 // stack at #0 is temp result address
-    stp x1, x2, [sp, #80] // store them registers
-    stp x3, x4, [sp, #96]
     bl _fp_sq1 // x0 = x0^2
     ldr x1, [sp, #72] // load address of x0 
     bl _fp_mul2 // x0 = x0 * x1
     b _fp_inv_end_of_bit
 
+_fp_inv_bit_is_zero:
+    add x0, sp, #0 // result address from stack into x0
+    bl _fp_sq1 // x0 = x0^2
+
 _fp_inv_end_of_bit:
     ldp x1, x2, [sp, #80] // restore the registers
-    ldp x3, x4, [sp, #80]
+    ldp x3, x4, [sp, #96]
+    ldr x5, [sp, #112]
     lsr x3, x3, #1 // shift current word to the right by 1
     subs x4, x4, #1 // decrement bit counter
     b.ne _bit_loop // if not 0 get next bit
     add x2, x2, #8 // new word offset
     subs x1, x1, #1 // decrement word counter
-    b.ne _fp_inv_normal_word_loop // if in the first 7 words, go normal word
-    b fp_inv_last_word
-
-/*
-logic for last word is different, because we dont want to square on the leading 0's
- */
-_fp_inv_last_word:
-    ldr x3, [p_minus_2 + x2]
-
-_fp_inv_last_bit_loop:
+    b.ne _fp_inv_word_loop // if in the first 8 words, go normal word
 
 _fp_inv_finished_inv:
+    // store result in x0 address
+    add x1, sp, #0 // result address in stack
+    LOAD_8_WORD_NUMBER x2, x3, x4, x5, x6 , x7, x8, x9, x1
+    ldr x0, [sp, #72] // load initial result address
+    STORE_8_WORD_NUMBER x2, x3, x4, x5, x7, x7, x8, x9, x0
+    ret
