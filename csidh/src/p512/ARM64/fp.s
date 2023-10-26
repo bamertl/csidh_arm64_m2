@@ -1,4 +1,5 @@
 .extern r_squared_mod_p
+.extern p_minus_2
 .extern uint_1
 .extern p
 
@@ -701,7 +702,7 @@ x0 = x1^2 mod p
 .global _fp_sq2
 _fp_sq2:
     mov x2, x1 // x2 = x1
-    b fp_mul3 // x0 = x1 * x2
+    b _fp_mul3 // x0 = x1 * x2
 
 /*
 x0 = x0^2
@@ -710,3 +711,67 @@ x0 = x0^2
 _fp_sq1:
     mov x1, x0
     b _fp_sq2
+
+/*
+Calculate the inverse of x0 with little fermat
+x0 = x0^(p-2) mod p = x0^(-1) mod p
+we want to override a[x0] only at the very end
+
+ */
+.global _fp_inv
+_fp_inv:
+    sub sp, sp, #112   // make place for result 8*8 (#0), lr(#64), x0(#72), x1(#80), x2(#88), x3(#96), x4(#104)
+    stp lr, x0, [sp, #64] // store lr and adress of x0
+    mov x1, #1
+    str x1, [sp, #0] // init result with 1
+    mov x1, #7          ; Counter for the number of words (8 words in total)
+    mov x2, #0          ; Offset from the base address
+    b _normal_word_loop
+
+// for the first 7 words we use this
+_fp_inv_normal_word_loop:
+    ldr x3, [p_minus_2 + x2] // load the word
+    mov x4, #64 // init bit counter
+    b _fp_inv_bit_loop
+
+_fp_inv_bit_loop:
+    tst x3, #1        ; Test the least significant bit of x3
+    beq _fp_inv_bit_is_zero
+    b _fp_inv_bit_is_one
+
+_fp_inv_bit_is_zero:
+    add x0, sp, #0 // result address from stack into x0
+    stp x1, x2, [sp, #80] // store them registers
+    stp x3, x4, [sp, #96]
+    bl _fp_sq1 // x0 = x0^2
+    b _fp_inv_end_of_bit
+
+_fp_inv_bit_is_one:
+    add x0, sp, #0 // stack at #0 is temp result address
+    stp x1, x2, [sp, #80] // store them registers
+    stp x3, x4, [sp, #96]
+    bl _fp_sq1 // x0 = x0^2
+    ldr x1, [sp, #72] // load address of x0 
+    bl _fp_mul2 // x0 = x0 * x1
+    b _fp_inv_end_of_bit
+
+_fp_inv_end_of_bit:
+    ldp x1, x2, [sp, #80] // restore the registers
+    ldp x3, x4, [sp, #80]
+    lsr x3, x3, #1 // shift current word to the right by 1
+    subs x4, x4, #1 // decrement bit counter
+    b.ne _bit_loop // if not 0 get next bit
+    add x2, x2, #8 // new word offset
+    subs x1, x1, #1 // decrement word counter
+    b.ne _fp_inv_normal_word_loop // if in the first 7 words, go normal word
+    b fp_inv_last_word
+
+/*
+logic for last word is different, because we dont want to square on the leading 0's
+ */
+_fp_inv_last_word:
+    ldr x3, [p_minus_2 + x2]
+
+_fp_inv_last_bit_loop:
+
+_fp_inv_finished_inv:
