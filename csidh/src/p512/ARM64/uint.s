@@ -36,7 +36,9 @@ _uint_1:
     STP \reg7, \reg8, [\destination_pointer, #48]
 .endm
 
-/* x0 = x0 == x1 */
+/* x0 = x0 == x1 
+bool uint_eq(uint const *x, uint const *y)
+*/
 .global _uint_eq
 _uint_eq:
     // Load 1st pair of elements and compute XOR
@@ -86,6 +88,7 @@ _uint_eq:
 
 /*
 Operation x0[0] = x1, rest of x0 = 0
+void uint_set(uint *x, uint64_t y)
  */
 .global _uint_set
 _uint_set:
@@ -105,6 +108,7 @@ _uint_set:
 /*
 get position most significant non zero bit, i dont know if it start by 1 or 0
 todo: test this if it start by 0 or 1
+size_t uint_len(uint const *x)
  */
 .global _uint_len
 _uint_len:
@@ -115,7 +119,7 @@ _uint_len:
     // First element
     mov x2, #0          // current limb bit offset 0 - 448 (7*64)
 
-    ldr x4, [x3, #0]    // Load the 1th limb
+    ldr x4, [x3, #0]    // Load the 1st limb
     clz x5, x4          // Count leading zeros in x4
     sub x5, x16, x5     // position of first bit or 0
     add x5, x5, x2      // add limb offset
@@ -190,6 +194,7 @@ _uint_len:
 Check if bit at position x1 is set in array of x0
  x1 position: 0-511 
  x0 array of number 8*64 bit
+ bool uint_bit(uint const *x,  uint64_t k)
  */
 .global _uint_bit
 _uint_bit:
@@ -205,6 +210,7 @@ _uint_bit:
 /*
 c[x0] = a[x1] + b[x2]
 x0 = carry
+bool uint_add3(uint *x, uint const *y, uint const *z)
  */
 .global _uint_add3
 _uint_add3:
@@ -237,6 +243,7 @@ _uint_add3:
 /*
 c[x0] = a[x1] - b[x2]
 x0 = carry
+bool uint_sub3(uint *x, uint const *y, uint const *z)
  */
 .global _uint_sub3
 _uint_sub3:
@@ -265,6 +272,8 @@ _uint_sub3:
 /*
 c[x0] = a[x1] * b[x2]
 b = direct value not address of 64 bit
+schoolbook multiplication
+void uint_mul3_64(uint *x, uint const *y, uint64_t z)
  */
 .global _uint_mul3_64
 _uint_mul3_64:
@@ -330,6 +339,7 @@ x1: uniformly distributed in (0,x1)
 for now just filling the full bytes
 
 todo we might need to change this here a bit, they have some odd logic if x1 is 0
+void uint_random(uint *x, uint const *m)
  */
 .global _uint_random
 _uint_random:
