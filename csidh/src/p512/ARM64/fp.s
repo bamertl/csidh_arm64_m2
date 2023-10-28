@@ -589,7 +589,7 @@ void fp_add3(fp *x, fp const *y, fp const *z)
 .global _fp_add3
 _fp_add3:
 
-    sub sp, sp, #33
+    sub sp, sp, #32
     stp x19, x20, [sp, #0]
     stp x21, x22, [sp, #16]
 
@@ -828,7 +828,7 @@ bool fp_issquare(fp *x)
 .global _fp_issquare
 _fp_issquare:
     sub sp, sp, #8
-    str lr, [sp, #0]
+    str lr, [sp, #0] //bad_access
     adrp x1, _p_minus_1_halves@PAGE
     bl _fp_pow
     adrp x1, _fp_1@PAGE
