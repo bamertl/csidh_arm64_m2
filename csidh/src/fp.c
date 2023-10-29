@@ -12,6 +12,10 @@ uint64_t *fp_sq_counter = NULL;
 uint64_t *fp_inv_counter = NULL;
 uint64_t *fp_sqt_counter = NULL;
 
+
+/*
+checks for equality in fp in c
+*/
 bool fp_eq(fp const *x, fp const *y)
 {
     uint64_t r = 0;
@@ -20,6 +24,10 @@ bool fp_eq(fp const *x, fp const *y)
     return !r;
 }
 
+
+/*
+
+*/
 void fp_set(fp *x, uint64_t y)
 {
     uint_set((uint *) x, y);
