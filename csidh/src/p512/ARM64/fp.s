@@ -606,9 +606,10 @@ void fp_add3(fp *x, fp const *y, fp const *z)
 .global _fp_add3
 _fp_add3:
 
-    sub sp, sp, #32
-    stp x19, x20, [sp, #0]
-    stp x21, x22, [sp, #16]
+    sub sp, sp, #48
+    str x17, [sp, #0] 
+    stp x19, x20, [sp, #16]
+    stp x21, x22, [sp, #32]
 
     // Load first Number in register X3-X10
     LOAD_8_WORD_NUMBER2 x3, x4, x5, x6, x7, x8, x9, x10, x1
@@ -665,9 +666,10 @@ _fp_add3:
     // Store result in x0
     STORE_8_WORD_NUMBER2 x3, x4, x5, x6, x7, x8, x9, x10, x0
 
-    ldp x19, x20, [sp, #0]
-    ldp x21, x22, [sp, #16]
-    add sp, sp, #32
+    ldr x17, [sp, #0]
+    ldp x19, x20, [sp, #16]
+    ldp x21, x22, [sp, #32]
+    add sp, sp, #48
     ret
 
 /*
@@ -676,18 +678,8 @@ void fp_sub2(fp *x, fp const *y)
 */
 .global _fp_sub2
 _fp_sub2:
-    sub sp, sp, #80 // 16 + 64
-    stp lr, x0, [sp, #0] // 0 -16
-
-    add x0, sp, 16 // result 8 words 16 - 64
-    bl _minus_number // x0 = -x1 
-    mov x1, x0 // we add x1
-    ldr x0, [sp, #8] // load result addr which is also x0
-    bl _fp_add2 // x0 = x0 + x1
-
-    ldr lr, [sp, #0]
-    add sp, sp, #80
-    ret
+    mov x2, x1
+    mov x1, x0
 
 /*
 x0 = x1 - x2 mod p
@@ -695,29 +687,41 @@ void fp_sub3(fp *x, fp const *y, fp const *z)
 */
 .global _fp_sub3
 _fp_sub3:
-    sub sp, sp, #88 // make space on the stack 16 + 64
-    stp lr, x0, [sp, #0] // 0 -16 put lr and x0 on the stack to hav the address loadable later
+    sub sp, sp, #112 // make space on the stack 16 + 64
+    str lr, [sp, #0]
+    str x0, [sp, #8]
     str x1, [sp, #16] // store x1 for the addition later
-    add x0, sp, 24 // result 8 words 16 - 64 --> create the new x0 address on the stack
+    add x0, sp, #48 // result 8 words 24 - 88 --> create the new x0 address on the stack
+
 
     mov x1, x2 // move x2 to x1 for the minus function
-    bl _minus_number
-    mov x2, x0 //move result address back to x2
+    bl _minus_number // x0 = -x1
+    mov x2, x0
     ldr x0, [sp, #8] // load x0 from the stack inserted above
     ldr x1, [sp, #16] // load x1 from the stack inserted above
-    b _fp_add3 // x0 = x1 + x2
+    bl _fp_add3 // x0 = x1 + x2
+    ldr lr, [sp, #0] // load back lr
+    add sp, sp, #112 // give back the stack
 
+    ret
 /*
 x0 = -x1
 not in fp.c
+x0 = p - x1
 */
 _minus_number:
+
+    sub sp, sp, #32
+    stp x16, x17, [sp, #0]
+    stp x19, x20, [sp, #16]
+    
     // Load number we want minus of into register X3-X10
-    LOAD_8_WORD_NUMBER2 x2, x3, x4, x5, x6, x7, x8, x9, x0
+    LOAD_8_WORD_NUMBER2 x2, x3, x4, x5, x6, x7, x8, x9, x1
 
     // Load the prime
     LOAD_511_PRIME x10, x11, x12, x13, x14, x15, x16, x17
 
+    // p - a
     SUBS x2, x10, x2
     SBCS x3, x11, x3
     SBCS x4, x12, x4
@@ -727,7 +731,47 @@ _minus_number:
     SBCS x8, x16, x8
     SBC x9, x17, x9
 
-    STORE_8_WORD_NUMBER2 x2, x3, x4, x5, x6, x7, x8, x9, x1
+    // check if a = 0 by orr x2-x9 
+    orr x19, x2, x3
+    orr x19, x19, x4
+    orr x19, x19, x5
+    orr x19, x19, x6
+    orr x19, x19, x7
+    orr x19, x19, x8
+    orr x19, x19, x9
+
+    // check if a is really 0
+    cmp x19, #0
+    cset x19, eq // x19 = 1 if a was 0, 0 otherwise
+    LSL x19, x19, #63
+    ASR x19, x19, #63 //arithmetic shift (will take the value of msb)
+
+
+    // and the prime (if a was 0 then we and with 1, otherwise 0)
+    and x10, x10, x19
+    and x11, x11, x19
+    and x12, x12, x19
+    and x13, x13, x19
+    and x14, x14, x19
+    and x15, x15, x19
+    and x16, x16, x19
+    and x17, x17, x19
+
+    // subtract the prime from the result (this should only happen if result = prime)
+    SUBS x2, x2, x10
+    SBCS x3, x3, x11
+    SBCS x4, x4, x12
+    SBCS x5, x5, x13
+    SBCS x6, x6, x14
+    SBCS x7, x7, x15
+    SBCS x8, x8, x16
+    SBC x9, x9, x17
+
+    ldp x16, x17, [sp, #0]
+    ldp x19, x20, [sp, #16]
+    STORE_8_WORD_NUMBER2 x2, x3, x4, x5, x6, x7, x8, x9, x0
+
+    add sp, sp, #32
     ret
 
 /*

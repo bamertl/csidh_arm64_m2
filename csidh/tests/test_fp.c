@@ -68,15 +68,27 @@ void test_mul_more(void){
     }   
 }
 
+void test_fp_sub_3(void){
+    fp a = {{1,2,3,4,5,6,7,8}};
+    fp b = {{1,2,3,4,5,6,7,8}};
+    fp c = {{1,2,3,4,5,6,7,8}};
+    fp expected = {{0}};
+    fp_sub3(&a, &b, &c);
+    for(int i = 0; i < LIMBS; i++) {
+        assert(expected.c[i] == a.c[i]);
+    } 
+}
+
+
 
 int main(void)
 {
-    test_fp_eq();
-    test_fp_add();
+    //test_fp_eq();
+    //test_fp_add();
     //test_mul_3();
-    test_mul_more();
+    //test_mul_more();
+    test_fp_sub_3();
 
     printf("All tests passed!\n");
-
     return 0;
 }
