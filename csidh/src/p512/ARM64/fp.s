@@ -7,6 +7,17 @@
 .extern _mu
 
 
+.macro COPY_8_WORD_NUMBER, num1, num2, reg1, reg2
+    LDP \reg1, \reg2, [\num1,#0] 
+    STP \reg1, \reg2, [\num2,#0] 
+    LDP \reg1, \reg2, [\num1,#16]
+    STP \reg1, \reg2, [\num2,#16]
+    LDP \reg1, \reg2, [\num1,#32]
+    STP \reg1, \reg2, [\num2,#32]
+    LDP \reg1, \reg2, [\num1,#48]
+    STP \reg1, \reg2, [\num2,#48]
+.endm
+
 .macro LOAD_8_WORD_NUMBER2, reg1, reg2, reg3, reg4, reg5, reg6, reg7, reg8, num_pointer
     LDP \reg1, \reg2, [\num_pointer,#0] 
     LDP \reg3, \reg4, [\num_pointer,#16]
@@ -395,9 +406,10 @@ _fp_mul3:
     mov x0, x2 // copy result address of mul to x0 (this points to stack + 16)
     ldr x1, [sp, #8] // load back initial result address to x1
     bl _monte_reduce
-    ldr lr, [sp, #0] // get back lr
+    ldp lr, x0, [sp, #0] // get back lr
     ldp x19, x20, [sp, #16] //get back x19 - x22
     ldp x21, x22, [sp, #32]
+
     add sp, sp, #224 //give back the stack
 
     ret
@@ -808,34 +820,53 @@ _fp_inv:
 
 /*
 c[x0] = a[x0]^b[x1] mod p
+Right-To_left
+Output: md mod n
+1: a ← 1 ; m ← a
+2: for i = 0 to k − 1 do
+3:  if di = 1 then
+4:      a ← a × m mod n
+5:   m ← m^2 mod n
+6: return a
 */
+.global _fp_pow
 _fp_pow:
-    sub sp, sp, #128   // make place for result 8*8 (#0), lr(#64), x0(#72), x1(#80), x2(#88), x3(#96), x4(#104), x5(#112), address of b (#120)
+    sub sp, sp, #192   // make place for result 8*8 (#0), lr(#64), x0(#72), x1(#80), x2(#88), x3(#96), x4(#104), x5(#112), address of b (#120), address of m (#128)
+
     //where x0 is the result address
     // x1 is the counter for the number of words
-    // x2 is the offset from the base address
-    // x3 is the potential address of b 
-    // x4 is the bit counter
+    // x2 is the offset from the base address of b
+    // x4 is the bit counter per word of b
     // x5 is the word counter
-    stp lr, x0, [sp, #64] // store lr and adress of x0 to get them back later
+    stp lr, x0, [sp, #64] // store lr and address of x0 to get them back later
     str x1, [sp, #120] //do the same for x1
-    mov x0, x1 // mov b to x0 for _uint_len function
+
+    add x1, sp, #128 // result address for m
+    COPY_8_WORD_NUMBER x0, x1, x3, x4 // m = b
+
+    // init stack result to 1
+    mov x1, xzr // 0 into x1
+    stp x1, x1, [sp, #0]
+    stp x1, x1, [sp, #16]
+    stp x1, x1, [sp, #32]
+    stp x1, x1, [sp, #48]
     mov x1, #1
-    str x1, [sp, #0] // init result with 1 still unsure whether it is 0 or 1 to start with
+    str x1, [sp, #0] // init result with 1 
+
+    ldr x0, [sp, #120] // load back b
     // get position of msb 1 bit of b
-    bl _uint_len // x1 = position of last 1
-    mov x5, x0 // counter of  total len
+    bl _uint_len // x0 = position of last 1 in b x0 = len(x0)
+    mov x5, x0 // counter of total len
     mov x1, #8          ; Counter for the number of words (8 words in total)
     mov x2, #0          ; Offset from the base address
 
 _fp_pow_word_loop:
-    ldr x3, [sp, #120] // load adress of b
+    ldr x3, [sp, #120] // load address of b
     add x3, x3, x2 // add offset
     ldr x3, [x3] // load the word
     mov x4, #64 // init bit counter
 
 _fp_pow_bit_loop:
-    subs x5, x5, #1 // dec total bit counter
     cbz x5, _fp_pow_finished // finish if total counter = 0
 
     stp x1, x2, [sp, #80] // store them registers
@@ -846,14 +877,17 @@ _fp_pow_bit_loop:
     // bit is one
 
 _fp_pow_bit_is_one:
-    add x0, sp, #0 // stack at #0 is temp result address
-    bl _fp_sq1 // x0 = x0^2
-    ldr x1, [sp, #72] // load address of x0 
-    bl _fp_mul2 // x0 = x0 * x1
+
+    add x0, sp, #0 // =a
+    add x1, sp, #128 // =m
+    bl _fp_mul2 // a = a * m
+
+    add x0, sp, #128 // =m
+    bl _fp_sq1 // m = m^2
     b _fp_pow_end_of_bit
 
 _fp_pow_bit_is_zero:
-    add x0, sp, #0 // result address from stack into x0
+    add x0, sp, #128 // =tempb
     bl _fp_sq1 // x0 = x0^2
 
 //don't we want to make this time constant? As far as I remember it is not relevant, since it is a public number anyways
@@ -862,6 +896,7 @@ _fp_pow_end_of_bit:
     ldp x1, x2, [sp, #80] // restore the registers
     ldp x3, x4, [sp, #96]
     ldr x5, [sp, #112]
+    subs x5, x5, #1 // total counter -1
     lsr x3, x3, #1 // shift current word to the right by 1
     subs x4, x4, #1 // decrement bit counter
     b.ne _fp_pow_bit_loop // if not 0 get next bit
@@ -871,13 +906,11 @@ _fp_pow_end_of_bit:
 
 _fp_pow_finished:
     // store result in x0 address
-    add x1, sp, #0 // result address in stack
-    LOAD_8_WORD_NUMBER2 x2, x3, x4, x5, x6 , x7, x8, x9, x1
-    ldr x0, [sp, #72] // load initial result address
-    STORE_8_WORD_NUMBER2 x2, x3, x4, x5, x7, x7, x8, x9, x0
-
+    add x0, sp, #0 // result address in stack
+    ldr x1, [sp, #72] // load initial result address
+    COPY_8_WORD_NUMBER x0, x1, x3, x4
     ldr lr, [sp, #64]
-    add sp, sp, #128
+    add sp, sp, #192
     ret
 
 
