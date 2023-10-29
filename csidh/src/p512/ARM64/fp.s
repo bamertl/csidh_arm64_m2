@@ -839,10 +839,10 @@ _fp_pow:
     // x4 is the bit counter per word of b
     // x5 is the word counter
     stp lr, x0, [sp, #64] // store lr and address of x0 to get them back later
-    str x1, [sp, #120] //do the same for x1
+    str x1, [sp, #120] //store b address
 
-    add x1, sp, #128 // result address for m
-    COPY_8_WORD_NUMBER x0, x1, x3, x4 // m = b
+    add x1, sp, #128 // space for m
+    COPY_8_WORD_NUMBER x0, x1, x3, x4 // m = a
 
     // init stack result to 1
     mov x1, xzr // 0 into x1
@@ -853,7 +853,7 @@ _fp_pow:
     mov x1, #1
     str x1, [sp, #0] // init result with 1 
 
-    ldr x0, [sp, #120] // load back b
+    ldr x0, [sp, #120] // load back b to get its length
     // get position of msb 1 bit of b
     bl _uint_len // x0 = position of last 1 in b x0 = len(x0)
     mov x5, x0 // counter of total len
@@ -887,10 +887,8 @@ _fp_pow_bit_is_one:
     b _fp_pow_end_of_bit
 
 _fp_pow_bit_is_zero:
-    add x0, sp, #128 // =tempb
-    bl _fp_sq1 // x0 = x0^2
-
-//don't we want to make this time constant? As far as I remember it is not relevant, since it is a public number anyways
+    add x0, sp, #128 // =m
+    bl _fp_sq1 // m = m^2
 
 _fp_pow_end_of_bit:
     ldp x1, x2, [sp, #80] // restore the registers

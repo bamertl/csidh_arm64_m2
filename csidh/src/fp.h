@@ -32,6 +32,8 @@ void fp_sq2(fp *x, fp const *y); // x = y^2 mod p
 void fp_inv(fp *x);
 bool fp_issquare(fp *x); /* destroys input! */
 
+void fp_pow(fp *x, uint const *e); // x = x^e mod p	
+
 void fp_random(fp *x);
 
 #endif

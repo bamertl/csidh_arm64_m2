@@ -10,7 +10,6 @@ const struct fp p_minus_2_for_fp = {{
     0x5afbfcc69322c9cd, 0xb42d083aedc88c42, 0xfc8ab0d15e3e4c4a, 0x65b48e8f740f89bf,
 }};
 
-extern void fp_pow(fp *x, fp const *y);
 
 void fp_print(fp const *x)
 {
@@ -69,7 +68,6 @@ void test_mul_more(void){
     fp_set(&b, 6);
     fp_mul2(&a, &b);
     fp_dec(&result, &a);
-
     fp expected = {{30,0,0,0,0,0,0,0}};
     
     for(int i = 0; i < LIMBS; i++) {
@@ -125,10 +123,11 @@ void test_sq1(void){
 }
 
 void test_inverse(void){
-    fp a = {{2, 0, 0, 0, 0, 0, 0, 0}};
+    uint a = {{2, 0, 0, 0, 0, 0, 0, 0}};
     fp b = {{0}};
-    fp_inv(&a);
-    fp_print(&a);
+    fp_enc(&b, &a);
+    fp_inv(&b);
+    fp_print(&b);
 }
 
 void test_fp_pow(void){
@@ -144,12 +143,11 @@ void test_fp_pow(void){
     fp_dec(&aa, &a);
     printf("aa: ");
     uint_print(&aa);
-    fp b = {{2, 0, 0, 0, 0, 0, 0, 0}};
+    fp b = {{3, 0, 0, 0, 0, 0, 0, 0}};
     fp_pow(&a, &b);
+    fp_print(&a);
 
     printf("a^1: ");
-    fp_dec(&bb, &a);
-    uint_print(&bb);
 }
 
 int main(void)
@@ -163,8 +161,6 @@ int main(void)
     //test_sq1();
     //test_inverse();
     test_fp_pow();
-
-
 
     printf("All tests passed!\n");
     return 0;

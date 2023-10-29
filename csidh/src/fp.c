@@ -138,7 +138,7 @@ void fp_sq1(fp *x)
 }
 
 /* (obviously) not constant time in the exponent */
-static void fp_pow(fp *x, uint const *e)
+void fp_pow(fp *x, uint const *e)
 {
     fp y = *x;
     *x = fp_1;
