@@ -22,7 +22,8 @@
 .endm
 
 .macro LOAD_511_PRIME, reg1, reg2, reg3, reg4, reg5, reg6, reg7, reg8
-    ADRP \reg8, _p@PAGE
+    adrp \reg8, _p@PAGE
+    add \reg8, \reg8, _p@PAGEOFF
     LDP \reg1, \reg2, [\reg8, #0]
     LDP \reg3, \reg4, [\reg8, #16]
     LDP \reg5, \reg6, [\reg8, #32]
@@ -133,7 +134,12 @@ a = 8 words, b = 8 words, c = 16 words
 */
 .global _uint_mul
 _uint_mul:
-    sub     sp, sp, #96
+    sub     sp, sp, #160
+
+    stp lr, x19, [sp,#96]
+    stp x20, x21, [sp,#112]
+    stp x22, x23, [sp,#128]
+    str x24, [sp,#144]
 
     //LOAD A
     ldp     x3, x4, [x0]
@@ -262,7 +268,12 @@ _uint_mul:
     adc     x7, x7, xzr
     stp     x1, x7,   [x2,#112]    
     
-    add     sp, sp, #96
+    ldp lr, x19, [sp,#96]
+    ldp x20, x21, [sp,#112]
+    ldp x22, x23, [sp,#128]
+    ldr x24, [sp,#144]
+
+    add sp, sp, #160
     ret
 
 
@@ -323,9 +334,14 @@ void fp_set(fp *x, uint64_t y)
  */
 .global _fp_set
 _fp_set:
+    sub sp, sp, #16
+    str lr, [sp, #0]
     bl _uint_set // x0 = x1
+    ldr lr, [sp, #0]
+    add sp, sp, #16
     mov x1, x0
     b _fp_enc
+
 
 /*
 encode x1 to x0 for montogomery
@@ -337,9 +353,8 @@ void fp_enc(fp *x, uint const *y)
 .global _fp_enc
 _fp_enc:
     adrp x2, _r_squared_mod_p@PAGE // load the address of r_squared_mod_p into x2 
+    add x2, x2, _r_squared_mod_p@PAGEOFF // add the offset of r_squared_mod_p to x2
     b _fp_mul3
-    ret
-
 
 /*
 decode x1 to x0 from montogomery
@@ -349,6 +364,7 @@ void fp_dec(uint *x, fp const *y)
 .global _fp_dec
 _fp_dec:
     adrp x2, _uint_1@PAGE
+    add x2, x2, _uint_1@PAGEOFF
     b _fp_mul3
 
 
@@ -369,8 +385,7 @@ void fp_mul3(fp *x, fp const *y, fp const *z)
 .global _fp_mul3
 _fp_mul3:
     sub sp, sp, #224 // make space in the stack for 56 words
-    str lr, [sp, #0] // store lr
-    str x0, [sp, #8] // store result address
+    stp lr, x0, [sp, #0] // store lr and result address
     stp x19, x20, [sp, #16] //store x19 and x20 to avoid segmentation fault
     stp x21, x22, [sp, #32] //store x21 and x22 to avoid segmentation fault
 
@@ -408,6 +423,7 @@ _monte_reduce:
     // a mod R = Lower 8 words of a
     // load mu into x1 
     adrp x1, _mu@PAGE //get address of mu
+    add x1, x1, _mu@PAGEOFF //add offset of mu
     //add  x1, x1, :lo12:mu aah, this was unnecessary then :) smart move
     add x2, sp, #24 // result of multiplication 16 words -> sp #24 - sp# 152
     // mu [x1] * ( a [x0] mod R )
@@ -417,6 +433,7 @@ _monte_reduce:
     // C ← (a + p*q)/R
     // x0 = p
     adrp x0, _p@PAGE
+    add x0, x0, _p@PAGEOFF
     add x2, sp, #152 // result of multiplication p*q 16 words from sp#152-280
     bl _uint_mul
     mov x0, x2 // x0 = p*q
@@ -741,6 +758,7 @@ we want to override a[x0] only at the very end
 .global _fp_inv
 _fp_inv:
     adrp x1, _p_minus_2@PAGE  //get _p_minus_2 address into x1 for the fp_pow function
+    add x1, x1, _p_minus_2@PAGEOFF //add offset of _p_minus_2 to x1
     b _fp_pow //use the power of fermat
 
 
@@ -830,8 +848,10 @@ _fp_issquare:
     sub sp, sp, #8
     str lr, [sp, #0] //bad_access
     adrp x1, _p_minus_1_halves@PAGE
+    add x1, x1, _p_minus_1_halves@PAGEOFF
     bl _fp_pow
     adrp x1, _fp_1@PAGE
+    add x1, x1, _fp_1@PAGEOFF
     mov x2, #64
     bl _memcmp
     cbnz x0, _not_square //compare non zero
@@ -854,4 +874,5 @@ using uint_random
 .global _fp_random
 _fp_random:
     adrp x1, _p@PAGE
+    add x1, x1, _p@PAGEOFF
     b _uint_random
