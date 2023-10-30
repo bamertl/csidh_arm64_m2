@@ -5,10 +5,23 @@
 #include "fp.h"
 #include "constants.h"
 
+typedef struct biguint { uint64_t c[16]; } biguint;
+
 const struct fp p_minus_2_for_fp = {{
     0x1b81b90533c6c879, 0xc2721bf457aca835, 0x516730cc1f0b4f25, 0xa7aac6c567f35507,
     0x5afbfcc69322c9cd, 0xb42d083aedc88c42, 0xfc8ab0d15e3e4c4a, 0x65b48e8f740f89bf,
 }};
+
+const struct uint muu = {{
+    0x66c1301f632e294d,
+    0xfe025ed7d0d3b1aa,
+    0xf6fe2bc33e915395,
+    0x34ed3ea7f1de34c4,
+    0xb081b3aba7d05f85,
+    0x1232b9eb013dee1e,
+    0x3512da337a97b345,
+    0xd8c3904b18371bcd
+    }};
 
 
 void fp_print(fp const *x)
@@ -21,6 +34,20 @@ void fp_print(fp const *x)
 void uint_print(uint const *x)
 {
     for (size_t i = 8*LIMBS-1; i < 8*LIMBS; --i)
+        printf("%02hhx", i[(unsigned char *) x->c]);
+    printf("\n");
+}
+
+void biguint_print(uint const *x)
+{
+    for (size_t i = 8*16-1; i < 8*16; --i)
+        printf("%02hhx", i[(unsigned char *) x->c]);
+    printf("\n");
+}
+
+void biguint_print_lower(uint const *x)
+{
+    for (size_t i = 8*8-1; i < 8*8; --i)
         printf("%02hhx", i[(unsigned char *) x->c]);
     printf("\n");
 }
@@ -133,7 +160,7 @@ void test_inverse(void){
 void test_fp_pow(void){
     printf("p : ");
     uint_print(&p);
-    uint aa = {{2, 0, 0, 0, 0, 0, 0, 0}};
+    uint aa = {{5, 0, 0, 0, 0, 0, 1, 0}};
     uint bb = {{0}};
     fp a = {{0}};
     fp_enc(&a, &aa);
@@ -143,11 +170,30 @@ void test_fp_pow(void){
     fp_dec(&aa, &a);
     printf("aa: ");
     uint_print(&aa);
-    fp b = {{3, 0, 0, 0, 0, 0, 0, 0}};
+    uint b = {{30, 1, 1,0,0,0,0,0}};
     fp_pow(&a, &b);
     fp_print(&a);
 
     printf("a^1: ");
+}
+
+void test_decrypt(void){
+    fp a = {{0xd45f914906fc8f68,0xf2e3f6dff4cef5f1,0xd927fa85083ccad4,0x68016cf8e4fc5fd0,0x5a5a847e9bff7844,0x6ab1c33fad4a7674,0xffc157ad48adf78f,0x1a0d9ee6d73adc9e}};
+    uint aa = {{0}};
+    fp_dec(&aa, &a);
+    uint_print(&aa);
+}
+
+extern void uint_mul(const fp *a, const uint *b, biguint *c);
+
+uint q = {{0x48b72f84899eca48, 0xdb7e0542b77624de, 0xafaeb264ca1bb35a, 0xba24269dff081925, 0x5d6cec71e0fac030, 0x845f1c9d401fac7f, 0x0000000000000002, 0x0000000000000000}};
+
+
+void test_uint_mul(void){
+    fp a = {{0xd45f914906fc8f68,0xf2e3f6dff4cef5f1,0xd927fa85083ccad4,0x68016cf8e4fc5fd0,0x5a5a847e9bff7844,0x6ab1c33fad4a7674,0xffc157ad48adf78f,0x1a0d9ee6d73adc9e}};
+    biguint b = {{0}}; 
+    uint_mul(&q, &p, &b);
+    biguint_print(&b);
 }
 
 int main(void)
@@ -160,7 +206,10 @@ int main(void)
     //test_encode_decode();
     //test_sq1();
     //test_inverse();
-    test_fp_pow();
+    //test_fp_pow();
+    //test_inverse();
+    //test_decrypt();
+    test_uint_mul();
 
     printf("All tests passed!\n");
     return 0;

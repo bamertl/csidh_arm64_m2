@@ -15,11 +15,11 @@ all: $(TARGET)
 
 # Link all object files to create the main executable
 $(TARGET): $(filter-out $(OBJ_DIR)/helper.o, $(C_OBJECTS))
-	$(CC) $(LDFLAGS) -o $@ $^ -lgmp
+	$(CC) $(LDFLAGS) -o $@ $^ 
 
 # Rule for the helper executable
 $(HELPER_TARGET): $(OBJ_DIR)/helper.o
-	$(CC) $(LDFLAGS) -o $@ $^ -lgmp
+	$(CC) $(LDFLAGS) -o $@ $^ 
 
 # Compile C source files to object files
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
