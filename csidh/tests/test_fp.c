@@ -178,13 +178,16 @@ void test_fp_pow(void){
 }
 
 void test_decrypt(void){
-    uint aa = {{1,1,1,1,1,1,1,1}};
+    // uint aa = {{12312312312,13451,1124,11241,112334,141241,1214124,12431289431}};
+    uint aa = {{2231231233,25,25,25,25,25,25, 25123123}};
     uint_print(&aa);
     printf("mu: ");
-    uint_print(&r_squared_mod_p); 
+    fp_print(&r_squared_mod_p); 
     fp a = {{0}};
     fp_enc(&a, &aa);
     fp_print(&a);
+    fp_dec(&aa, &a);
+    uint_print(&aa);
 }
 
 // extern void uint_mul(const fp *a, const uint *b, biguint *c);

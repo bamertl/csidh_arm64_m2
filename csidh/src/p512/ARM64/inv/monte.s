@@ -14,13 +14,13 @@ R = r^n = 2^512
 .global _fp_mul3
 _fp_mul3:
 
-sub sp, sp, #224 // 0-64 lr,x0,x1,x2,x17,19,x20,x21
+sub sp, sp, #240 // 0-64 lr,x0,x1,x2,x17,19,x20,x21
 // Address C = sp + #8
 // Address A = sp + #16
 // Address B = sp + #24
-// C = sp + 64-128, temp = sp + 128-200 !! temp is 9 words
-// Counter = sp + 200
-// Offset = i * 8 = sp + 208
+// C = sp + 64-144, temp = sp + 144-216 !! temp is 9 words
+// Counter = sp + 208
+// Offset = i * 8 = sp + 216
 
 stp lr, x0, [sp, #0]
 stp x1, x2, [sp, #16]
@@ -33,70 +33,80 @@ stp x0, x0, [sp, #64]
 stp x0, x0, [sp, #80]
 stp x0, x0, [sp, #96]
 stp x0, x0, [sp, #112]
+str x0, [sp, #128]
+
+
+// temp <- 0
+stp x0, x0, [sp, #144]
+stp x0, x0, [sp, #160]
+stp x0, x0, [sp, #176]
+stp x0, x0, [sp, #192]
+str x0, [sp, #208]
+
 
 // i = 0
 mov x5, #0
-str x5, [sp, #200]
+str x5, [sp, #216]
 // offset = i * 8
 mov x6, #0
-str x6, [sp, #208]
+str x6, [sp, #224]
 
 _fp_mul_loop:
-    // 1. C <- C + a[i] * B
+    // 1. C(temp) <- C + a[i] * B
     ldr x2, [sp, #16] // load address of A
     add x2, x2, x6 // add offset 
     ldr x2, [x2] //  value a[i]
     ldr x1, [sp, #24] // load address of B 
-    add x0, sp, #128 // temp Address
+    add x0, sp, #144 // temp Address
 
     // a[i] * B
-    bl _uint_mul3_64 // x0 = x1 * x2 (x2 = uint64_t)
+    bl _uint_mul3_64_full // x0 = x1 * x2 (x2 = uint64_t)
     mov x1, x0 // x1 = a[i] * B
     add x0, sp, #64 // load address of C
-    mov x2, x0
-    bl _uint_add3 // C <- C + temp(a[i] * B)
+    bl _uint_add3_9_words // C <- C + temp(a[i] * B)
 
     // 2. q ← C*mu mod r
 
-    add x0, sp, #128 // temp address
+    add x0, sp, #144 // temp address
     add x1, sp, #64 // C address
     adrp x2, _inv_min_p_mod_r@PAGE
     add x2, x2, _inv_min_p_mod_r@PAGEOFF
     ldr x2, [x2] // x1 = mu (actual value)
 
-    bl _uint_mul3_64 // x0 = C * mu
+    bl _uint_mul3_64_full // x0 = C * mu
     // mod r = 2^64 (Automatic as we will only load the lsb word value for the next step)
 
     // 3. C ← (C + p*q) /r
 
     // p * q
-    add x0, sp, #128 // temp address
+    add x0, sp, #144 // temp address
     adrp x1, _p@PAGE
     add x1, x1, _p@PAGEOFF
-    ldr x2, [sp, #128] // load lsb word of temp (q)
+    ldr x2, [sp, #144] // load lsb word of temp (q)
     bl _uint_mul3_64_full // temp = p*q
 
-    add x0, sp, #128 // temp addr
+    add x0, sp, #144 // temp addr
     add x1, sp, #64 // C address
-    mov x2, x0 // x2 = temp
-    bl _uint_add3 // temp = C + temp(p*q)
+    bl _uint_add3_9_words // temp = C + temp(p*q)
 
     // 4. C <- temp/r (we do this by just copieng over word 1-9, without 0)
-    ldp x0, x1, [sp, #136] // temp addr + 8
+    ldp x0, x1, [sp, #152] // temp addr + 8
     stp x0, x1, [sp, #64]
-    ldp x0, x1, [sp, #152] // temp addr + 24
+    ldp x0, x1, [sp, #168] // temp addr + 24
     stp x0, x1, [sp, #80]
-    ldp x0, x1, [sp, #168] // temp addr + 40
+    ldp x0, x1, [sp, #184] // temp addr + 40
     stp x0, x1, [sp, #96]
-    ldp x0, x1, [sp, #184] // temp addr + 56
+    ldp x0, x1, [sp, #200] // temp addr + 56
     stp x0, x1, [sp, #112]
+    mov x0, #0
+    str x0, [sp, #128] // store 0 to last c addr + 64
 
     // 5. i <- i + 1
-    ldr x5, [sp, #200] // load i
-    ldr x6, [sp, #208] // load offset
+    ldr x5, [sp, #216] // load i
+    ldr x6, [sp, #224] // load offset
     add x5, x5, #1 // i = i + 1
     add x6, x6, #8
-    stp x5, x6, [sp, #200] // store i and offset
+    stp x5, x6, [sp, #216] // store i and offset
 
     // if i < 8 goto loop
     cmp x5, #8
@@ -110,6 +120,7 @@ _finish_fp_mul:
     ldp x5, x6, [sp, #80]
     ldp x7, x8, [sp, #96]
     ldp x9, x10, [sp, #112]
+    ldr x11, [sp, #120] 
 
     // load p into x12-x20
     adrp x0, _p@PAGE
@@ -165,7 +176,7 @@ _finish_fp_mul:
     ldp x17, x19, [sp, #32]
     ldp x20, x21, [sp, #48]
 
-    add sp, sp, #224
+    add sp, sp, #240
     ret
 
 
@@ -236,5 +247,48 @@ _uint_mul3_64_full:
 
     adc x5, x5, xzr    // add past lower (x5) now with carry flag as well
     str x5, [x0, #64]   // store last limb
+
+    ret
+
+/*
+x0 = x0 + x1 both 9 words
+ */
+_uint_add3_9_words:
+    sub sp, sp, #32
+    stp x19, x20, [sp, #0]
+    stp x21, x22, [sp, #16]
+
+    ldp x2, x3, [x0, #0]
+    ldp x4, x5, [x0, #16]
+    ldp x6, x7, [x0, #32]
+    ldp x8, x9, [x0, #48]
+    ldr x10, [x0, #64]
+
+    ldp x12, x13, [x1, #0]
+    ldp x14, x15, [x1, #16]
+    ldp x16, x17, [x1, #32]
+    ldp x19, x20, [x1, #48]
+    ldr x21, [x1, #64]
+
+    // Add x0 + x1 with carry into register X0
+    adds x2, x2, x12
+    adcs x3, x3, x13 
+    adcs x4, x4, x14
+    adcs x5, x5, x15
+    adcs x6, x6, x16
+    adcs x7, x7, x17
+    adcs x8, x8, x19
+    adcs x9, x9, x20
+    adc x10, x10, x21
+
+    stp x2, x3, [x0, #0]
+    stp x4, x5, [x0, #16]
+    stp x6, x7, [x0, #32]
+    stp x8, x9, [x0, #48]
+    str x10, [x0, #64]
+
+    ldp x19, x20, [sp, #0]
+    ldp x21, x22, [sp, #16]
+    add sp, sp, #32
 
     ret
