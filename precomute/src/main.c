@@ -1,4 +1,3 @@
-#include <gmp.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,13 +14,13 @@ const struct uint_custom p = {{
     0x5afbfcc69322c9cd, 0xb42d083aedc88c42, 0xfc8ab0d15e3e4c4a, 0x65b48e8f740f89bf,
 }};
 
-void init_mpz_from_uint(mpz_t N, const uint_custom p) {
-    mpz_init(N);  // Initialize N to 0
-    for (int i = LIMBS-1; i >= 0; i--) {
-        mpz_mul_2exp(N, N, 64);  // Shift left by 64 bits
-        mpz_add_ui(N, N, p.c[i]); // Add the next 64-bit chunk
-    }
-}
+// void init_mpz_from_uint(mpz_t N, const uint_custom p) {
+//     mpz_init(N);  // Initialize N to 0
+//     for (int i = LIMBS-1; i >= 0; i--) {
+//         mpz_mul_2exp(N, N, 64);  // Shift left by 64 bits
+//         mpz_add_ui(N, N, p.c[i]); // Add the next 64-bit chunk
+//     }
+// }
 
 
 void print_reversed_chunks(const char* input) {
@@ -51,42 +50,42 @@ void print_reversed_chunks(const char* input) {
     }
     putchar('\n');
 }
-/* Compute R^2 mod p, R = r^LIMBS* r = 2^64*/
-void compute_R2_mod_N(mpz_t R2_mod_N, const mpz_t N) {
-    mpz_t R;
-    mpz_init(R);
+// /* Compute R^2 mod p, R = r^LIMBS* r = 2^64*/
+// void compute_R2_mod_N(mpz_t R2_mod_N, const mpz_t N) {
+//     mpz_t R;
+//     mpz_init(R);
 
-    // Compute R = 2^(64*LIMBS)
-    mpz_ui_pow_ui(R, 2, 64*LIMBS);
+//     // Compute R = 2^(64*LIMBS)
+//     mpz_ui_pow_ui(R, 2, 64*LIMBS);
 
-    // Compute R^2 mod N
-    mpz_powm_ui(R2_mod_N, R, 2, N);
+//     // Compute R^2 mod N
+//     mpz_powm_ui(R2_mod_N, R, 2, N);
 
-    mpz_clear(R);
-}
+//     mpz_clear(R);
+// }
 
 
-/* This computes mu = -N^(-1) mod r*/
-void find_mu(const uint_custom p) {
-    mpz_t r, mp, temp, result;
-    mpz_init(result);
-    mpz_init(temp);
-    init_mpz_from_uint(mp, p);
-    mpz_init_set_si(r, 2);
-    mpz_pow_ui(r, r, 512); // r = 2^512
-    gmp_printf("r = %Zx\n", r);
-    gmp_printf("p = %Zx\n", mp);
-    mpz_neg(mp, mp); // p -> -p
-    mpz_invert(result, mp, r); // -p^(-1) mod r
-    gmp_printf("result %Zx\n", result);
-    mpz_mul(temp, mp, result);
-    mpz_mod(result, temp, r);
-    gmp_printf("resultcheck %Zx\n", result);
-}
+// /* This computes mu = -N^(-1) mod r*/
+// void find_mu(const uint_custom p) {
+//     mpz_t r, mp, temp, result;
+//     mpz_init(result);
+//     mpz_init(temp);
+//     init_mpz_from_uint(mp, p);
+//     mpz_init_set_si(r, 2);
+//     mpz_pow_ui(r, r, 512); // r = 2^512
+//     gmp_printf("r = %Zx\n", r);
+//     gmp_printf("p = %Zx\n", mp);
+//     mpz_neg(mp, mp); // p -> -p
+//     mpz_invert(result, mp, r); // -p^(-1) mod r
+//     gmp_printf("result %Zx\n", result);
+//     mpz_mul(temp, mp, result);
+//     mpz_mod(result, temp, r);
+//     gmp_printf("resultcheck %Zx\n", result);
+// }
 
 int main() {
-    find_mu(p);
-    char input[] = "d8c3904b18371bcd3512da337a97b3451232b9eb013dee1eb081b3aba7d05f8534ed3ea7f1de34c4f6fe2bc33e915395fe025ed7d0d3b1aa66c1301f632e294d";
+    //find_mu(p);
+    char input[] = "0x00000000000000000000000000000002845f1c9d401fac7f5d6cec71e0fac030ba24269dff081925afaeb264ca1bb35adb7e0542b77624de48b72f84899eca48";
     printf("\nOutput: ");
     print_reversed_chunks(input);
     /*Calculating R^2 mod p*/
@@ -98,8 +97,6 @@ int main() {
     //gmp_printf("R^2 mod N = %Zx\n", R2_mod_N);
 
     //mpz_clear(R2_mod_N);
-
-
 
 
     return 0;

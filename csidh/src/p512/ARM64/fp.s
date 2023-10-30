@@ -403,7 +403,7 @@ _fp_mul3:
     mov x0, x2 // Move x2 to x0 for multiplication
     add x2, sp, #64 // result for mul = stack address + 16 + (16+8*16) words
     bl _uint_mul // x2 = x0 * x1
-    mov x0, x2 // copy result address of mul to x0 (this points to stack + 16)
+    mov x0, x2 // copy result address of mul to x0 (this points to stack + 64)
     ldr x1, [sp, #8] // load back initial result address to x1
     bl _monte_reduce
     ldp lr, x0, [sp, #0] // get back lr
@@ -428,8 +428,7 @@ not defined in fp.c
 _monte_reduce:
     // Make place in the stack for
     sub sp, sp, #512
-    str lr, [sp, #0] // store lr 
-    str x1, [sp, #8] // store result address
+    stp lr, x1, [sp, #0] // store lr and result address
     str x0, [sp, #16] // store adress of a
 
     // a mod R = Lower 8 words of a
@@ -816,7 +815,7 @@ _fp_inv:
     adrp x1, _p_minus_2@PAGE  //get _p_minus_2 address into x1 for the fp_pow function
     add x1, x1, _p_minus_2@PAGEOFF //add offset of _p_minus_2 to x1
     b _fp_pow //use the power of fermat
-
+    
 
 /*
 c[x0] = a[x0]^b[x1] mod p
@@ -852,6 +851,11 @@ _fp_pow:
     stp x1, x1, [sp, #48]
     mov x1, #1
     str x1, [sp, #0] // init result with 1 
+    // encode 1
+    add x0, sp, #0
+    mov x1, x0
+    bl _fp_enc // x0 = 1 encoded
+
 
     ldr x0, [sp, #120] // load back b to get its length
     // get position of msb 1 bit of b
