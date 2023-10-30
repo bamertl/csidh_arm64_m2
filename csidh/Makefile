@@ -20,11 +20,11 @@ ifeq "$(ARCH)" "GENERIC"
 else ifeq "$(ARCH)" "x86"
     UINT_IMPL=$(wildcard src/p${BITS}/X86/uint.*)
     FP_IMPL=$(wildcard src/p${BITS}/X86/fp.*)
-    FP_IMPL+=$(wildcard src/p${BITS}/X86/inv/*.c p${BITS}/X86/inv/*.s)
+    FP_IMPL+=$(wildcard src/p${BITS}/X86/inv/*.c src/p${BITS}/X86/inv/*.s)
 else ifeq "$(ARCH)" "ARM64"
     UINT_IMPL=$(wildcard src/p${BITS}/ARM64/uint.*)
     FP_IMPL=$(wildcard src/p${BITS}/ARM64/fp.*)
-    FP_IMPL+=$(wildcard src/p${BITS}/ARM64/inv/*.c p${BITS}/ARM64/inv/*.s)
+    FP_IMPL+=$(wildcard  src/p${BITS}/ARM64/inv/*.s)
 endif
 
 
@@ -40,6 +40,7 @@ includes = $(wildcard src/*.h src/p${BITS}/*.h)
 TEST_SRC = $(wildcard tests/*.c)
 TEST_OUT = $(TEST_SRC:.c=)
 
+$(info SOURCES: $(sources))
 
 main: ${includes} ${sources} src/main.c
 	@cc \

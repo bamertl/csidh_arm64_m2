@@ -178,23 +178,26 @@ void test_fp_pow(void){
 }
 
 void test_decrypt(void){
-    fp a = {{0xd45f914906fc8f68,0xf2e3f6dff4cef5f1,0xd927fa85083ccad4,0x68016cf8e4fc5fd0,0x5a5a847e9bff7844,0x6ab1c33fad4a7674,0xffc157ad48adf78f,0x1a0d9ee6d73adc9e}};
-    uint aa = {{0}};
-    fp_dec(&aa, &a);
+    uint aa = {{1,1,1,1,1,1,1,1}};
     uint_print(&aa);
+    printf("mu: ");
+    uint_print(&r_squared_mod_p); 
+    fp a = {{0}};
+    fp_enc(&a, &aa);
+    fp_print(&a);
 }
 
-extern void uint_mul(const fp *a, const uint *b, biguint *c);
+// extern void uint_mul(const fp *a, const uint *b, biguint *c);
 
-uint q = {{0x48b72f84899eca48, 0xdb7e0542b77624de, 0xafaeb264ca1bb35a, 0xba24269dff081925, 0x5d6cec71e0fac030, 0x845f1c9d401fac7f, 0x0000000000000002, 0x0000000000000000}};
+// uint q = {{0x48b72f84899eca48, 0xdb7e0542b77624de, 0xafaeb264ca1bb35a, 0xba24269dff081925, 0x5d6cec71e0fac030, 0x845f1c9d401fac7f, 0x0000000000000002, 0x0000000000000000}};
 
 
-void test_uint_mul(void){
-    fp a = {{0xd45f914906fc8f68,0xf2e3f6dff4cef5f1,0xd927fa85083ccad4,0x68016cf8e4fc5fd0,0x5a5a847e9bff7844,0x6ab1c33fad4a7674,0xffc157ad48adf78f,0x1a0d9ee6d73adc9e}};
-    biguint b = {{0}}; 
-    uint_mul(&q, &p, &b);
-    biguint_print(&b);
-}
+// void test_uint_mul(void){
+//     fp a = {{0xd45f914906fc8f68,0xf2e3f6dff4cef5f1,0xd927fa85083ccad4,0x68016cf8e4fc5fd0,0x5a5a847e9bff7844,0x6ab1c33fad4a7674,0xffc157ad48adf78f,0x1a0d9ee6d73adc9e}};
+//     biguint b = {{0}}; 
+//     uint_mul(&q, &p, &b);
+//     biguint_print(&b);
+// }
 
 int main(void)
 {
@@ -208,8 +211,7 @@ int main(void)
     //test_inverse();
     //test_fp_pow();
     //test_inverse();
-    //test_decrypt();
-    test_uint_mul();
+    test_decrypt();
 
     printf("All tests passed!\n");
     return 0;

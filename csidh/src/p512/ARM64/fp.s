@@ -5,6 +5,7 @@
 .extern _p
 .extern _fp_1
 .extern _mu
+.extern _fp_mul3
 
 
 .macro COPY_8_WORD_NUMBER, num1, num2, reg1, reg2
@@ -393,8 +394,8 @@ Montgomery multiplication
 x0 = x1 * x2
 void fp_mul3(fp *x, fp const *y, fp const *z)
 */
-.global _fp_mul3
-_fp_mul3:
+.global _fp_mul3_2
+_fp_mul3_2:
     sub sp, sp, #224 // make space in the stack for 56 words
     stp lr, x0, [sp, #0] // store lr and result address
     stp x19, x20, [sp, #16] //store x19 and x20 to avoid segmentation fault
