@@ -202,6 +202,12 @@ void test_decrypt(void){
 //     biguint_print(&b);
 // }
 
+void test_issquare(void){
+    fp a = {{2}};
+    bool itis = fp_issquare(&a);
+    printf("itis: %d\n", itis);
+}
+
 int main(void)
 {
     //test_fp_eq();
@@ -214,7 +220,8 @@ int main(void)
     //test_inverse();
     //test_fp_pow();
     //test_inverse();
-    test_decrypt();
+    //test_decrypt();
+    test_issquare();
 
     printf("All tests passed!\n");
     return 0;

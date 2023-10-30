@@ -925,7 +925,7 @@ bool fp_issquare(fp *x)
 */
 .global _fp_issquare
 _fp_issquare:
-    sub sp, sp, #8
+    sub sp, sp, #16
     str lr, [sp, #0] //bad_access
     adrp x1, _p_minus_1_halves@PAGE
     add x1, x1, _p_minus_1_halves@PAGEOFF
@@ -943,7 +943,7 @@ _not_square:
 
 _issquare_end:
     ldr lr, [sp, #0]
-    add sp, sp, #8
+    add sp, sp, #16
     ret
 
 /*
