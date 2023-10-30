@@ -8,7 +8,7 @@
 extern const fp fp_0;
 extern const fp fp_1;
 
-bool fp_eq(fp const *x, fp const *y);
+bool fp_eq(fp const *x, fp const *y); 
 
 // this does also encode, not only set
 void fp_set(fp *x, uint64_t y);
@@ -27,10 +27,12 @@ void fp_add3(fp *x, fp const *y, fp const *z); // x = y + z mod p
 void fp_sub3(fp *x, fp const *y, fp const *z); // x = y - z mod p
 void fp_mul3(fp *x, fp const *y, fp const *z);  // x = y * z mod p
 
-void fp_sq1(fp *x);
-void fp_sq2(fp *x, fp const *y);
+void fp_sq1(fp *x); // x = x^2 mod p
+void fp_sq2(fp *x, fp const *y); // x = y^2 mod p
 void fp_inv(fp *x);
 bool fp_issquare(fp *x); /* destroys input! */
+
+void fp_pow(fp *x, uint const *e); // x = x^e mod p	
 
 void fp_random(fp *x);
 

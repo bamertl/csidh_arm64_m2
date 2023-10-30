@@ -7,6 +7,17 @@
 .extern _mu
 
 
+.macro COPY_8_WORD_NUMBER, num1, num2, reg1, reg2
+    LDP \reg1, \reg2, [\num1,#0] 
+    STP \reg1, \reg2, [\num2,#0] 
+    LDP \reg1, \reg2, [\num1,#16]
+    STP \reg1, \reg2, [\num2,#16]
+    LDP \reg1, \reg2, [\num1,#32]
+    STP \reg1, \reg2, [\num2,#32]
+    LDP \reg1, \reg2, [\num1,#48]
+    STP \reg1, \reg2, [\num2,#48]
+.endm
+
 .macro LOAD_8_WORD_NUMBER2, reg1, reg2, reg3, reg4, reg5, reg6, reg7, reg8, num_pointer
     LDP \reg1, \reg2, [\num_pointer,#0] 
     LDP \reg3, \reg4, [\num_pointer,#16]
@@ -22,7 +33,8 @@
 .endm
 
 .macro LOAD_511_PRIME, reg1, reg2, reg3, reg4, reg5, reg6, reg7, reg8
-    ADRP \reg8, _p@PAGE
+    adrp \reg8, _p@PAGE
+    add \reg8, \reg8, _p@PAGEOFF
     LDP \reg1, \reg2, [\reg8, #0]
     LDP \reg3, \reg4, [\reg8, #16]
     LDP \reg5, \reg6, [\reg8, #32]
@@ -133,7 +145,12 @@ a = 8 words, b = 8 words, c = 16 words
 */
 .global _uint_mul
 _uint_mul:
-    sub     sp, sp, #96
+    sub     sp, sp, #160
+
+    stp lr, x19, [sp,#96]
+    stp x20, x21, [sp,#112]
+    stp x22, x23, [sp,#128]
+    str x24, [sp,#144]
 
     //LOAD A
     ldp     x3, x4, [x0]
@@ -262,7 +279,12 @@ _uint_mul:
     adc     x7, x7, xzr
     stp     x1, x7,   [x2,#112]    
     
-    add     sp, sp, #96
+    ldp lr, x19, [sp,#96]
+    ldp x20, x21, [sp,#112]
+    ldp x22, x23, [sp,#128]
+    ldr x24, [sp,#144]
+
+    add sp, sp, #160
     ret
 
 
@@ -323,9 +345,14 @@ void fp_set(fp *x, uint64_t y)
  */
 .global _fp_set
 _fp_set:
+    sub sp, sp, #16
+    str lr, [sp, #0]
     bl _uint_set // x0 = x1
+    ldr lr, [sp, #0]
+    add sp, sp, #16
     mov x1, x0
     b _fp_enc
+
 
 /*
 encode x1 to x0 for montogomery
@@ -337,9 +364,8 @@ void fp_enc(fp *x, uint const *y)
 .global _fp_enc
 _fp_enc:
     adrp x2, _r_squared_mod_p@PAGE // load the address of r_squared_mod_p into x2 
+    add x2, x2, _r_squared_mod_p@PAGEOFF // add the offset of r_squared_mod_p to x2
     b _fp_mul3
-    ret
-
 
 /*
 decode x1 to x0 from montogomery
@@ -349,6 +375,7 @@ void fp_dec(uint *x, fp const *y)
 .global _fp_dec
 _fp_dec:
     adrp x2, _uint_1@PAGE
+    add x2, x2, _uint_1@PAGEOFF
     b _fp_mul3
 
 
@@ -369,8 +396,7 @@ void fp_mul3(fp *x, fp const *y, fp const *z)
 .global _fp_mul3
 _fp_mul3:
     sub sp, sp, #224 // make space in the stack for 56 words
-    str lr, [sp, #0] // store lr
-    str x0, [sp, #8] // store result address
+    stp lr, x0, [sp, #0] // store lr and result address
     stp x19, x20, [sp, #16] //store x19 and x20 to avoid segmentation fault
     stp x21, x22, [sp, #32] //store x21 and x22 to avoid segmentation fault
 
@@ -380,9 +406,10 @@ _fp_mul3:
     mov x0, x2 // copy result address of mul to x0 (this points to stack + 16)
     ldr x1, [sp, #8] // load back initial result address to x1
     bl _monte_reduce
-    ldr lr, [sp, #0] // get back lr
+    ldp lr, x0, [sp, #0] // get back lr
     ldp x19, x20, [sp, #16] //get back x19 - x22
     ldp x21, x22, [sp, #32]
+
     add sp, sp, #224 //give back the stack
 
     ret
@@ -408,6 +435,7 @@ _monte_reduce:
     // a mod R = Lower 8 words of a
     // load mu into x1 
     adrp x1, _mu@PAGE //get address of mu
+    add x1, x1, _mu@PAGEOFF //add offset of mu
     //add  x1, x1, :lo12:mu aah, this was unnecessary then :) smart move
     add x2, sp, #24 // result of multiplication 16 words -> sp #24 - sp# 152
     // mu [x1] * ( a [x0] mod R )
@@ -417,6 +445,7 @@ _monte_reduce:
     // C ← (a + p*q)/R
     // x0 = p
     adrp x0, _p@PAGE
+    add x0, x0, _p@PAGEOFF
     add x2, sp, #152 // result of multiplication p*q 16 words from sp#152-280
     bl _uint_mul
     mov x0, x2 // x0 = p*q
@@ -589,9 +618,10 @@ void fp_add3(fp *x, fp const *y, fp const *z)
 .global _fp_add3
 _fp_add3:
 
-    sub sp, sp, #32
-    stp x19, x20, [sp, #0]
-    stp x21, x22, [sp, #16]
+    sub sp, sp, #48
+    str x17, [sp, #0] 
+    stp x19, x20, [sp, #16]
+    stp x21, x22, [sp, #32]
 
     // Load first Number in register X3-X10
     LOAD_8_WORD_NUMBER2 x3, x4, x5, x6, x7, x8, x9, x10, x1
@@ -648,9 +678,10 @@ _fp_add3:
     // Store result in x0
     STORE_8_WORD_NUMBER2 x3, x4, x5, x6, x7, x8, x9, x10, x0
 
-    ldp x19, x20, [sp, #0]
-    ldp x21, x22, [sp, #16]
-    add sp, sp, #32
+    ldr x17, [sp, #0]
+    ldp x19, x20, [sp, #16]
+    ldp x21, x22, [sp, #32]
+    add sp, sp, #48
     ret
 
 /*
@@ -659,18 +690,8 @@ void fp_sub2(fp *x, fp const *y)
 */
 .global _fp_sub2
 _fp_sub2:
-    sub sp, sp, #80 // 16 + 64
-    stp lr, x0, [sp, #0] // 0 -16
-
-    add x0, sp, 16 // result 8 words 16 - 64
-    bl _minus_number // x0 = -x1 
-    mov x1, x0 // we add x1
-    ldr x0, [sp, #8] // load result addr which is also x0
-    bl _fp_add2 // x0 = x0 + x1
-
-    ldr lr, [sp, #0]
-    add sp, sp, #80
-    ret
+    mov x2, x1
+    mov x1, x0
 
 /*
 x0 = x1 - x2 mod p
@@ -678,29 +699,41 @@ void fp_sub3(fp *x, fp const *y, fp const *z)
 */
 .global _fp_sub3
 _fp_sub3:
-    sub sp, sp, #88 // make space on the stack 16 + 64
-    stp lr, x0, [sp, #0] // 0 -16 put lr and x0 on the stack to hav the address loadable later
+    sub sp, sp, #112 // make space on the stack 16 + 64
+    str lr, [sp, #0]
+    str x0, [sp, #8]
     str x1, [sp, #16] // store x1 for the addition later
-    add x0, sp, 24 // result 8 words 16 - 64 --> create the new x0 address on the stack
+    add x0, sp, #48 // result 8 words 24 - 88 --> create the new x0 address on the stack
+
 
     mov x1, x2 // move x2 to x1 for the minus function
-    bl _minus_number
-    mov x2, x0 //move result address back to x2
+    bl _minus_number // x0 = -x1
+    mov x2, x0
     ldr x0, [sp, #8] // load x0 from the stack inserted above
     ldr x1, [sp, #16] // load x1 from the stack inserted above
-    b _fp_add3 // x0 = x1 + x2
+    bl _fp_add3 // x0 = x1 + x2
+    ldr lr, [sp, #0] // load back lr
+    add sp, sp, #112 // give back the stack
 
+    ret
 /*
 x0 = -x1
 not in fp.c
+x0 = p - x1
 */
 _minus_number:
+
+    sub sp, sp, #32
+    stp x16, x17, [sp, #0]
+    stp x19, x20, [sp, #16]
+    
     // Load number we want minus of into register X3-X10
-    LOAD_8_WORD_NUMBER2 x2, x3, x4, x5, x6, x7, x8, x9, x0
+    LOAD_8_WORD_NUMBER2 x2, x3, x4, x5, x6, x7, x8, x9, x1
 
     // Load the prime
     LOAD_511_PRIME x10, x11, x12, x13, x14, x15, x16, x17
 
+    // p - a
     SUBS x2, x10, x2
     SBCS x3, x11, x3
     SBCS x4, x12, x4
@@ -710,7 +743,47 @@ _minus_number:
     SBCS x8, x16, x8
     SBC x9, x17, x9
 
-    STORE_8_WORD_NUMBER2 x2, x3, x4, x5, x6, x7, x8, x9, x1
+    // check if a = 0 by orr x2-x9 
+    orr x19, x2, x3
+    orr x19, x19, x4
+    orr x19, x19, x5
+    orr x19, x19, x6
+    orr x19, x19, x7
+    orr x19, x19, x8
+    orr x19, x19, x9
+
+    // check if a is really 0
+    cmp x19, #0
+    cset x19, eq // x19 = 1 if a was 0, 0 otherwise
+    LSL x19, x19, #63
+    ASR x19, x19, #63 //arithmetic shift (will take the value of msb)
+
+
+    // and the prime (if a was 0 then we and with 1, otherwise 0)
+    and x10, x10, x19
+    and x11, x11, x19
+    and x12, x12, x19
+    and x13, x13, x19
+    and x14, x14, x19
+    and x15, x15, x19
+    and x16, x16, x19
+    and x17, x17, x19
+
+    // subtract the prime from the result (this should only happen if result = prime)
+    SUBS x2, x2, x10
+    SBCS x3, x3, x11
+    SBCS x4, x4, x12
+    SBCS x5, x5, x13
+    SBCS x6, x6, x14
+    SBCS x7, x7, x15
+    SBCS x8, x8, x16
+    SBC x9, x9, x17
+
+    ldp x16, x17, [sp, #0]
+    ldp x19, x20, [sp, #16]
+    STORE_8_WORD_NUMBER2 x2, x3, x4, x5, x6, x7, x8, x9, x0
+
+    add sp, sp, #32
     ret
 
 /*
@@ -741,39 +814,59 @@ we want to override a[x0] only at the very end
 .global _fp_inv
 _fp_inv:
     adrp x1, _p_minus_2@PAGE  //get _p_minus_2 address into x1 for the fp_pow function
+    add x1, x1, _p_minus_2@PAGEOFF //add offset of _p_minus_2 to x1
     b _fp_pow //use the power of fermat
 
 
 /*
 c[x0] = a[x0]^b[x1] mod p
+Right-To_left
+Output: md mod n
+1: a ← 1 ; m ← a
+2: for i = 0 to k − 1 do
+3:  if di = 1 then
+4:      a ← a × m mod n
+5:   m ← m^2 mod n
+6: return a
 */
+.global _fp_pow
 _fp_pow:
-    sub sp, sp, #128   // make place for result 8*8 (#0), lr(#64), x0(#72), x1(#80), x2(#88), x3(#96), x4(#104), x5(#112), address of b (#120)
+    sub sp, sp, #192   // make place for result 8*8 (#0), lr(#64), x0(#72), x1(#80), x2(#88), x3(#96), x4(#104), x5(#112), address of b (#120), address of m (#128)
+
     //where x0 is the result address
     // x1 is the counter for the number of words
-    // x2 is the offset from the base address
-    // x3 is the potential address of b 
-    // x4 is the bit counter
+    // x2 is the offset from the base address of b
+    // x4 is the bit counter per word of b
     // x5 is the word counter
-    stp lr, x0, [sp, #64] // store lr and adress of x0 to get them back later
-    str x1, [sp, #120] //do the same for x1
-    mov x0, x1 // mov b to x0 for _uint_len function
+    stp lr, x0, [sp, #64] // store lr and address of x0 to get them back later
+    str x1, [sp, #120] //store b address
+
+    add x1, sp, #128 // space for m
+    COPY_8_WORD_NUMBER x0, x1, x3, x4 // m = a
+
+    // init stack result to 1
+    mov x1, xzr // 0 into x1
+    stp x1, x1, [sp, #0]
+    stp x1, x1, [sp, #16]
+    stp x1, x1, [sp, #32]
+    stp x1, x1, [sp, #48]
     mov x1, #1
-    str x1, [sp, #0] // init result with 1 still unsure whether it is 0 or 1 to start with
+    str x1, [sp, #0] // init result with 1 
+
+    ldr x0, [sp, #120] // load back b to get its length
     // get position of msb 1 bit of b
-    bl _uint_len // x1 = position of last 1
-    mov x5, x0 // counter of  total len
+    bl _uint_len // x0 = position of last 1 in b x0 = len(x0)
+    mov x5, x0 // counter of total len
     mov x1, #8          ; Counter for the number of words (8 words in total)
     mov x2, #0          ; Offset from the base address
 
 _fp_pow_word_loop:
-    ldr x3, [sp, #120] // load adress of b
+    ldr x3, [sp, #120] // load address of b
     add x3, x3, x2 // add offset
     ldr x3, [x3] // load the word
     mov x4, #64 // init bit counter
 
 _fp_pow_bit_loop:
-    subs x5, x5, #1 // dec total bit counter
     cbz x5, _fp_pow_finished // finish if total counter = 0
 
     stp x1, x2, [sp, #80] // store them registers
@@ -784,22 +877,24 @@ _fp_pow_bit_loop:
     // bit is one
 
 _fp_pow_bit_is_one:
-    add x0, sp, #0 // stack at #0 is temp result address
-    bl _fp_sq1 // x0 = x0^2
-    ldr x1, [sp, #72] // load address of x0 
-    bl _fp_mul2 // x0 = x0 * x1
+
+    add x0, sp, #0 // =a
+    add x1, sp, #128 // =m
+    bl _fp_mul2 // a = a * m
+
+    add x0, sp, #128 // =m
+    bl _fp_sq1 // m = m^2
     b _fp_pow_end_of_bit
 
 _fp_pow_bit_is_zero:
-    add x0, sp, #0 // result address from stack into x0
-    bl _fp_sq1 // x0 = x0^2
-
-//don't we want to make this time constant? As far as I remember it is not relevant, since it is a public number anyways
+    add x0, sp, #128 // =m
+    bl _fp_sq1 // m = m^2
 
 _fp_pow_end_of_bit:
     ldp x1, x2, [sp, #80] // restore the registers
     ldp x3, x4, [sp, #96]
     ldr x5, [sp, #112]
+    subs x5, x5, #1 // total counter -1
     lsr x3, x3, #1 // shift current word to the right by 1
     subs x4, x4, #1 // decrement bit counter
     b.ne _fp_pow_bit_loop // if not 0 get next bit
@@ -809,13 +904,11 @@ _fp_pow_end_of_bit:
 
 _fp_pow_finished:
     // store result in x0 address
-    add x1, sp, #0 // result address in stack
-    LOAD_8_WORD_NUMBER2 x2, x3, x4, x5, x6 , x7, x8, x9, x1
-    ldr x0, [sp, #72] // load initial result address
-    STORE_8_WORD_NUMBER2 x2, x3, x4, x5, x7, x7, x8, x9, x0
-
+    add x0, sp, #0 // result address in stack
+    ldr x1, [sp, #72] // load initial result address
+    COPY_8_WORD_NUMBER x0, x1, x3, x4
     ldr lr, [sp, #64]
-    add sp, sp, #128
+    add sp, sp, #192
     ret
 
 
@@ -830,8 +923,10 @@ _fp_issquare:
     sub sp, sp, #8
     str lr, [sp, #0] //bad_access
     adrp x1, _p_minus_1_halves@PAGE
+    add x1, x1, _p_minus_1_halves@PAGEOFF
     bl _fp_pow
     adrp x1, _fp_1@PAGE
+    add x1, x1, _fp_1@PAGEOFF
     mov x2, #64
     bl _memcmp
     cbnz x0, _not_square //compare non zero
@@ -854,4 +949,5 @@ using uint_random
 .global _fp_random
 _fp_random:
     adrp x1, _p@PAGE
+    add x1, x1, _p@PAGEOFF
     b _uint_random
