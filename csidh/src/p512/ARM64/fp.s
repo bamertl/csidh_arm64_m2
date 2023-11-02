@@ -5,7 +5,7 @@
 .extern _p
 .extern _fp_1
 .extern _mu
-.extern _fp_mul3
+//.extern _fp_mul3
 
 
 .macro COPY_8_WORD_NUMBER, num1, num2, reg1, reg2
@@ -56,7 +56,7 @@
     adcs    \C2, \C2, \B0
     adc     \C3, xzr, xzr
     
-    adds    \C2, \C2, \T0
+    adds    \C2, \C2, \T0 
     adc     \C3, \C3, \B1
 .endm
 
@@ -68,11 +68,13 @@
     adds    \A0, \A0, \A2
     adcs    \A1, \A1, \A3
     adc     \T0, xzr, xzr
+    //T0 is the carry of the first addition
 
     // C6, T1 <- BH + BL, C7 <- mask
     adds    \C6, \B0, \B2
     adcs    \T1, \B1, \B3
     adc     \C7, xzr, xzr
+    // C7 is the carry of the second addition
     
     // C0-C1 <- masked (BH + BL)
     sub     \C2, xzr, \T0
@@ -85,14 +87,14 @@
     and     \C5, \A1, \C3
     mul     \C2, \A0, \C6
     mul     \C3, \A0, \T1
-    and     \T0, \T0, \C7
+    and     \T0, \T0, \C7 
 
     // C0-C1, T0 <- (AH+AL) x (BH+BL), part 1
     adds    \C0, \C4, \C0
     umulh   \C4, \A0, \T1    
     adcs    \C1, \C5, \C1
     umulh   \C5, \A0, \C6
-    adc     \T0, \T0, xzr
+    adc     \T0, \T0, xzr //means that T0 can become two if the carry is 1 and the combined carry as well
 
     // C2-C5 <- (AH+AL) x (BH+BL), low part
     MUL128_COMBA_CUT  \A0, \A1, \C6, \T1, \C2, \C3, \C4, \C5, \C7
@@ -146,12 +148,12 @@ a = 8 words, b = 8 words, c = 16 words
 */
 .global _uint_mul
 _uint_mul:
-    sub     sp, sp, #160
+    sub     sp, sp, #176
 
     stp lr, x19, [sp,#96]
-    stp x20, x21, [sp,#112]
-    stp x22, x23, [sp,#128]
-    str x24, [sp,#144]
+    //stp x20, x21, [sp,#112]
+    //stp x22, x23, [sp,#128]
+    //str x24, [sp,#144]
 
     //LOAD A
     ldp     x3, x4, [x0]
@@ -205,7 +207,7 @@ _uint_mul:
     adds    x15, x15, x19
     adcs    x16, x16, x20
     adcs    x17, x17, x21
-    stp     x26, x27, [x2,#0]
+    stp     x26, x27, [x2,#0] //those two values are used for the Karatsuba later
     adc     x18, x18, x22
     
     // x8-x10,x19-x23 <- (AH+AL) x (BH+BL), low part
@@ -218,6 +220,8 @@ _uint_mul:
     adcs    x17, x17, x22
     ldp     x13, x14, [x1,#16]
     adc     x18, x18, x23
+    //PROBLEM Space No2: x18 is the 8th word of step_4 (in the example: 0x0d5f5554dc02dec7),
+    // it's actual value is 0x10d5f5554dc02dec7, how can I get hold of this value?
 
     // x20-x27 <- AL x BL
     MUL256_KARATSUBA_COMBA  x0, x3, x4, x5, x6, x11, x12, x13, x14, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29
@@ -232,7 +236,7 @@ _uint_mul:
     sbcs    x19, x19, x23
     ldp     x13, x14, [x1,#48]
     sbcs    x15, x15, x24
-    stp     x20, x21, [x2]
+    stp     x20, x21, [x2] //here they overwrite x2 withouth using the values x26 and x27
     sbcs    x16, x16, x25
     stp     x22, x23, [x2,#16]
     sbcs    x17, x17, x26
@@ -255,12 +259,19 @@ _uint_mul:
     sbcs    x16, x16, x25
     sbcs    x17, x17, x1
     sbc     x18, x18, x7
-    
-    adds    x8, x8, x3 
-    adcs    x9, x9, x4
+
+
+    //here now we should have step_4 correctly in (from highest to lowest) x0, x17, x16, x15, x19, x10, x9, x8
+    // so step_5: step_2 + half_padded step_4 + full_padded step_1
+    // step_4 is in x8, x9, x10,x19, x15, x16, x17, x18 --> numbers correct, but carry is there
+    // step_1 is in x25 - x20 and x1 and x7 --> correct
+    // step_2 is in partly in x2 --> correct
+    // this is why the first 4 words are already correctly loaded in x2 (foxes)  --> check, those are the same values
+    adds    x8, x8, x3 //still in register fifth word of step 2
+    adcs    x9, x9, x4 // still in register sixth word of step 2
     stp     x8, x9, [x2,#32]
-    adcs    x10, x10, x26
-    adcs    x19, x19, x27
+    adcs    x10, x10, x26 // still in register seventh word of step 2
+    adcs    x19, x19, x27 // still in register eight word of step 2
     stp     x10, x19, [x2,#48]    
     adcs    x15, x15, x20 
     ldp     x19, x20, [sp,#0]  
@@ -270,6 +281,9 @@ _uint_mul:
     adcs    x17, x17, x22
     ldp     x21, x22, [sp,#16]
     adcs    x18, x18, x23
+    //HERE IS THE PROBLEM, x18 is the 8th word of step_4 (in the example: 0x0d5f5554dc02dec7),
+    // it's actual value is 0x10d5f5554dc02dec7, the carry is somehow not taken into consideration
+    // the question is where to find this value
     stp     x17, x18, [x2,#80] 
     adcs    x24, x24, xzr
     adcs    x25, x25, xzr //only change
@@ -281,12 +295,13 @@ _uint_mul:
     adc     x7, x7, xzr
     stp     x1, x7,   [x2,#112]    
     
+    
     ldp lr, x19, [sp,#96]
-    ldp x20, x21, [sp,#112]
-    ldp x22, x23, [sp,#128]
-    ldr x24, [sp,#144]
+    //ldp x20, x21, [sp,#112]
+    //ldp x22, x23, [sp,#128]
+    //ldr x24, [sp,#144]
 
-    add sp, sp, #160
+    add sp, sp, #176
     ret
 
 
@@ -395,20 +410,22 @@ Montgomery multiplication
 x0 = x1 * x2
 void fp_mul3(fp *x, fp const *y, fp const *z)
 */
-.global _fp_mul3_2
-_fp_mul3_2:
+.global _fp_mul3
+_fp_mul3:
     sub sp, sp, #224 // make space in the stack for 56 words
     stp lr, x0, [sp, #0] // store lr and result address
     stp x19, x20, [sp, #16] //store x19 and x20 to avoid segmentation fault
     stp x21, x22, [sp, #32] //store x21 and x22 to avoid segmentation fault
 
-    mov x0, x2 // Move x2 to x0 for multiplication
+    mov x0, x2 // Move second part of multiplication to x0
     add x2, sp, #64 // result for mul = stack address + 16 + (16+8*16) words
     bl _uint_mul // x2 = x0 * x1
+    //result correct here
     mov x0, x2 // copy result address of mul to x0 (this points to stack + 64)
     ldr x1, [sp, #8] // load back initial result address to x1
     bl _monte_reduce
     ldp lr, x0, [sp, #0] // get back lr
+   // mov x0, x1 // copy result address to x0
     ldp x19, x20, [sp, #16] //get back x19 - x22
     ldp x21, x22, [sp, #32]
 

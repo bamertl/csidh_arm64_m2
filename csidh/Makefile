@@ -24,7 +24,7 @@ else ifeq "$(ARCH)" "x86"
 else ifeq "$(ARCH)" "ARM64"
     UINT_IMPL=$(wildcard src/p${BITS}/ARM64/uint.*)
     FP_IMPL=$(wildcard src/p${BITS}/ARM64/fp.*)
-    FP_IMPL+=$(wildcard  src/p${BITS}/ARM64/inv/*.s)
+   FP_IMPL+=$(wildcard  src/p${BITS}/ARM64/inv/*.s)
 endif
 
 
