@@ -280,59 +280,59 @@ void uint_mul3_64(uint *x, uint const *y, uint64_t z)
 _uint_mul3_64:
 
     // First limb
-    ldr x4, [x1, #0]   // load limb
-    umulh x5, x4, x2   // high 
-    mul x4, x4, x2     // low
+    ldr x7, [x1, #0]   // load limb
+    umulh x5, x7, x2   // high 
+    mul x4, x7, x2     // low
     str x4, [x0, #0]
 
     // Second Limb
-    ldr x4, [x1, #8]    // load limb
-    mul x4, x4, x2      // low
+    ldr x7, [x1, #8]    // load limb
+    mul x4, x7, x2      // low
     adds x4, x4, x5     // add past lower (x5)
     str x4, [x0, #8]
-    umulh x5, x4, x2    // high
+    umulh x5, x7, x2    // high
 
     // Third Limb
-    ldr x4, [x1, #16]    // load limb
-    mul x4, x4, x2      // low
+    ldr x7, [x1, #16]    // load limb
+    mul x4, x7, x2      // low
     adcs x4, x4, x5     // add past lower (x5) now with carry flag as well
     str x4, [x0, #16]
-    umulh x5, x4, x2    // high
+    umulh x5, x7, x2    // high
 
     // Fourth Limb
-    ldr x4, [x1, #24]    // load limb
-    mul x4, x4, x2      // low
+    ldr x7, [x1, #24]    // load limb
+    mul x4, x7, x2      // low
     adcs x4, x4, x5     // add past lower (x5) now with carry flag as well
     str x4, [x0, #24]
-    umulh x5, x4, x2    // high
+    umulh x5, x7, x2    // high
 
     // Limb Numero 5
-    ldr x4, [x1, #32]    // load limb
-    mul x4, x4, x2      // low
+    ldr x7, [x1, #32]    // load limb
+    mul x4, x7, x2      // low
     adcs x4, x4, x5     // add past lower (x5) now with carry flag as well
     str x4, [x0, #32]
-    umulh x5, x4, x2    // high
+    umulh x5, x7, x2    // high
 
     // Limb Numero 6
-    ldr x4, [x1, #40]    // load limb
-    mul x4, x4, x2      // low
+    ldr x7, [x1, #40]    // load limb
+    mul x4, x7, x2      // low
     adcs x4, x4, x5     // add past lower (x5) now with carry flag as well
     str x4, [x0, #40]
-    umulh x5, x4, x2    // high
+    umulh x5, x7, x2    // high
 
     // Limb Numero 7
-    ldr x4, [x1, #48]    // load limb
-    mul x4, x4, x2      // low
+    ldr x7, [x1, #48]    // load limb
+    mul x4, x7, x2      // low
     adcs x4, x4, x5     // add past lower (x5) now with carry flag as well
     str x4, [x0, #48]
-    umulh x5, x4, x2    // high
+    umulh x5, x7, x2    // high
 
     // Limb Numero 8
-    ldr x4, [x1, #56]    // load limb
-    mul x4, x4, x2      // low
+    ldr x7, [x1, #56]    // load limb
+    mul x4, x7, x2      // low
     adcs x4, x4, x5     // add past lower (x5) now with carry flag as well
     str x4, [x0, #56]
-    umulh x5, x4, x2    // high
+    umulh x5, x7, x2    // high
     ret
 /*
 x0: place to store random number
