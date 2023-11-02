@@ -272,8 +272,9 @@ _uint_mul:
     adcs    x18, x18, x23
     stp     x17, x18, [x2,#80] 
     adcs    x24, x24, xzr
+    adcs    x25, x25, xzr //only change
     stp     x24, x25, [x2,#96] 
-    adcs    x25, x25, xzr
+    //from here
     ldp     x23, x24, [sp,#32]
     adcs    x1, x1, xzr
     ldp     x25, x26, [sp,#48]
