@@ -82,35 +82,37 @@
     // |AH - AL| into A0-A3
     subs \A0, \A2, \A0
     sbcs \A1, \A3, \A1
-    cinv \A0, \A0, MI  // If negative (MI), invert x2
-    cinv \A1, \A1, MI  //If negative (MI), invert x3
-    csetm \T5, MI     //T0 = -1 if negative, 0 otherwise
-    adds \A0, \A0, \T5  //Add T0 to x2, set flags
+    sbcs \A3, \A3, \A3
+    eor \A0, \A0, \A3
+    eor \A1, \A1, \A3
+    and \A3, \A3, #1
+    adds \A0, \A0, \A3  //Add T0 to x2, set flags
     adc \A1, \A1, xzr  //Add carry to x3
 
     // |BH - BL| into B0-B3
     subs \B0, \B2, \B0
     sbcs \B1, \B3, \B1
-    cinv \B0, \B0, MI  // If negative (MI), invert x2
-    cinv \B1, \B1, MI  //If negative (MI), invert x3
-    csetm \T6, MI     //T0 = -1 if negative, 0 otherwise
-    adds \B0, \B0, \T6  //Add T0 to x2, set flags
+    sbcs \B3, \B3, \B3
+    eor \B0, \B0, \B3
+    eor \B1, \B1, \B3
+    and \B3, \B3, #1
+    adds \B0, \B0, \B3  //Add T0 to x2, set flags
     adc \B1, \B1, xzr  //Add carry to x3
 
 
-    eor \T5, \T5, \T6
-    sub \T5, \T5, #1
+    eor \B3, \B3, \A3
+    sub \B3, \B3, #1
 
     // |AH - AL| * |BH - BL| into T0-T3 = M
     MUL128x128 \A0, \A1, \B0, \B1, \T0, \T1, \T2, \T3, \T4
 
-    eor \T0, \T0, \T5
-    eor \T1, \T1, \T5
-    eor \T2, \T2, \T5
-    eor \T3, \T3, \T5
+    eor \T0, \T0, \B3
+    eor \T1, \T1, \B3
+    eor \T2, \T2, \B3
+    eor \T3, \T3, \B3
 
-    AND \T5, \T5, #1
-    adds \T0, \T0, \T5
+    and \B3, \B3, #1
+    adds \T0, \T0, \B3
     adcs \T1, \T1, xzr
     adcs \T2, \T2, xzr
     adc \T3, \T3, xzr
@@ -127,7 +129,7 @@
     adcs \C3, \A1, \T1
     adcs \C4, \A2, \T2 
     adcs \C5, \A3, \T3
-    adc \T4, \T4, xzr
+    adc \C6, \T4, xzr // carry into C6
 
     // todo maybe we need this potential carry maybe not, what if the carry would be negative?
 .endm
@@ -185,16 +187,17 @@ _uint_mul:
     ldp x7, x8, [x0, #32]
     ldp x9, x10, [x0, #48]
     
+
     subs x3, x7, x3 // AH - AL
     sbcs x4, x8, x4
     sbcs x5, x9, x5
     sbcs x6, x10, x6
-
-    cinv x3, x3, MI  // If negative (MI), invert x2
-    cinv x4, x4, MI  //If negative (MI), invert x3
-    cinv x5, x5, MI
-    cinv x6, x6, MI
-    csetm x30, MI     //T0 = -1 if negative, 0 otherwise
+    sbcs x30, x30, x30
+    eor x3, x3, x30
+    eor x4, x4, x30
+    eor x5, x5, x30
+    eor x6, x6, x30
+    and x30, x30, #1
     adds x3, x3, x30  //Add T0 to x3, set flags
     adcs x4, x4, xzr  
     adcs x5, x5, xzr 
@@ -210,12 +213,12 @@ _uint_mul:
     sbcs x8, x12, x8
     sbcs x9, x13, x9
     sbcs x10, x14, x10
-
-    cinv x7, x7, MI  // If negative (MI), invert x7
-    cinv x8, x8, MI
-    cinv x9, x9, MI
-    cinv x10, x10, MI
-    csetm x16, MI     //x11 = -1 if negative, 0 otherwise
+    sbcs x16, x16, x16
+    eor x7, x7, x16
+    eor x8, x8, x16
+    eor x9, x9, x16
+    eor x10, x10, x16
+    and x16, x16, #1
     adds x7, x7, x16  //Add T0, set flags
     adcs x8, x8, xzr
     adcs x9, x9, xzr
