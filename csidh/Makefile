@@ -69,7 +69,7 @@ bench: ${includes} ${sources} src/bench.c
 	@cc \
 		$(if ${BENCH_ITS},-DBENCH_ITS=${BENCH_ITS}) \
 		$(if ${BENCH_VERBOSE},-DBENCH_VERBOSE=${BENCH_VERBOSE}) \
-		-I ./ \
+		-I ./src \
 		-I src/p${BITS}/ \
 		-std=c99 -pedantic \
 		-Wall -Wextra \

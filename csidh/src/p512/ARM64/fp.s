@@ -43,101 +43,95 @@
    
 .endm
 
-//////////////////////////////////////////// MACRO
-.macro MUL128_COMBA_CUT  A0, A1, B0, B1, C0, C1, C2, C3, T0
-    mul     \A0, \A1, \B0
-    umulh   \B0, \A1, \B0
-    adds    \C1, \C1, \C3
-    adc     \C2, \C2, xzr
-    
+.macro MUL128x128 A0, A1, B0, B1, C0, C1, C2, C3, T0
+    ; Multiply the least significant words
+    mul     \C0, \A0, \B0       ; C0 = A0 * B0 (low word)
+    umulh   \C1, \A0, \B0       ; C1 = A0 * B0 (high word)
+
+    ; Add the cross-product of lower A0:B1 
+    mul     \T0, \A0, \B1       ; T0 = A0 * B1 (low word)
+    adds    \C1, \C1, \T0       ; C1 += T1
+    adc     \C2, xzr, xzr       ; C2 = carry from previous addition
+    ; Add the cross-prodoct of lower A1:B0
+    mul     \T0, \A1, \B0       ; T1 = A1 * B0 (low word)
+    adds    \C1, \C1, \T0       ; C1 += T1 (with carry)
+    adc     \C2, \C2, xzr       ; C2 += carry from previous addition    
+    ; to the same for the highers into C2
+    umulh   \T0, \A0, \B1       ; T0 = A0 * B1 (high word)
+    adds    \C2, \T0, \C2       ; C2 = T0 + C2
+    adc     \C3, xzr, xzr       ; C3 = carry from previous addition
+    umulh   \T0, \A1, \B0       ; T0 = A1 * B0 (high word)
+    adds    \C2, \C2, \T0       ; C2 += T0 
+    adc     \C3, \C3, xzr       ; C3 += carry from previous addition
+    ; Multiply the most significant words
     mul     \T0, \A1, \B1
-    umulh   \B1, \A1, \B1
-    adds    \C1, \C1, \A0
-    adcs    \C2, \C2, \B0
-    adc     \C3, xzr, xzr
-    
     adds    \C2, \C2, \T0
-    adc     \C3, \C3, \B1
+    adc     \C3, \C3, xzr
+    umulh   \T0, \A1, \B1
+    adc     \C3, \C3, \T0
 .endm
 
+// 𝐴𝐿 ∙ 𝐵𝐿 + 𝐴𝐻 ∙ 𝐵𝐻 − |𝐴𝐻 − 𝐴𝐿| ∙ |𝐵𝐻 − 𝐵𝐿| = RH · 2^256 + (RL + RH − RM ) · 2^128 + RL
+// !!messes with A0-B3!!
+.macro MUL256_KARATSUBA A0, A1, A2, A3, B0, B1, B2, B3, C0, C1, C2, C3, C4, C5, C6, C7, T0, T1, T2, T3, T4, T5, T6
+    // AL * BL into C0-C3 = RL
+    MUL128x128 \A0, \A1, \B0, \B1, \C0, \C1, \C2, \C3, \T0
+    // AH * BH into C4-C7 = RH
+    MUL128x128 \A2, \A3, \B2, \B3, \C4, \C5, \C6, \C7, \T0
 
-//////////////////////////////////////////// MACRO
-.macro    MUL256_KARATSUBA_COMBA  M,A0,A1,A2,A3,B0,B1,B2,B3,C0,C1,C2,C3,C4,C5,C6,C7,T0,T1
+    // |AH - AL| into A0-A3
+    subs \A0, \A2, \A0
+    sbcs \A1, \A3, \A1
+    cinv \A0, \A0, MI  // If negative (MI), invert x2
+    cinv \A1, \A1, MI  //If negative (MI), invert x3
+    csetm \T5, MI     //T0 = -1 if negative, 0 otherwise
+    adds \A0, \A0, \T5  //Add T0 to x2, set flags
+    adc \A1, \A1, xzr  //Add carry to x3
 
-    // A0-A1 <- AH + AL, T0 <- mask
-    adds    \A0, \A0, \A2
-    adcs    \A1, \A1, \A3
-    adc     \T0, xzr, xzr
+    // |BH - BL| into B0-B3
+    subs \B0, \B2, \B0
+    sbcs \B1, \B3, \B1
+    cinv \B0, \B0, MI  // If negative (MI), invert x2
+    cinv \B1, \B1, MI  //If negative (MI), invert x3
+    csetm \T6, MI     //T0 = -1 if negative, 0 otherwise
+    adds \B0, \B0, \T6  //Add T0 to x2, set flags
+    adc \B1, \B1, xzr  //Add carry to x3
 
-    // C6, T1 <- BH + BL, C7 <- mask
-    adds    \C6, \B0, \B2
-    adcs    \T1, \B1, \B3
-    adc     \C7, xzr, xzr
-    
-    // C0-C1 <- masked (BH + BL)
-    sub     \C2, xzr, \T0
-    sub     \C3, xzr, \C7
-    and     \C0, \C6, \C2
-    and     \C1, \T1, \C2
 
-    // C4-C5 <- masked (AH + AL), T0 <- combined carry
-    and     \C4, \A0, \C3
-    and     \C5, \A1, \C3
-    mul     \C2, \A0, \C6
-    mul     \C3, \A0, \T1
-    and     \T0, \T0, \C7
+    eor \T5, \T5, \T6
+    sub \T5, \T5, #1
 
-    // C0-C1, T0 <- (AH+AL) x (BH+BL), part 1
-    adds    \C0, \C4, \C0
-    umulh   \C4, \A0, \T1    
-    adcs    \C1, \C5, \C1
-    umulh   \C5, \A0, \C6
-    adc     \T0, \T0, xzr
+    // |AH - AL| * |BH - BL| into T0-T3 = M
+    MUL128x128 \A0, \A1, \B0, \B1, \T0, \T1, \T2, \T3, \T4
 
-    // C2-C5 <- (AH+AL) x (BH+BL), low part
-    MUL128_COMBA_CUT  \A0, \A1, \C6, \T1, \C2, \C3, \C4, \C5, \C7
-    ldp     \A0, \A1, [\M,#0]
-    
-    // C2-C5, T0 <- (AH+AL) x (BH+BL), final part
-    adds    \C4, \C0, \C4
-    umulh   \C7, \A0, \B0 
-    umulh   \T1, \A0, \B1 
-    adcs    \C5, \C1, \C5
-    mul     \C0, \A0, \B0
-    mul     \C1, \A0, \B1  
-    adc     \T0, \T0, xzr
+    eor \T0, \T0, \T5
+    eor \T1, \T1, \T5
+    eor \T2, \T2, \T5
+    eor \T3, \T3, \T5
 
-    // C0-C1, T1, C7 <- AL x BL
-    MUL128_COMBA_CUT  \A0, \A1, \B0, \B1, \C0, \C1, \T1, \C7, \C6
-    
-    // C2-C5, T0 <- (AH+AL) x (BH+BL) - ALxBL
-    mul     \A0, \A2, \B2
-    umulh   \B0, \A2, \B2
-    subs    \C2, \C2, \C0 
-    sbcs    \C3, \C3, \C1
-    sbcs    \C4, \C4, \T1
-    mul     \A1, \A2, \B3
-    umulh   \C6, \A2, \B3   
-    sbcs    \C5, \C5, \C7
-    sbc     \T0, \T0, xzr
+    AND \T5, \T5, #1
+    adds \T0, \T0, \T5
+    adcs \T1, \T1, xzr
+    adcs \T2, \T2, xzr
+    adc \T3, \T3, xzr
 
-    // A0, A1, C6, B0 <- AH x BH 
-    MUL128_COMBA_CUT  \A2, \A3, \B2, \B3, \A0, \A1, \C6, \B0, \B1
-    
-    // C2-C5, T0 <- (AH+AL) x (BH+BL) - ALxBL - AHxBH
-    subs    \C2, \C2, \A0 
-    sbcs    \C3, \C3, \A1
-    sbcs    \C4, \C4, \C6
-    sbcs    \C5, \C5, \B0
-    sbc     \T0, \T0, xzr
-    
-    adds    \C2, \C2, \T1 
-    adcs    \C3, \C3, \C7
-    adcs    \C4, \C4, \A0
-    adcs    \C5, \C5, \A1
-    adcs    \C6, \T0, \C6
-    adc     \C7, \B0, xzr
+    //RL + RH = A0-A3 (carry T4)
+    adds \A0, \C0, \C4
+    adcs \A1, \C1, \C5
+    adcs \A2, \C2, \C6
+    adcs \A3, \C3, \C7
+    adc \T4, xzr, xzr // carry into T4
+
+    // RL + RH - M 
+    adds \C2, \A0, \T0
+    adcs \C3, \A1, \T1
+    adcs \C4, \A2, \T2 
+    adcs \C5, \A3, \T3
+    adc \T4, \T4, xzr
+
+    // todo maybe we need this potential carry maybe not, what if the carry would be negative?
 .endm
+
 
 /* 
 mul a la https://github.com/microsoft/PQCrypto-SIDH/blob/master/src/P503/ARM64/fp_arm64_asm.S
@@ -146,146 +140,160 @@ a = 8 words, b = 8 words, c = 16 words
 */
 .global _uint_mul
 _uint_mul:
-    sub     sp, sp, #160
+    sub sp, sp, #240
+    // save registers
+    stp lr, x0, [sp, #0] 
+    stp x1, x2, [sp, #16]
+    stp x19, x20, [sp, #32]
+    stp x21, x22, [sp, #48]
+    stp x23, x24, [sp, #64]
+    stp x25, x26, [sp, #80]
+    stp x27, x28, [sp, #96]
+    stp x29, x30, [sp, #112]
 
-    stp lr, x19, [sp,#96]
-    stp x20, x21, [sp,#112]
-    stp x22, x23, [sp,#128]
-    str x24, [sp,#144]
 
-    //LOAD A
-    ldp     x3, x4, [x0]
-    ldp     x5, x6, [x0,#16]
-    ldp     x7, x8, [x0,#32]
-    ldp     x9, x10, [x0,#48]
+    // Load  low A
+    ldp x3, x4, [x0, #0]
+    ldp x5, x6, [x0, #16]
+    // Load low B 
+    ldp x11, x12, [x1, #0]
+    ldp x13, x14, [x1, #16]
+    // AL x BL = RL = x20-x27
+    MUL256_KARATSUBA x3, x4, x5, x6, x11, x12, x13, x14, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30, x7, x8, x9, x10
+   
+    stp x20, x21, [x2, #0] // store RL on result
+    stp x22, x23, [x2, #16]
+    stp x24, x25, [x2, #32]
+    stp x26, x27, [x2, #48]
 
-    // save x25-x28 for some reason
-    stp     x25, x26, [sp,#48]
-    stp     x27, x28, [sp,#64]
-    str     x29, [sp, #80]
+    //load high A
+    ldp x3, x4, [x0, #32]
+    ldp x5, x6, [x0, #48]
+    //load high B
+    ldp x11, x12, [x1, #32]
+    ldp x13, x14, [x1, #48]
+    // AH x BH = RH = x20-x27
+    MUL256_KARATSUBA x3, x4, x5, x6, x11, x12, x13, x14, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30, x7, x8, x9, x10
+    stp x20, x21, [x2, #64] // store RH on result
+    stp x22, x23, [x2, #80]
+    stp x24, x25, [x2, #96]
+    stp x26, x27, [x2, #112]
 
-    // x26-x29 <- AH + AL, x7 <- mask
-    adds    x26, x3, x7
-    ldp     x11, x12, [x1,#0]
-    adcs    x27, x4, x8
-    ldp     x13, x14, [x1,#16]
-    adcs    x28, x5, x9
-    ldp     x15, x16, [x1,#32]
-    adcs    x29, x6, x10
-    ldp     x17, x18, [x1,#48]
-    adc     x7, xzr, xzr
-
-    // For some reason store x19 and x20 in stack
-    stp     x19, x20, [sp,#0]
-
-    // x11-x14 <- BH + BL, x8 <- mask
-    adds    x11, x11, x15
-    stp     x21, x22, [sp,#16]
-    adcs    x12, x12, x16
-    stp     x23, x24, [sp,#32]
-    adcs    x13, x13, x17
-    adcs    x14, x14, x18
-    adc     x8, xzr, xzr
+    // |AH - AL| into x3-x6 
+    ldp x3, x4, [x0, #0] // load a again
+    ldp x5, x6, [x0, #16]
+    ldp x7, x8, [x0, #32]
+    ldp x9, x10, [x0, #48]
     
-    // x15-x18 <- masked (BH + BL)
-    sub     x9, xzr, x7
-    sub     x10, xzr, x8
-    and     x15, x11, x9
-    and     x16, x12, x9
-    and     x17, x13, x9
-    and     x18, x14, x9
+    subs x3, x7, x3 // AH - AL
+    sbcs x4, x8, x4
+    sbcs x5, x9, x5
+    sbcs x6, x10, x6
 
-    // x19-x22 <- masked (AH + AL)
-    and     x19, x26, x10
-    and     x20, x27, x10
-    and     x21, x28, x10
-    and     x22, x29, x10
+    cinv x3, x3, MI  // If negative (MI), invert x2
+    cinv x4, x4, MI  //If negative (MI), invert x3
+    cinv x5, x5, MI
+    cinv x6, x6, MI
+    csetm x30, MI     //T0 = -1 if negative, 0 otherwise
+    adds x3, x3, x30  //Add T0 to x3, set flags
+    adcs x4, x4, xzr  
+    adcs x5, x5, xzr 
+    adc x6, x6, xzr  //Add carry to x6
 
-    // x15-x18 <- masked (AH+AL) + masked (BH+BL), step 1
-    adds    x15, x15, x19
-    adcs    x16, x16, x20
-    adcs    x17, x17, x21
-    stp     x26, x27, [x2,#0]
-    adc     x18, x18, x22
-    
-    // x8-x10,x19-x23 <- (AH+AL) x (BH+BL), low part
-    MUL256_KARATSUBA_COMBA  x2, x26, x27, x28, x29, x11, x12, x13, x14, x8, x9, x10, x19, x20, x21, x22, x23, x24, x25  
-    
-    // x15-x18 <- (AH+AL) x (BH+BL), final step
-    adds    x15, x15, x20
-    ldp     x11, x12, [x1,#0]
-    adcs    x16, x16, x21
-    adcs    x17, x17, x22
-    ldp     x13, x14, [x1,#16]
-    adc     x18, x18, x23
+    // |BH - BL| into x7-x10
+    ldp x7, x8, [x1, #0] // load b again
+    ldp x9, x10, [x1, #16]
+    ldp x11, x12, [x1, #32]
+    ldp x13, x14, [x1, #48]
 
-    // x20-x27 <- AL x BL
-    MUL256_KARATSUBA_COMBA  x0, x3, x4, x5, x6, x11, x12, x13, x14, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29
-    
-    // x8-x10, x19, x15-x18 <- (AH+AL) x (BH+BL) - ALxBL
-    subs    x8, x8, x20 
-    ldp     x3, x4, [x0,#32]
-    sbcs    x9, x9, x21
-    ldp     x5, x6, [x0,#48]
-    sbcs    x10, x10, x22
-    ldp     x11, x12, [x1,#32]
-    sbcs    x19, x19, x23
-    ldp     x13, x14, [x1,#48]
-    sbcs    x15, x15, x24
-    stp     x20, x21, [x2]
-    sbcs    x16, x16, x25
-    stp     x22, x23, [x2,#16]
-    sbcs    x17, x17, x26
-    stp     x24, x25, [x2,#32]
-    sbc     x18, x18, x27
+    subs x7, x11, x7 // BH - BL
+    sbcs x8, x12, x8
+    sbcs x9, x13, x9
+    sbcs x10, x14, x10
 
+    cinv x7, x7, MI  // If negative (MI), invert x7
+    cinv x8, x8, MI
+    cinv x9, x9, MI
+    cinv x10, x10, MI
+    csetm x16, MI     //x11 = -1 if negative, 0 otherwise
+    adds x7, x7, x16  //Add T0, set flags
+    adcs x8, x8, xzr
+    adcs x9, x9, xzr
+    adc x10, x10, xzr
 
-    // x20-x25, x1, x7 <- AH x BH
-    add     x0, x0, #32
-    MUL256_KARATSUBA_COMBA  x0, x3, x4, x5, x6, x11, x12, x13, x14, x20, x21, x22, x23, x24, x25, x1, x7, x28, x29
-    
-    // x8-x10, x19, x15-x18 <- (AH+AL) x (BH+BL) - ALxBL - AHxBH
-    subs    x8, x8, x20 
-    sbcs    x9, x9, x21
-    ldp     x3, x4, [x2,#32]
-    sbcs    x10, x10, x22
-    sbcs    x19, x19, x23
-    ldr     x29, [sp,#80]
-    sbcs    x15, x15, x24
-    sbcs    x16, x16, x25
-    sbcs    x17, x17, x1
-    sbc     x18, x18, x7
-    
-    adds    x8, x8, x3 
-    adcs    x9, x9, x4
-    stp     x8, x9, [x2,#32]
-    adcs    x10, x10, x26
-    adcs    x19, x19, x27
-    stp     x10, x19, [x2,#48]    
-    adcs    x15, x15, x20 
-    ldp     x19, x20, [sp,#0]  
-    ldp     x27, x28, [sp,#64]   
-    adcs    x16, x16, x21
-    stp     x15, x16, [x2,#64]
-    adcs    x17, x17, x22
-    ldp     x21, x22, [sp,#16]
-    adcs    x18, x18, x23
-    stp     x17, x18, [x2,#80] 
-    adcs    x24, x24, xzr
-    stp     x24, x25, [x2,#96] 
-    adcs    x25, x25, xzr
-    ldp     x23, x24, [sp,#32]
-    adcs    x1, x1, xzr
-    ldp     x25, x26, [sp,#48]
-    adc     x7, x7, xzr
-    stp     x1, x7,   [x2,#112]    
-    
-    ldp lr, x19, [sp,#96]
-    ldp x20, x21, [sp,#112]
-    ldp x22, x23, [sp,#128]
-    ldr x24, [sp,#144]
+    eor x30, x30, x16 // combine signs
+    sub x30, x30, #1
 
-    add sp, sp, #160
+    // |AH - AL| * |BH - BL| into x20-x27 = M
+    MUL256_KARATSUBA x3, x4, x5, x6, x7, x8, x9, x10, x20, x21, x22, x23, x24, x25, x26, x27, x11, x12, x13, x14, x15, x28, x29
+    // if sign is negative, invert and add 1
+   
+    eor x20, x20, x30
+    eor x21, x21, x30
+    eor x22, x22, x30
+    eor x23, x23, x30
+    eor x24, x24, x30
+    eor x25, x25, x30
+    eor x26, x26, x30
+    eor x27, x27, x30
+
+    and x30, x30, #1
+
+    adds x20, x20, x30
+    adcs x21, x21, xzr
+    adcs x22, x22, xzr
+    adcs x23, x23, xzr
+    adcs x24, x24, xzr
+    adcs x25, x25, xzr
+    adcs x26, x26, xzr
+    adc x27, x27, xzr
+
+    // RL + RH = x3-x10 (carry x11)
+    ldp x3, x4, [x2, #0] // load RL first 2
+    ldp x5, x6, [x2, #64]    // load RH first 2
+    adds x3, x3, x5
+    adcs x4, x4, x6
+    ldp x5, x6, [x2, #16] // load RL second 2
+    ldp x7, x8, [x2, #80] // load RH second 2
+    adcs x5, x5, x7
+    adcs x6, x6, x8
+    ldp x7, x8, [x2, #32] // load RL third 2
+    ldp x9, x10, [x2, #96] // load RH third 2
+    adcs x7, x7, x9
+    adcs x8, x8, x10
+    ldp x9, x10, [x2, #48] // load RL fourth 2
+    ldp x11, x12, [x2, #112] // load RH fourth 2
+    adcs x9, x9, x11
+    adcs x10, x10, x12
+    adc x11, xzr, xzr
+
+    // RL + RH - M 
+    adds x3, x3, x20
+    adcs x4, x4, x21
+    adcs x5, x5, x22
+    adcs x6, x6, x23
+    adcs x7, x7, x24
+    adcs x8, x8, x25
+    adcs x9, x9, x26
+    adcs x10, x10, x27
+    adc x11, x11, xzr // todo maybe this carry will actually be needed
+
+    stp x3, x4, [x2, #32] // store middle result
+    stp x5, x6, [x2, #48]
+    stp x7, x8, [x2, #64]
+    stp x9, x10, [x2, #80]
+
+    //restore registers 
+    ldp lr, x0, [sp, #0]
+    ldp x1, x2, [sp, #16]
+    ldp x19, x20, [sp, #32]
+    ldp x21, x22, [sp, #48]
+    ldp x23, x24, [sp, #64]
+    ldp x25, x26, [sp, #80]
+    ldp x27, x28, [sp, #96]
+    ldp x29, x30, [sp, #112]
+
+    add sp, sp, #240
     ret
 
 
@@ -394,8 +402,8 @@ Montgomery multiplication
 x0 = x1 * x2
 void fp_mul3(fp *x, fp const *y, fp const *z)
 */
-.global _fp_mul3_2
-_fp_mul3_2:
+.global _fp_mul3
+_fp_mul3:
     sub sp, sp, #224 // make space in the stack for 56 words
     stp lr, x0, [sp, #0] // store lr and result address
     stp x19, x20, [sp, #16] //store x19 and x20 to avoid segmentation fault
