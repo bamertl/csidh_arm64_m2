@@ -196,15 +196,15 @@ uint q = {{0x48b72f84899eca48, 0xdb7e0542b77624de, 0xafaeb264ca1bb35a, 0xba24269
 
 
 void test_uint_mul(void){
-    uint a = {{0x5555555555555555, 0x5555555555555555, 0x5555555555555555, 0x555555555555555, 0x0,0x0,0x0,0x0}};
-    uint cc = {{0x01, 0x0,0x0,0x0,0x0, 0x0,0x0}};
+    uint a = {{0x5555555555555555, 0x5555555555555555, 0x5555555555555555, 0x555555555555555, 0x5555555555,0x55,0x123,0x41}};
+    uint cc = {{0x0213, 0x0,0x0,0x0,0x0, 0x0,0x0}};
     printf("a: ");
     uint_print(&a);
     printf("p: ");
-    uint_print(&cc);
+    uint_print(&p);
 
     biguint b = {{0}}; 
-    uint_mul(&cc, &a, &b);
+    uint_mul(&p, &a, &b);
     biguint_print(&b);
 }
 
