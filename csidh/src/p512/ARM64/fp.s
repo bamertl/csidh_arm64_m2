@@ -43,96 +43,6 @@
    
 .endm
 
-.macro MUL128x128 A0, A1, B0, B1, C0, C1, C2, C3, T0
-    ; Multiply the least significant words
-    mul     \C0, \A0, \B0       ; C0 = A0 * B0 (low word)
-    umulh   \C1, \A0, \B0       ; C1 = A0 * B0 (high word)
-
-    ; Add the cross-product of lower A0:B1 
-    mul     \T0, \A0, \B1       ; T0 = A0 * B1 (low word)
-    adds    \C1, \C1, \T0       ; C1 += T1
-    adc     \C2, xzr, xzr       ; C2 = carry from previous addition
-    ; Add the cross-prodoct of lower A1:B0
-    mul     \T0, \A1, \B0       ; T1 = A1 * B0 (low word)
-    adds    \C1, \C1, \T0       ; C1 += T1 (with carry)
-    adc     \C2, \C2, xzr       ; C2 += carry from previous addition    
-    ; to the same for the highers into C2
-    umulh   \T0, \A0, \B1       ; T0 = A0 * B1 (high word)
-    adds    \C2, \T0, \C2       ; C2 = T0 + C2
-    adc     \C3, xzr, xzr       ; C3 = carry from previous addition
-    umulh   \T0, \A1, \B0       ; T0 = A1 * B0 (high word)
-    adds    \C2, \C2, \T0       ; C2 += T0 
-    adc     \C3, \C3, xzr       ; C3 += carry from previous addition
-    ; Multiply the most significant words
-    mul     \T0, \A1, \B1
-    adds    \C2, \C2, \T0
-    adc     \C3, \C3, xzr
-    umulh   \T0, \A1, \B1
-    adc     \C3, \C3, \T0
-.endm
-
-// 𝐴𝐿 ∙ 𝐵𝐿 + 𝐴𝐻 ∙ 𝐵𝐻 − |𝐴𝐻 − 𝐴𝐿| ∙ |𝐵𝐻 − 𝐵𝐿| = RH · 2^256 + (RL + RH − RM ) · 2^128 + RL
-// !!messes with A0-B3!!
-.macro MUL256_KARATSUBA A0, A1, A2, A3, B0, B1, B2, B3, C0, C1, C2, C3, C4, C5, C6, C7, T0, T1, T2, T3, T4, T5, T6
-    // AL * BL into C0-C3 = RL
-    MUL128x128 \A0, \A1, \B0, \B1, \C0, \C1, \C2, \C3, \T0
-    // AH * BH into C4-C7 = RH
-    MUL128x128 \A2, \A3, \B2, \B3, \C4, \C5, \C6, \C7, \T0
-
-    // |AH - AL| into A0-A3
-    subs \A0, \A2, \A0
-    sbcs \A1, \A3, \A1
-    sbcs \A3, \A3, \A3
-    eor \A0, \A0, \A3
-    eor \A1, \A1, \A3
-    and \A3, \A3, #1
-    adds \A0, \A0, \A3  //Add T0 to x2, set flags
-    adc \A1, \A1, xzr  //Add carry to x3
-
-    // |BH - BL| into B0-B3
-    subs \B0, \B2, \B0
-    sbcs \B1, \B3, \B1
-    sbcs \B3, \B3, \B3
-    eor \B0, \B0, \B3
-    eor \B1, \B1, \B3
-    and \B3, \B3, #1
-    adds \B0, \B0, \B3  //Add T0 to x2, set flags
-    adc \B1, \B1, xzr  //Add carry to x3
-
-    eor \B3, \B3, \A3
-    sub \B3, \B3, #1
-
-    // |AH - AL| * |BH - BL| into T0-T3 = M
-    MUL128x128 \A0, \A1, \B0, \B1, \T0, \T1, \T2, \T3, \T4
-
-    eor \T0, \T0, \B3      // invert if negative
-    eor \T1, \T1, \B3
-    eor \T2, \T2, \B3
-    eor \T3, \T3, \B3
-
-    and \B3, \B3, #1        // two complement
-    adds \T0, \T0, \B3
-    adcs \T1, \T1, xzr
-    adcs \T2, \T2, xzr
-    adc \T3, \T3, xzr
-
-    //RL + RH = A0-A3 (carry T4)
-    adds \A0, \C0, \C4
-    adcs \A1, \C1, \C5
-    adcs \A2, \C2, \C6
-    adcs \A3, \C3, \C7
-    adc \T4, xzr, xzr // carry into T4
-
-    // RL + RH - M 
-    adds \C2, \A0, \T0
-    adcs \C3, \A1, \T1
-    adcs \C4, \A2, \T2 
-    adcs \C5, \A3, \T3
-    adc \C6, \T4, xzr // carry into C6
-
-    // todo maybe we need this potential carry maybe not, what if the carry would be negative?
-.endm
-
 /* 
 mul a la https://github.com/microsoft/PQCrypto-SIDH/blob/master/src/P503/ARM64/fp_arm64_asm.S
 //  Operation: c [x2] = a [x0] * b [x1]
@@ -158,7 +68,7 @@ _uint_mul:
     ldp x11, x12, [x1, #0]
     ldp x13, x14, [x1, #16]
     // AL x BL = RL = x20-x27
-    MUL256_KARATSUBA x3, x4, x5, x6, x11, x12, x13, x14, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30, x7, x8, x9, x10
+   // MUL256_KARATSUBA x3, x4, x5, x6, x11, x12, x13, x14, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30, x7, x8, x9, x10
    
     stp x20, x21, [x2, #0] // store RL on result
     stp x22, x23, [x2, #16]
@@ -172,7 +82,7 @@ _uint_mul:
     ldp x11, x12, [x1, #32]
     ldp x13, x14, [x1, #48]
     // AH x BH = RH = x20-x27
-    MUL256_KARATSUBA x3, x4, x5, x6, x11, x12, x13, x14, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30, x7, x8, x9, x10
+    //MUL256_KARATSUBA x3, x4, x5, x6, x11, x12, x13, x14, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30, x7, x8, x9, x10
     stp x20, x21, [x2, #64] // store RH on result
     stp x22, x23, [x2, #80]
     stp x24, x25, [x2, #96]
@@ -225,7 +135,7 @@ _uint_mul:
     sub x30, x30, #1
 
     // |AH - AL| * |BH - BL| into x20-x27 = M
-    MUL256_KARATSUBA x3, x4, x5, x6, x7, x8, x9, x10, x20, x21, x22, x23, x24, x25, x26, x27, x11, x12, x13, x14, x15, x28, x29
+// MUL256_KARATSUBA x3, x4, x5, x6, x7, x8, x9, x10, x20, x21, x22, x23, x24, x25, x26, x27, x11, x12, x13, x14, x15, x28, x29
     // if sign is negative, invert and add 1
    
     eor x20, x20, x30
