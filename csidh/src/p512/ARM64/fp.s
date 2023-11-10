@@ -99,19 +99,18 @@
     adds \B0, \B0, \B3  //Add T0 to x2, set flags
     adc \B1, \B1, xzr  //Add carry to x3
 
-
     eor \B3, \B3, \A3
     sub \B3, \B3, #1
 
     // |AH - AL| * |BH - BL| into T0-T3 = M
     MUL128x128 \A0, \A1, \B0, \B1, \T0, \T1, \T2, \T3, \T4
 
-    eor \T0, \T0, \B3
+    eor \T0, \T0, \B3      // invert if negative
     eor \T1, \T1, \B3
     eor \T2, \T2, \B3
     eor \T3, \T3, \B3
 
-    and \B3, \B3, #1
+    and \B3, \B3, #1        // two complement
     adds \T0, \T0, \B3
     adcs \T1, \T1, xzr
     adcs \T2, \T2, xzr
@@ -134,7 +133,6 @@
     // todo maybe we need this potential carry maybe not, what if the carry would be negative?
 .endm
 
-
 /* 
 mul a la https://github.com/microsoft/PQCrypto-SIDH/blob/master/src/P503/ARM64/fp_arm64_asm.S
 //  Operation: c [x2] = a [x0] * b [x1]
@@ -152,7 +150,6 @@ _uint_mul:
     stp x25, x26, [sp, #80]
     stp x27, x28, [sp, #96]
     stp x29, x30, [sp, #112]
-
 
     // Load  low A
     ldp x3, x4, [x0, #0]
