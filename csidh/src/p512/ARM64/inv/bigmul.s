@@ -26,29 +26,31 @@
     adc     \C3, \C3, \T0
 .endm
 
+
 // 𝐴𝐿 ∙ 𝐵𝐿 + 𝐴𝐻 ∙ 𝐵𝐻 − |𝐴𝐻 − 𝐴𝐿| ∙ |𝐵𝐻 − 𝐵𝐿| = RH · 2^256 + (RL + RH − RM ) · 2^128 + RL
 // !!messes with A0-B3!!
 // needs 21 registers
-.macro MUL256_KARATSUBA A0, A1, A2, A3, B0, B1, B2, B3, C0, C1, C2, C3, C4, C5, C6, C7, T0, T1, T2, T3, T4
-    // AL * BL into C0-C3 = RL
+.macro MUL256_KARATSUBA A0, A1, A2, A3, B0, B1, B2, B3, C0, C1, C2, C3, C4, C5, C6, C7, T0, T1, T2, T3, T4, T5
+    // AL * BL into C0-C3 = L
     MUL128x128 \A0, \A1, \B0, \B1, \C0, \C1, \C2, \C3, \T0
-    // AH * BH into C4-C7 = RH
+    // AH * BH into C4-C7 = H
     MUL128x128 \A2, \A3, \B2, \B3, \C4, \C5, \C6, \C7, \T0
 
-    // T RLH(C2,C3) + RHL(C4,C5)
-    adds \T0, \C0, \C4
-    adcs \T1, \C1, \C5
-    adcs \T2, \C2, \C6
-    adcs \T3, \C3, \C7
-    adcs \T4, xzr, xzr // carry into T4
+        // + L*2^128 from (L+H-M)*2^128(2 words) 
+    adds \T0, \C2, \C0
+    adcs \T1, \C3, \C1
+    adcs \T2, \C4, \C2
+    adcs \T3, \C5, \C3
+    adc  \T4, \C6, xzr
 
-    adds \C2, \C2, \T0
-    adcs \C3, \C3, \T1
-    adcs \C4, \C4, \T2
-    adcs \C5, \C5, \T3
-    adcs \C6, \C6, \T4
+    // + H*2^128 from (L+H-M)*2^128(2 words)
+    adds \C2, \T0, \C4
+    adcs \C3, \T1, \C5
+    adcs \C4, \T2, \C6
+    adcs \C5, \T3, \C7
+    adc \C6, \T4, xzr
 
-    // |AH - AL| into A1-A3 sign in A2
+    // |AH - AL| into A0-A1 sign in A2
     subs \A0, \A2, \A0
     sbcs \A1, \A3, \A1
     // LO means the carry flag is 0, which means x1 was bigger than x0
@@ -60,7 +62,7 @@
     adds \A0, \A0, \A2
     adc \A1, \A1, xzr
 
-    // |BH - BL| into B0-B3
+    // |BH - BL| into B0-B1 sign in B2
     subs \B0, \B2, \B0
     sbcs \B1, \B3, \B1
     // LO means the carry flag is 0, which means x1 was bigger than x0
@@ -75,10 +77,10 @@
     eor \A2, \A2, \B2
     sub \A2, \A2, #1
     // M = |AH - AL| * |BH - BL| into T0-T3 = M
-             // A0,  A1,  B0,  B1,  C0,  C1,  C2,  C3,  T0
+          
     MUL128x128 \A0, \A1, \B0, \B1, \T0, \T1, \T2, \T3, \T4
 
-    // 2's complement if necessary
+    // 2's complement of M if signs are the same (we then add negative)
     eor \T0, \T0, \A2
     eor \T1, \T1, \A2
     eor \T2, \T2, \A2
@@ -88,19 +90,18 @@
     adds \T0, \T0, \T4
     adcs \T1, \T1, xzr
     adcs \T2, \T2, xzr
-    adcs \T3, \T3, xzr
+    adc \T3, \T3, xzr
 
-    adcs \A2, \A2, xzr // carry into T4
-    
-    // RL + RH - M 
+    // +- M*2^128 from (L+H-M)*2^128(2 words)
     adds \C2, \C2, \T0
     adcs \C3, \C3, \T1
     adcs \C4, \C4, \T2
     adcs \C5, \C5, \T3
     adcs \C6, \C6, \A2
+    adc \C7, \C7, \A2
 
-    // todo maybe we need this potential carry maybe not, what if the carry would be negative?
 .endm
+
 
 //  Operation: c [x2] = a [x0] * b [x1]
 //a = 8 words, b = 8 words, c = 8 words
@@ -117,15 +118,15 @@ _uint_mul_lower:
     stp x25, x26, [sp, #80]
     stp x27, x28, [sp, #96]
 
-        // Load  low A
+    // Load  low A
     ldp x3, x4, [x0, #0]
     ldp x5, x6, [x0, #16]
     // Load low B 
     ldp x7, x8, [x1, #0]
     ldp x9, x10, [x1, #16]
 
-    // AL x BL = RL = x20-x27
-    MUL256_KARATSUBA x3, x4, x5, x6, x7, x8, x9, x10, x20, x21, x22, x23, x24, x25, x26, x27, x11, x12, x13, x14, x15, x16, x17
+    // AL x BL = L = x20-x27
+    MUL256_KARATSUBA x3, x4, x5, x6, x7, x8, x9, x10, x20, x21, x22, x23, x24, x25, x26, x27, x11, x12, x13, x14, x15, x16
     stp x20, x21, [x2, #0]
     stp x22, x23, [x2, #16]
     stp x24, x25, [x2, #32]

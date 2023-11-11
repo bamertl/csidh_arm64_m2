@@ -54,15 +54,14 @@ void biguint_print_lower(uint const *x)
 
 extern void uint_mul_lower(uint *c, uint const *a, uint const *b);
 
-extern void abs_minus(void);
+extern void uint_mul_128x128(uint *c, uint const *a, uint const *b);
+
 
 
 void test_uint_mul_lower(void)
 {
-    //uint a = {{0x66c1301f632e294d, 0xfe025ed7d0d3b1aa, 0xf6fe2bc33e915395, 0x34ed3ea7f1de34c4, 0x0,0x0,0x0,0x0}};
-    //uint b = {{0x5afbfcc69322c9cd, 0xb42d083aedc88c42, 0xfc8ab0d15e3e4c4a, 0x65b48e8f740f89bf, 0x0,0x0,0x0,0x0}};
-    uint a = {{0x0, 0,0,0x1000000000000000,0,0,0,0}};
-    uint b = {{0x1123456789ABCDEF,0x1123456789ABCDEF,0x1123456789ABCDEF,0x1123456789ABCDEF,0x0,0x0,0x0,0x0}};
+    uint a = {{0x66c1301f632e294d, 0xfe025ed7d0d3b1aa, 0xf6fe2bc33e915395, 0x34ed3ea7f1de34c4, 0x0,0x0,0x0,0x0}};
+    uint b = {{0x5afbfcc69322c9cd, 0xb42d083aedc88c42, 0xfc8ab0d15e3e4c4a, 0x65b48e8f740f89bf, 0x0,0x0,0x0,0x0}};
 
     printf("a = "); uint_print(&a);
     printf("b = "); uint_print(&b);

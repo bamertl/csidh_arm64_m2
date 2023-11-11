@@ -67,10 +67,10 @@ _uint_mul:
     // Load low B 
     ldp x11, x12, [x1, #0]
     ldp x13, x14, [x1, #16]
-    // AL x BL = RL = x20-x27
+    // AL x BL = L = x20-x27
    // MUL256_KARATSUBA x3, x4, x5, x6, x11, x12, x13, x14, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30, x7, x8, x9, x10
    
-    stp x20, x21, [x2, #0] // store RL on result
+    stp x20, x21, [x2, #0] // store L on result
     stp x22, x23, [x2, #16]
     stp x24, x25, [x2, #32]
     stp x26, x27, [x2, #48]
@@ -81,7 +81,7 @@ _uint_mul:
     //load high B
     ldp x11, x12, [x1, #32]
     ldp x13, x14, [x1, #48]
-    // AH x BH = RH = x20-x27
+    // AH x BH = H = x20-x27
     //MUL256_KARATSUBA x3, x4, x5, x6, x11, x12, x13, x14, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30, x7, x8, x9, x10
     stp x20, x21, [x2, #64] // store RH on result
     stp x22, x23, [x2, #80]
@@ -93,7 +93,6 @@ _uint_mul:
     ldp x5, x6, [x0, #16]
     ldp x7, x8, [x0, #32]
     ldp x9, x10, [x0, #48]
-    
 
     subs x3, x7, x3 // AH - AL
     sbcs x4, x8, x4
