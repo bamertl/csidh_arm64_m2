@@ -11,8 +11,8 @@ n = 8
 R = r^n = 2^512
 
  */
-.global _fp_mul3_2
-_fp_mul3_2:
+.global _fp_mul3
+_fp_mul3:
 
 sub sp, sp, #240 // 0-64 lr,x0,x1,x2,x17,19,x20,x21
 // Address C = sp + #8

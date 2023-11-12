@@ -1,3 +1,246 @@
+/*
+This file contains the fp_mul3 method for montgomery reduction with first a subtractive karatsuba multiplication
+of 256*256 -> 512 bits and then a reduction
+ */
+.macro LOAD_8_WORD_NUMBER42, reg1, reg2, reg3, reg4, reg5, reg6, reg7, reg8, num_pointer
+    LDP \reg1, \reg2, [\num_pointer,#0] 
+    LDP \reg3, \reg4, [\num_pointer,#16]
+    LDP \reg5, \reg6, [\num_pointer,#32]
+    LDP \reg7, \reg8, [\num_pointer, #48]
+.endm
+
+.macro STORE_8_WORD_NUMBER42, reg1, reg2, reg3, reg4, reg5, reg6, reg7, reg8, destination_pointer
+    STP \reg1, \reg2, [\destination_pointer,#0] 
+    STP \reg3, \reg4, [\destination_pointer,#16]
+    STP \reg5, \reg6, [\destination_pointer,#32]
+    STP \reg7, \reg8, [\destination_pointer, #48]
+.endm
+
+.macro LOAD_511_PRIME42, reg1, reg2, reg3, reg4, reg5, reg6, reg7, reg8
+    adrp \reg8, _p@PAGE
+    add \reg8, \reg8, _p@PAGEOFF
+    LDP \reg1, \reg2, [\reg8, #0]
+    LDP \reg3, \reg4, [\reg8, #16]
+    LDP \reg5, \reg6, [\reg8, #32]
+    LDP \reg7, \reg8, [\reg8, #48]
+   
+.endm
+
+/*
+Montgomery multiplication
+x0 = x1 * x2
+void fp_mul3(fp *x, fp const *y, fp const *z)
+*/
+.global _fp_mul3
+_fp_mul3:
+    sub sp, sp, #224 // make space in the stack for 56 words
+    stp lr, x0, [sp, #0] // store lr and result address
+    stp x19, x20, [sp, #16] //store x19 and x20 to avoid segmentation fault
+    stp x21, x22, [sp, #32] //store x21 and x22 to avoid segmentation fault
+
+    mov x0, x2 // Move x2 to x0 for multiplication
+    add x2, sp, #64 // result for mul = stack address + 16 + (16+8*16) words
+    bl _uint_mul_512x512 // x2 = x0 * x1
+    mov x0, x2 // copy result address of mul to x0 (this points to stack + 64)
+    ldr x1, [sp, #8] // load back initial result address to x1
+    bl _monte_reduce
+    ldp lr, x0, [sp, #0] // get back lr
+    ldp x19, x20, [sp, #16] //get back x19 - x22
+    ldp x21, x22, [sp, #32]
+
+    add sp, sp, #224 //give back the stack
+
+    ret
+
+/*
+Input: 
+    a such that 0 <= a < p^2
+    R = 2^256
+    mu_big = -p^(-1) mod R
+Output: 
+    C ≡ a*R^(−1) mod p such that 0 ≤ C < p
+    Operation: c[x1] = a [x0] mod p
+
+not defined in fp.c
+*/
+_monte_reduce:
+    // Make place in the stack for
+    sub sp, sp, #512
+    stp lr, x1, [sp, #0] // store lr and result address
+    str x0, [sp, #16] // store adress of a
+
+    // a mod R = Lower 8 words of a
+    // load mu into x1 
+    adrp x1, _mu@PAGE //get address of mu
+    add x1, x1, _mu@PAGEOFF //add offset of mu
+    //add  x1, x1, :lo12:mu aah, this was unnecessary then :) smart move
+    add x2, sp, #24 // result of multiplication 16 words -> sp #24 - sp# 152
+    // mu [x1] * ( a [x0] mod R )
+    bl _uint_mul_512x512
+    mov x1, x2 // copy result address to x1
+    // q = lower 8 words of x1
+    // C ← (a + p*q)/R
+    // x0 = p
+    adrp x0, _p@PAGE
+    add x0, x0, _p@PAGEOFF
+    add x2, sp, #152 // result of multiplication p*q 16 words from sp#152-280
+    bl _uint_mul_512x512
+    mov x0, x2 // x0 = p*q
+    ldr x1, [sp, #16] // load address of a into x1 
+    add x2, sp, #280 // result again 16 words from sp #280-408
+    bl _add2_16_words
+    // Result in higher 8 words of x2
+    add x2, x2, #64 // 
+    // If C >= p then C = C - p
+    LOAD_8_WORD_NUMBER42 x3, x4, x5, x6, x7, x8, x9, x10, x2
+    LOAD_511_PRIME42 x12, x13, x14, x15, x16, x17, x19, x20
+
+    
+    //Subtract Prime from a + b into register x3-x11, not(carry)
+    SUBS x3, x3, x12
+    SBCS x4, x4, x13
+    SBCS x5, x5, x14
+    SBCS x6, x6, x15
+    SBCS x7, x7, x16
+    SBCS x8, x8, x17
+    SBCS x9, x9, x19
+    SBCS x10, x10, x20
+    //SBCS x11, x11, xzr // this is the error.
+    // The carry into x21
+    SBC x21, xzr, xzr
+
+    // If the result of a + b - p was negative, the mask will be 1, otherwise 0
+    and x12, x12, x21
+    and x13, x13, x21
+    and x14, x14, x21
+    and x15, x15, x21
+    and x16, x16, x21
+    and x17, x17, x21
+    and x19, x19, x21
+    and x20, x20, x21
+
+    // Add masked p to a + b - p (masked p = p | 0)
+    ADDS x3, x3, x12
+    ADCS x4, x4, x13
+    ADCS x5, x5, x14
+    ADCS x6, x6, x15
+    ADCS x7, x7, x16
+    ADCS x8, x8, x17
+    ADCS x9, x9, x19
+    ADC x10, x10, x20
+
+
+    // load result address
+    ldr x1, [sp, #8]
+    STORE_8_WORD_NUMBER42 x3, x4, x5, x6, x7, x8, x9, x10, x1    
+    ldr lr, [sp, #0]
+    add sp, sp, #512
+    ret
+
+
+/*  
+Operation: c[x2] = a[x0] + b[x1]
+a, b, c = 16 words
+not defined in fp.c
+*/
+_add2_16_words:
+    // Word 0
+    LDR x4, [x0]          // Load word 0 from a
+    LDR x5, [x1]          // Load word 0 from b
+    ADDS x6, x4, x5       // Add the two words, set flags
+    STR x6, [x2]          // Store the result word 0 to c
+
+    // Word 1
+    LDR x4, [x0, #8]         
+    LDR x5, [x1, #8]      
+    ADCS x6, x4, x5       
+    STR x6, [x2, #8]      
+    
+    // Word 2
+    LDR x4, [x0, #16]     
+    LDR x5, [x1, #16]     
+    ADCS x6, x4, x5       
+    STR x6, [x2, #16]
+
+    // Word 3
+    LDR x4, [x0, #24]
+    LDR x5, [x1, #24]
+    ADCS x6, x4, x5
+    STR x6, [x2, #24]
+
+    // Word 4
+    LDR x4, [x0, #32]
+    LDR x5, [x1, #32]
+    ADCS x6, x4, x5
+    STR x6, [x2, #32]
+
+    // Word 5
+    LDR x4, [x0, #40]
+    LDR x5, [x1, #40]
+    ADCS x6, x4, x5
+    STR x6, [x2, #40]
+
+    // Word 6
+    LDR x4, [x0, #48]
+    LDR x5, [x1, #48]
+    ADCS x6, x4, x5
+    STR x6, [x2, #48]
+
+    // Word 7
+    LDR x4, [x0, #56]
+    LDR x5, [x1, #56]
+    ADCS x6, x4, x5
+    STR x6, [x2, #56]
+
+    // Word 8
+    LDR x4, [x0, #64]
+    LDR x5, [x1, #64]
+    ADCS x6, x4, x5
+    STR x6, [x2, #64]
+
+    // Word 9
+    LDR x4, [x0, #72]
+    LDR x5, [x1, #72]
+    ADCS x6, x4, x5
+    STR x6, [x2, #72]
+
+    // Word 10
+    LDR x4, [x0, #80]
+    LDR x5, [x1, #80]
+    ADCS x6, x4, x5
+    STR x6, [x2, #80]
+
+    // Word 11
+    LDR x4, [x0, #88]
+    LDR x5, [x1, #88]
+    ADCS x6, x4, x5
+    STR x6, [x2, #88]
+
+    // Word 12
+    LDR x4, [x0, #96]
+    LDR x5, [x1, #96]
+    ADCS x6, x4, x5
+    STR x6, [x2, #96]
+
+    // Word 13
+    LDR x4, [x0, #104]
+    LDR x5, [x1, #104]
+    ADCS x6, x4, x5
+    STR x6, [x2, #104]
+
+    // Word 14
+    LDR x4, [x0, #112]
+    LDR x5, [x1, #112]
+    ADCS x6, x4, x5
+    STR x6, [x2, #112]
+
+    // Word 15
+    LDR x4, [x0, #120]
+    LDR x5, [x1, #120]
+    ADCS x6, x4, x5
+    STR x6, [x2, #120]
+    ret
+
 .macro MUL128x128 A0, A1, B0, B1, C0, C1, C2, C3, T0
     ; Multiply the least significant words
     mul     \C0, \A0, \B0       ; C0 = A0 * B0 (low word)
