@@ -43,6 +43,7 @@
    
 .endm
 
+
 //////////////////////////////////////////// MACRO
 .macro MUL128_COMBA_CUT  A0, A1, B0, B1, C0, C1, C2, C3, T0
     mul     \A0, \A1, \B0
@@ -56,252 +57,328 @@
     adcs    \C2, \C2, \B0
     adc     \C3, xzr, xzr
     
-    adds    \C2, \C2, \T0 
+    adds    \C2, \C2, \T0
     adc     \C3, \C3, \B1
+.endm
+	
+	
+//////////////////////////////////////////// MACRO
+.macro MUL192_COMBA_CUT  A0, A1, A2, B0, B1, B2, C0, C1, C2, C3, C4, C5, T0, T1
+    mul     \C4, \A1, \B0
+    umulh   \C5, \A1, \B0
+    adds    \C1, \C1, \C3
+    adc     \C2, \C2, xzr
+    
+    mul     \T1, \A1, \B1
+    umulh   \C3, \A1, \B1
+    adds    \C1, \C1, \C4
+    adcs    \C2, \C2, \C5
+    adc     \C3, \C3, xzr
+    
+    mul     \C4, \A0, \B2
+    umulh   \C5, \A0, \B2
+    adds    \C2, \C2, \T1
+    adcs    \C3, \C3, \C5
+    adc     \T0, xzr, xzr
+    
+    mul     \T1, \A2, \B0
+    umulh   \C5, \A2, \B0
+    adds    \C2, \C2, \C4
+    adcs    \C3, \C3, \C5
+    adc     \T0, \T0, xzr
+    
+    mul     \C4, \A1, \B2
+    umulh   \C5, \A1, \B2
+    adds    \C2, \C2, \T1
+    adcs    \C3, \C3, \C4
+    adcs    \T0, \T0, \C5
+    adc     \T1, xzr, xzr
+    
+    mul     \C4, \A2, \B1
+    umulh   \C5, \A2, \B1
+    adds    \C3, \C3, \C4
+    adcs    \T0, \T0, \C5
+    adc     \T1, \T1, xzr
+    
+    mul     \C4, \A2, \B2
+    umulh   \C5, \A2, \B2
+    adds    \C4, \C4, \T0
+    adc     \C5, \C5, \T1
 .endm
 
 
 //////////////////////////////////////////// MACRO
-.macro    MUL256_KARATSUBA_COMBA  M,A0,A1,A2,A3,B0,B1,B2,B3,C0,C1,C2,C3,C4,C5,C6,C7,T0,T1
+.macro    MUL320_KARATSUBA_COMBA  MA,A0,A1,A2,A3,A4,B0,B1,B2,B3,B4,C0,C1,C2,C3,C4,C5,C6,C7,C8,C9,T0,T1
 
-    // A0-A1 <- AH + AL, T0 <- mask
-    adds    \A0, \A0, \A2
-    adcs    \A1, \A1, \A3
+    // A0-A2 <- AH + AL, T0 <- mask
+    adds    \C0, \A0, \A3
+    adcs    \C1, \A1, \A4
+    adcs    \C2, \A2, xzr
     adc     \T0, xzr, xzr
-    //T0 is the carry of the first addition
 
-    // C6, T1 <- BH + BL, C7 <- mask
-    adds    \C6, \B0, \B2
-    adcs    \T1, \B1, \B3
-    adc     \C7, xzr, xzr
-    // C7 is the carry of the second addition
+    // B0-B2 <- BH + BL, T1 <- mask
+    adds    \C3, \B0, \B3
+    adcs    \C4, \B1, \B4
+    adcs    \C5, \B2, xzr
+    adc     \T1, xzr, xzr
     
-    // C0-C1 <- masked (BH + BL)
-    sub     \C2, xzr, \T0
-    sub     \C3, xzr, \C7
-    and     \C0, \C6, \C2
-    and     \C1, \T1, \C2
+    // C6-C8 <- masked (BH + BL)
+    sub     \T0, xzr, \T0
+    sub     \T1, xzr, \T1
+    and     \C6, \C3, \T0
+    and     \C7, \C4, \T0
+    and     \C8, \C5, \T0
 
-    // C4-C5 <- masked (AH + AL), T0 <- combined carry
-    and     \C4, \A0, \C3
-    and     \C5, \A1, \C3
-    mul     \C2, \A0, \C6
-    mul     \C3, \A0, \T1
-    and     \T0, \T0, \C7 
+    // C9,T0,T1 <- masked (AH + AL)
+    mul     \A0, \C0, \C3  
+    mul     \A1, \C0, \C4
+    and     \C9, \C0, \T1
+    and     \T0, \C1, \T1
+    and     \T1, \C2, \T1
 
-    // C0-C1, T0 <- (AH+AL) x (BH+BL), part 1
-    adds    \C0, \C4, \C0
-    umulh   \C4, \A0, \T1    
-    adcs    \C1, \C5, \C1
-    umulh   \C5, \A0, \C6
-    adc     \T0, \T0, xzr //means that T0 can become two if the carry is 1 and the combined carry as well
+    // C6-C8 <- (AH+AL) x (BH+BL), part 1
+    umulh   \A3, \C0, \C3 
+    umulh   \A2, \C0, \C4
+    adds    \C6, \C6, \C9   
+    adcs    \C7, \C7, \T0  
+    adc     \C8, \C8, \T1
 
-    // C2-C5 <- (AH+AL) x (BH+BL), low part
-    MUL128_COMBA_CUT  \A0, \A1, \C6, \T1, \C2, \C3, \C4, \C5, \C7
-    ldp     \A0, \A1, [\M,#0]
+    // A0-A4,C9 <- (AH+AL) x (BH+BL), low part
+    MUL192_COMBA_CUT  \C0, \C1, \C2, \C3, \C4, \C5, \A0, \A1, \A2, \A3, \A4, \C9, \T0, \T1
     
-    // C2-C5, T0 <- (AH+AL) x (BH+BL), final part
-    adds    \C4, \C0, \C4
-    umulh   \C7, \A0, \B0 
-    umulh   \T1, \A0, \B1 
-    adcs    \C5, \C1, \C5
-    mul     \C0, \A0, \B0
-    mul     \C1, \A0, \B1  
-    adc     \T0, \T0, xzr
+    // C6-C8 <- (AH+AL) x (BH+BL), final part
+    adds    \C6, \A3, \C6
+    adcs    \C7, \A4, \C7
+    ldp     \A3, \A4, [\MA,#0]
+    adc     \C8, \C9, \C8
+    ldr     \C9, [\MA,#16]
 
-    // C0-C1, T1, C7 <- AL x BL
-    MUL128_COMBA_CUT  \A0, \A1, \B0, \B1, \C0, \C1, \T1, \C7, \C6
+    // C0-C5 <- AL x BL
+    mul     \C0, \A3, \B0
+    mul     \C1, \A3, \B1  
+    umulh   \C3, \A3, \B0 
+    umulh   \C2, \A3, \B1 
+    MUL192_COMBA_CUT  \A3, \A4, \C9, \B0, \B1, \B2, \C0, \C1, \C2, \C3, \C4, \C5, \T0, \T1
     
-    // C2-C5, T0 <- (AH+AL) x (BH+BL) - ALxBL
-    mul     \A0, \A2, \B2
-    umulh   \B0, \A2, \B2
-    subs    \C2, \C2, \C0 
-    sbcs    \C3, \C3, \C1
-    sbcs    \C4, \C4, \T1
-    mul     \A1, \A2, \B3
-    umulh   \C6, \A2, \B3   
-    sbcs    \C5, \C5, \C7
-    sbc     \T0, \T0, xzr
+    // A0-A2,C6-C8 <- (AH+AL) x (BH+BL) - ALxBL
+    ldp     \A3, \A4, [\MA,#24]
+    subs    \A0, \A0, \C0 
+    sbcs    \A1, \A1, \C1
+    mul     \B0, \A3, \B3
+    umulh   \C9, \A3, \B3
+    sbcs    \A2, \A2, \C2
+    sbcs    \C6, \C6, \C3
+    mul     \B1, \A3, \B4
+    umulh   \B2, \A3, \B4  
+    sbcs    \C7, \C7, \C4
+    sbc     \C8, \C8, \C5	 
 
-    // A0, A1, C6, B0 <- AH x BH 
-    MUL128_COMBA_CUT  \A2, \A3, \B2, \B3, \A0, \A1, \C6, \B0, \B1
+    // B0-B2,C9 <- AH x BH 
+    MUL128_COMBA_CUT  \A3, \A4, \B3, \B4, \B0, \B1, \B2, \C9, \T0
     
-    // C2-C5, T0 <- (AH+AL) x (BH+BL) - ALxBL - AHxBH
-    subs    \C2, \C2, \A0 
-    sbcs    \C3, \C3, \A1
-    sbcs    \C4, \C4, \C6
-    sbcs    \C5, \C5, \B0
-    sbc     \T0, \T0, xzr
+    // A0-A2,C6-C8 <- (AH+AL) x (BH+BL) - ALxBL - AHxBH
+    subs    \A0, \A0, \B0 
+    sbcs    \A1, \A1, \B1
+    sbcs    \A2, \A2, \B2
+    sbcs    \C6, \C6, \C9
+    sbcs    \C7, \C7, xzr
+    sbc     \C8, \C8, xzr
     
-    adds    \C2, \C2, \T1 
-    adcs    \C3, \C3, \C7
-    adcs    \C4, \C4, \A0
-    adcs    \C5, \C5, \A1
-    adcs    \C6, \T0, \C6
-    adc     \C7, \B0, xzr
+    adds    \C3, \C3, \A0
+    adcs    \C4, \C4, \A1
+    adcs    \C5, \C5, \A2
+    adcs    \C6, \C6, \B0
+    adcs    \C7, \C7, \B1
+    adcs    \C8, \C8, \B2
+    adc     \C9, \C9, xzr
 .endm
 
 /* 
 mul a la https://github.com/microsoft/PQCrypto-SIDH/blob/master/src/P503/ARM64/fp_arm64_asm.S
 //  Operation: c [x2] = a [x0] * b [x1]
 a = 8 words, b = 8 words, c = 16 words
+a = 10 words, b = 10 words, c = 20 words
 */
 .global _uint_mul
 _uint_mul:
-    sub     sp, sp, #176
-
-    stp lr, x19, [sp,#96]
-    //stp x20, x21, [sp,#112]
-    //stp x22, x23, [sp,#128]
-    //str x24, [sp,#144]
-
-    //LOAD A
+//replace the last two words of x0 and x1 with zeros
+    sub     sp, sp, #96
     ldp     x3, x4, [x0]
     ldp     x5, x6, [x0,#16]
     ldp     x7, x8, [x0,#32]
-    ldp     x9, x10, [x0,#48]
-
-    // save x25-x28 for some reason
+    ldp     x10, x11, [x0,#48]
+    //ldp     x12, x13, [x0,#64]
+    mov    x12, xzr
+    mov   x13, xzr
     stp     x25, x26, [sp,#48]
     stp     x27, x28, [sp,#64]
-    str     x29, [sp, #80]
+    stp     x29, x30, [sp,#80]
 
-    // x26-x29 <- AH + AL, x7 <- mask
-    adds    x26, x3, x7
-    ldp     x11, x12, [x1,#0]
-    adcs    x27, x4, x8
-    ldp     x13, x14, [x1,#16]
-    adcs    x28, x5, x9
-    ldp     x15, x16, [x1,#32]
-    adcs    x29, x6, x10
-    ldp     x17, x18, [x1,#48]
-    adc     x7, xzr, xzr
-
-    // For some reason store x19 and x20 in stack
-    stp     x19, x20, [sp,#0]
-
-    // x11-x14 <- BH + BL, x8 <- mask
-    adds    x11, x11, x15
+    // x26-x30 <- AH + AL, x9 <- mask
+    adds    x26, x3, x8
     stp     x21, x22, [sp,#16]
-    adcs    x12, x12, x16
+    adcs    x27, x4, x10
     stp     x23, x24, [sp,#32]
-    adcs    x13, x13, x17
-    adcs    x14, x14, x18
+    adcs    x28, x5, x11
+    ldp     x21, x22, [x1,#0]
+    adcs    x29, x6, x12
+    ldp     x14, x15, [x1,#48]
+    adcs    x30, x7, x13
+    ldp     x23, x24, [x1,#16]
+    adc     x9, xzr, xzr
+    ldp     x25, x13, [x1,#32]
+
+    // x13-x17 <- BH + BL, x8 <- mask
+    adds    x13, x13, x21
+    //ldp     x16, x17, [x1,#64]
+    mov    x16, xzr
+    mov   x17, xzr
+    adcs    x14, x14, x22
+    adcs    x15, x15, x23
+    adcs    x16, x16, x24
+    adcs    x17, x17, x25
     adc     x8, xzr, xzr
     
-    // x15-x18 <- masked (BH + BL)
-    sub     x9, xzr, x7
-    sub     x10, xzr, x8
-    and     x15, x11, x9
-    and     x16, x12, x9
-    and     x17, x13, x9
-    and     x18, x14, x9
+    // x3-x7 <- masked (BH + BL)
+    sub     x8, xzr, x8
+    sub     x9, xzr, x9
+    stp     x19, x20, [sp,#0]
+    and     x3, x13, x9
+    and     x4, x14, x9
+    and     x5, x15, x9
+    and     x6, x16, x9
+    and     x7, x17, x9
 
-    // x19-x22 <- masked (AH + AL)
-    and     x19, x26, x10
-    and     x20, x27, x10
-    and     x21, x28, x10
-    and     x22, x29, x10
+    // x8-x12 <- masked (AH + AL)
+    and     x9, x27, x8
+    and     x10, x28, x8
+    and     x11, x29, x8
+    and     x12, x30, x8
+    and     x8, x26, x8
 
-    // x15-x18 <- masked (AH+AL) + masked (BH+BL), step 1
-    adds    x15, x15, x19
-    adcs    x16, x16, x20
-    adcs    x17, x17, x21
-    stp     x26, x27, [x2,#0] //those two values are used for the Karatsuba later
-    adc     x18, x18, x22
+    // x8-x12 <- masked (AH+AL) + masked (BH+BL), step 1
+    adds    x8, x8, x3
+    adcs    x9, x9, x4
+    stp     x26, x27, [x2,#0]
+    adcs    x10, x10, x5
+    stp     x28, x29, [x2,#16]
+    adcs    x11, x11, x6
+    str     x30, [x2,#32]
+    adc     x12, x12, x7
     
-    // x8-x10,x19-x23 <- (AH+AL) x (BH+BL), low part
-    MUL256_KARATSUBA_COMBA  x2, x26, x27, x28, x29, x11, x12, x13, x14, x8, x9, x10, x19, x20, x21, x22, x23, x24, x25  
+    // x3-x7,x19-x23 <- (AH+AL) x (BH+BL), low part
+    MUL320_KARATSUBA_COMBA  x2, x26, x27, x28, x29, x30, x13, x14, x15, x16, x17, x3, x4, x5, x6, x7, x19, x20, x21, x22, x23, x24, x25  
     
-    // x15-x18 <- (AH+AL) x (BH+BL), final step
-    adds    x15, x15, x20
-    ldp     x11, x12, [x1,#0]
-    adcs    x16, x16, x21
-    adcs    x17, x17, x22
-    ldp     x13, x14, [x1,#16]
-    adc     x18, x18, x23
-    //PROBLEM Space No2: x18 is the 8th word of step_4 (in the example: 0x0d5f5554dc02dec7),
-    // it's actual value is 0x10d5f5554dc02dec7, how can I get hold of this value?
+    // x8-x12 <- (AH+AL) x (BH+BL), final step
+	stp     x3, x4, [x2,#0]
+    adds    x8, x8, x19
+	stp     x5, x6, [x2,#16]
+    adcs    x9, x9, x20
+	str     x7, [x2,#32]
+    adcs    x10, x10, x21
+    ldp     x13, x14, [x0]
+    adcs    x11, x11, x22
+    ldp     x15, x16, [x0,#16]
+    adc     x12, x12, x23
+	
+    ldr     x17, [x0,#32]
+    ldp     x26, x27, [x1,#0]
+    ldp     x28, x29, [x1,#16]
+    ldr     x30, [x1,#32]
 
-    // x20-x27 <- AL x BL
-    MUL256_KARATSUBA_COMBA  x0, x3, x4, x5, x6, x11, x12, x13, x14, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29
+    // x3-x7,x19-x23 <- AL x BL
+    MUL320_KARATSUBA_COMBA  x0, x13, x14, x15, x16, x17, x26, x27, x28, x29, x30, x3, x4, x5, x6, x7, x19, x20, x21, x22, x23, x24, x25
     
-    // x8-x10, x19, x15-x18 <- (AH+AL) x (BH+BL) - ALxBL
-    subs    x8, x8, x20 
-    ldp     x3, x4, [x0,#32]
-    sbcs    x9, x9, x21
-    ldp     x5, x6, [x0,#48]
-    sbcs    x10, x10, x22
-    ldp     x11, x12, [x1,#32]
-    sbcs    x19, x19, x23
-    ldp     x13, x14, [x1,#48]
-    sbcs    x15, x15, x24
-    stp     x20, x21, [x2] //here they overwrite x2 withouth using the values x26 and x27
-    sbcs    x16, x16, x25
-    stp     x22, x23, [x2,#16]
-    sbcs    x17, x17, x26
-    stp     x24, x25, [x2,#32]
-    sbc     x18, x18, x27
+    // x3-x12 <- (AH+AL) x (BH+BL) - ALxBL
+	ldp     x13, x14, [x2,#0]
+    subs    x13, x13, x3 
+	ldp     x15, x16, [x2,#16]
+    sbcs    x14, x14, x4
+	ldr     x17, [x2,#32]
+    sbcs    x15, x15, x5
+    stp     x3, x4, [x2]
+    sbcs    x16, x16, x6
+    stp     x5, x6, [x2,#16]
+    sbcs    x17, x17, x7
+	str     x7, [x2,#32]
+    sbcs    x8, x8, x19
+    ldp     x3, x4, [x0,#40]
+    sbcs    x9, x9, x20
+    //ldp     x5, x6, [x0,#56]
+    ldr    x5, [x0,#56]
+    mov x6, xzr
+    mov x7, xzr 
+    //ldr     x7, [x0,#72]
+    sbcs    x10, x10, x21
+    ldp     x26, x27, [x1,#40]
+    sbcs    x11, x11, x22
+    //ldp     x28, x29, [x1,#56]
+    ldr   x28, [x1,#56]
+    mov x29, xzr
+    mov x30, xzr
+    //ldr     x30, [x1,#72]
+    sbc     x12, x12, x23	
 
+	stp     x8, x9, [x2,#40]
+	stp     x10, x11, [x2,#56]
+	stp     x12, x13, [x2,#72]
+	stp     x14, x15, [x2,#88]
+	stp     x16, x17, [x2,#104]
 
-    // x20-x25, x1, x7 <- AH x BH
-    add     x0, x0, #32
-    MUL256_KARATSUBA_COMBA  x0, x3, x4, x5, x6, x11, x12, x13, x14, x20, x21, x22, x23, x24, x25, x1, x7, x28, x29
+    // x8-x17 <- AH x BH
+    add     x0, x0, #40
+    MUL320_KARATSUBA_COMBA  x0, x3, x4, x5, x6, x7, x26, x27, x28, x29, x30, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x24, x25 
     
     // x8-x10, x19, x15-x18 <- (AH+AL) x (BH+BL) - ALxBL - AHxBH
-    subs    x8, x8, x20 
-    sbcs    x9, x9, x21
-    ldp     x3, x4, [x2,#32]
-    sbcs    x10, x10, x22
-    sbcs    x19, x19, x23
-    ldr     x29, [sp,#80]
-    sbcs    x15, x15, x24
-    sbcs    x16, x16, x25
-    sbcs    x17, x17, x1
-    sbc     x18, x18, x7
-
-
-    //here now we should have step_4 correctly in (from highest to lowest) x0, x17, x16, x15, x19, x10, x9, x8
-    // so step_5: step_2 + half_padded step_4 + full_padded step_1
-    // step_4 is in x8, x9, x10,x19, x15, x16, x17, x18 --> numbers correct, but carry is there
-    // step_1 is in x25 - x20 and x1 and x7 --> correct
-    // step_2 is in partly in x2 --> correct
-    // this is why the first 4 words are already correctly loaded in x2 (foxes)  --> check, those are the same values
-    adds    x8, x8, x3 //still in register fifth word of step 2
-    adcs    x9, x9, x4 // still in register sixth word of step 2
-    stp     x8, x9, [x2,#32]
-    adcs    x10, x10, x26 // still in register seventh word of step 2
-    adcs    x19, x19, x27 // still in register eight word of step 2
-    stp     x10, x19, [x2,#48]    
-    adcs    x15, x15, x20 
-    ldp     x19, x20, [sp,#0]  
-    ldp     x27, x28, [sp,#64]   
-    adcs    x16, x16, x21
-    stp     x15, x16, [x2,#64]
-    adcs    x17, x17, x22
-    ldp     x21, x22, [sp,#16]
-    adcs    x18, x18, x23
-    //HERE IS THE PROBLEM, x18 is the 8th word of step_4 (in the example: 0x0d5f5554dc02dec7),
-    // it's actual value is 0x10d5f5554dc02dec7, the carry is somehow not taken into consideration
-    // the question is where to find this value
-    stp     x17, x18, [x2,#80] 
-    adcs    x24, x24, xzr
-    adcs    x25, x25, xzr //only change
-    stp     x24, x25, [x2,#96] 
-    //from here, x18 does not seem to be a problem
-    ldp     x23, x24, [sp,#32]
-    adcs    x1, x1, xzr
+	ldp     x7, x26, [x2,#72]
+	ldp     x27, x28, [x2,#88]
+    subs    x26, x26, x8 
+	ldp     x29, x30, [x2,#104]
+    sbcs    x27, x27, x9
+    sbcs    x28, x28, x10
+	ldp     x3, x4, [x2,#40]
+    sbcs    x29, x29, x11
+    sbcs    x30, x30, x12
+	ldp     x5, x6, [x2,#56]
+    sbcs    x3, x3, x13
+    sbcs    x4, x4, x14
+    sbcs    x5, x5, x15
+    sbcs    x6, x6, x16
+    sbc     x7, x7, x17
+    
+	adds    x19, x19, x26
+	adcs    x20, x20, x27 
     ldp     x25, x26, [sp,#48]
-    adc     x7, x7, xzr
-    stp     x1, x7,   [x2,#112]    
-    
-    
-    ldp lr, x19, [sp,#96]
-    //ldp x20, x21, [sp,#112]
-    //ldp x22, x23, [sp,#128]
-    //ldr x24, [sp,#144]
+	adcs    x21, x21, x28
+	adcs    x22, x22, x29
+    stp     x19, x20, [x2,#40]   
+    adcs    x23, x23, x30  
+    ldp     x27, x28, [sp,#64] 
+    adcs    x3, x3, x8 
+    stp     x21, x22, [x2,#56]
+    adcs    x4, x4, x9
+    ldp     x19, x20, [sp,#0]  
+    adcs    x5, x5, x10 
+    stp     x23, x3, [x2,#72]
+    adcs    x6, x6, x11
+    ldp     x21, x22, [sp,#16]
+    adcs    x7, x7, x12
+    stp     x4, x5, [x2,#88] 
+    adcs    x13, x13, xzr
+    ldp     x23, x24, [sp,#32]
+    adcs    x14, x14, xzr
+    stp     x6, x7, [x2,#104] 
+    adcs    x15, x15, xzr
+    ldp     x29, x30, [sp,#80] 
+    adcs    x16, x16, xzr
+    stp     x13, x14, [x2,#120]
+    adc     x17, x17, xzr  
+    //stp     x15, x16, [x2,#136] 
+    str x15, [x2,#136]
 
-    add sp, sp, #176
+    //str     x17, [x2,#152]  
+    
+    add     sp, sp, #96
     ret
 
 

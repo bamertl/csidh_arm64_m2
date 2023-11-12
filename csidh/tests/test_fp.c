@@ -284,7 +284,7 @@ void test_issquare(void){
 
 void ultimate_uint_test(void){
     fp a = {{1,2,3,4,5,6,7,8}};
-    fp b = {{1, 0, 0, 0, 0, 0, 0, 0}};
+    //fp b = {{0, 0, 0, 0, 0, 0, 0, 0}};
     uint c = {{0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff}};
     biguint d = {{0}};
     uint_mul(&p, &c, &d);
