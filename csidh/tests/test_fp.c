@@ -192,7 +192,6 @@ void test_decrypt(void){
 }
 
 extern void uint_mul(const uint *a, const uint *b, biguint *c);
- extern void uint_mul(const fp *a, const uint *b, biguint *c);
 
  uint q = {{0x48b72f84899eca48, 0xdb7e0542b77624de, 0xafaeb264ca1bb35a, 0xba24269dff081925, 0x5d6cec71e0fac030, 0x845f1c9d401fac7f, 0x0000000000000002, 0x0000000000000000}};
 
