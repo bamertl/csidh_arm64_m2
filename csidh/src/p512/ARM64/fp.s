@@ -157,24 +157,51 @@ _uint_mul:
     adcs x26, x26, xzr
     adc x27, x27, xzr
 
-    // RL + RH = x3-x10 (carry x11)
-    ldp x3, x4, [x2, #0] // load RL first 2
-    ldp x5, x6, [x2, #64]    // load RH first 2
-    adds x3, x3, x5
-    adcs x4, x4, x6
-    ldp x5, x6, [x2, #16] // load RL second 2
-    ldp x7, x8, [x2, #80] // load RH second 2
-    adcs x5, x5, x7
-    adcs x6, x6, x8
-    ldp x7, x8, [x2, #32] // load RL third 2
-    ldp x9, x10, [x2, #96] // load RH third 2
-    adcs x7, x7, x9
-    adcs x8, x8, x10
-    ldp x9, x10, [x2, #48] // load RL fourth 2
-    ldp x11, x12, [x2, #112] // load RH fourth 2
-    adcs x9, x9, x11
-    adcs x10, x10, x12
-    adc x11, xzr, xzr
+    // x20-x25, x1, x7 <- AH x BH
+    add     x0, x0, #32
+    MUL256_KARATSUBA_COMBA  x0, x3, x4, x5, x6, x11, x12, x13, x14, x20, x21, x22, x23, x24, x25, x1, x7, x28, x29
+    
+    // x8-x10, x19, x15-x18 <- (AH+AL) x (BH+BL) - ALxBL - AHxBH
+    subs    x8, x8, x20 
+    sbcs    x9, x9, x21
+    ldp     x3, x4, [x2,#32]
+    sbcs    x10, x10, x22
+    sbcs    x19, x19, x23
+    ldr     x29, [sp,#80]
+    sbcs    x15, x15, x24
+    sbcs    x16, x16, x25
+    sbcs    x17, x17, x1
+    sbc     x18, x18, x7
+    
+    adds    x8, x8, x3 
+    adcs    x9, x9, x4
+    stp     x8, x9, [x2,#32]
+    adcs    x10, x10, x26
+    adcs    x19, x19, x27
+    stp     x10, x19, [x2,#48]    
+    adcs    x15, x15, x20 
+    ldp     x19, x20, [sp,#0]  
+    ldp     x27, x28, [sp,#64]   
+    adcs    x16, x16, x21
+    stp     x15, x16, [x2,#64]
+    adcs    x17, x17, x22
+    ldp     x21, x22, [sp,#16]
+    adcs    x18, x18, x23
+    stp     x17, x18, [x2,#80] 
+    adcs    x24, x24, xzr
+    adcs    x25, x25, xzr //only change
+    stp     x24, x25, [x2,#96] 
+    //from here
+    ldp     x23, x24, [sp,#32]
+    adcs    x1, x1, xzr
+    ldp     x25, x26, [sp,#48]
+    adc     x7, x7, xzr
+    stp     x1, x7,   [x2,#112]    
+    
+    ldp lr, x19, [sp,#96]
+    ldp x20, x21, [sp,#112]
+    ldp x22, x23, [sp,#128]
+    ldr x24, [sp,#144]
 
     // RL + RH - M 
     adds x3, x3, x20
