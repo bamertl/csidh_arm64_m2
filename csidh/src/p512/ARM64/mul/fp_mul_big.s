@@ -94,7 +94,6 @@ _monte_reduce:
     // If C >= p then C = C - p
     LOAD_8_WORD_NUMBER42 x3, x4, x5, x6, x7, x8, x9, x10, x2
     LOAD_511_PRIME42 x12, x13, x14, x15, x16, x17, x19, x20
-
     
     //Subtract Prime from a + b into register x3-x11, not(carry)
     SUBS x3, x3, x12
@@ -128,7 +127,6 @@ _monte_reduce:
     ADCS x8, x8, x17
     ADCS x9, x9, x19
     ADC x10, x10, x20
-
 
     // load result address
     ldr x1, [sp, #8]
@@ -338,13 +336,14 @@ _add2_16_words:
     adcs \T2, \T2, xzr
     adc \T3, \T3, xzr
 
-    sub \A2, \A2, #1 // if 0 -> fffffff, if 1 -> 0
+   
     // +- M*2^128 from (L+H-M)*2^128(2 words)
     adds \C2, \C2, \T0
     adcs \C3, \C3, \T1
     adcs \C4, \C4, \T2
     adcs \C5, \C5, \T3
-
+    adcs \C6, \C6, \A2
+    adcs \C7, \C7, \A2
 
 .endm
 
@@ -419,7 +418,6 @@ _uint_mul_512x512:
     stp x24, x25, [x2, #96] // store C12-C15
     stp x26, x27, [x2, #112]
 
-
     // |AH - AL| x3-x6
     ldp x3, x4, [x0, #0]
     ldp x5, x6, [x0, #16]
@@ -463,7 +461,6 @@ _uint_mul_512x512:
     adcs x9, x9, xzr
     adcs x10, x10, xzr
 
-
     eor x30, x30, x11 // combined sign
     sub x30, x30, #1 // if 0 -> fffffff, if 1 -> 0
     //M = |AH - AL| * |BH - BL| = x11-x14, x25-x28
@@ -485,8 +482,8 @@ _uint_mul_512x512:
     eor x9, x27, x30
     eor x10, x28, x30
 
-    and x30, x30, #1
-    adds x3, x3, x30
+    and x28, x30, #1
+    adds x3, x3, x28
     adcs x4, x4, xzr
     adcs x5, x5, xzr
     adcs x6, x6, xzr
@@ -499,7 +496,7 @@ _uint_mul_512x512:
     ldp x24, x25, [x2, #96] // load C12-C15
     ldp x26, x27, [x2, #112]
     // C4-C11 = x15-x23, C12-C15 = x24-x27 
-    sub x30, x30, #1 // if 0 -> fffffff, if 1 -> 0
+    
     adds x15, x15, x3
     adcs x16, x16, x4
     adcs x17, x17, x5
@@ -508,10 +505,11 @@ _uint_mul_512x512:
     adcs x21, x21, x8
     adcs x22, x22, x9
     adcs x23, x23, x10
-    // adcs x24, x24, x30 // carry propagation x30 is ffff or 0
-    // adcs x25, x25, x30
-    // adcs x26, x26, x30
-    // adcs x27, x27, x30
+
+    adcs x24, x24, x30 // carry propagation x30 is ffff or 0
+    adcs x25, x25, x30
+    adcs x26, x26, x30
+    adcs x27, x27, x30
 
     // store C4-C15
     stp x15, x16, [x2, #32]

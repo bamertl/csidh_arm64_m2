@@ -19,6 +19,9 @@ make ARCH=ARM64 MUL_TYPE=MONTE_MUL (standard)
 make ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SUB_KARATSUBA
 
 
+## Test BigMul
+make ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SUB_KARATSUBA test_bigmul
+
 
 
 ## Pass arguments to functions correctly
