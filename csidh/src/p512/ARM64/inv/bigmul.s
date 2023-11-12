@@ -21,7 +21,7 @@
     ; Multiply the most significant words
     mul     \T0, \A1, \B1
     adds    \C2, \C2, \T0
-    adc     \C3, \C3, xzr
+    adcs     \C3, \C3, xzr
     umulh   \T0, \A1, \B1
     adc     \C3, \C3, \T0
 .endm
@@ -73,14 +73,16 @@
     adds \B0, \B0, \B2
     adc \B1, \B1, xzr
 
+    // M = - (AH - AL) * (BH - BL) -> M = - eor(signA, signB) * |AH - AL| * |BH - BL|, if sign = 1 result needs two's complement
+    // But then we also need to subtract, so we make the opposite, two's if sign = 0
     // combine sign into A2 -> 1 if result of mul will be negative
     eor \A2, \A2, \B2
-    sub \A2, \A2, #1
+    sub \A2, \A2, #1 // if 0 -> fffffff, if 1 -> 0
     // M = |AH - AL| * |BH - BL| into T0-T3 = M
           
     MUL128x128 \A0, \A1, \B0, \B1, \T0, \T1, \T2, \T3, \T4
 
-    // 2's complement of M if signs are the same (we then add negative)
+    // 2's complement if sign was 0 
     eor \T0, \T0, \A2
     eor \T1, \T1, \A2
     eor \T2, \T2, \A2
@@ -96,9 +98,7 @@
     adds \C2, \C2, \T0
     adcs \C3, \C3, \T1
     adcs \C4, \C4, \T2
-    adcs \C5, \C5, \T3
-    adcs \C6, \C6, \A2
-    adc \C7, \C7, \A2
+    adc \C5, \C5, \T3
 
 .endm
 
