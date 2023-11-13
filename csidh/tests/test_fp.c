@@ -56,11 +56,8 @@ void biguint_print_lower(uint const *x)
 }
 
 
-void test_fp_eq(void) {
-    fp a = {{1,2,3,4,5,6,7,8}}, b = {{1,2,3,4,5,6,7,8}};
-    fp c = {{3, 1, 2, 3, 4, 5, 6 ,7 }};
-    assert(fp_eq(&a, &b));
-    assert(!fp_eq(&a, &c));
+void test_fp_eq(*a,*b) {
+    assert(fp_eq(a, b));
 }
 
 void test_fp_add(void) {
@@ -82,8 +79,8 @@ void test_fp_add(void) {
 }
 
 void test_mul_3(void){
-    fp a = {{1,2,3,4,5,6,7,8}};
-    fp f = {{1,2,3,4,5,6,7,8}};
+    fp r1 = {{1,2,3,4,5,6,7,8}};
+    fp r2 = {{1,2,3,4,5,6,7,8}};
     fp b = {{1, 0, 0, 0, 0, 0, 0, 0}};
     fp bigone = {{0x48b72f84899eca48, 0xdb7e0542b77624de, 0xafaeb264ca1bb35a, 0xba24269dff081925, 0x5d6cec71e0fac030, 0x845f1c9d401fac7f, 0x0000000000000002, 0x0000000000000000}};
     fp c = r_squared_mod_p;
@@ -94,46 +91,41 @@ void test_mul_3(void){
     uint_mul(&r_squared_mod_p, &q, &d);
     //biguint_print(&d);
     fp expected1 = fp_1;  
-    fp_mul3(&f, &a, &r_squared_mod_p);
-    biguint_print_lower(&f);
-    fp_mul3_2(&f, &a, &r_squared_mod_p);
-    biguint_print_lower(&f);
-    fp_mul3(&f, &a, &bigone);
-    biguint_print_lower(&f);
-    fp_mul3_2(&f, &a, &bigone);
-    biguint_print_lower(&f);
+    fp_mul3(&r1, &fp_1, &p_minus_2_for_fp);
+    fp_mul3_2(&r2, &fp_1, &p_minus_2_for_fp);
+    test_fp_eq(&r1, &r2);
+    fp a = {{1,2,3,4,5,6,7,8}};
+    fp f = {{1,2,3,4,5,6,7,8}};
+    fp_mul3(&r1, &a, &bigone);
+    fp_mul3_2(&r2, &a, &bigone);
+    test_fp_eq(&r2, &r1);
     fp_mul3(&a, &r_squared_mod_p, &r_squared_mod_p);
     fp_mul3_2(&f, &r_squared_mod_p, &r_squared_mod_p);
-    biguint_print_lower(&a);
-    biguint_print_lower(&f);
+    test_fp_eq(&a, &f);
     fp_mul3(&a, &fp_1, &r_squared_mod_p);
     fp_mul3_2(&f, &fp_1, &r_squared_mod_p);
-    biguint_print_lower(&a);
-    biguint_print_lower(&f);
+    test_fp_eq(&a, &f);
     fp_mul3(&a, &b, &r_squared_mod_p);
     fp_mul3_2(&f, &b, &r_squared_mod_p);
-    biguint_print_lower(&a);
-    biguint_print_lower(&f);
+    test_fp_eq(&a, &f);
     fp_mul3(&a, &b, &b);
     fp_mul3_2(&f, &b, &b);
-    biguint_print_lower(&a);
-    biguint_print_lower(&f);
+    test_fp_eq(&a, &f);
     fp_mul3(&a, &fp_1, &fp_1);
     fp_mul3_2(&f, &fp_1, &fp_1);
-    biguint_print_lower(&a);
-    biguint_print_lower(&f);
+    test_fp_eq(&a, &f);
+    fp_mul3(&a, &fp_1, &p_minus_2_for_fp);
+    fp_mul3_2(&f, &fp_1, &p_minus_2_for_fp);
+    test_fp_eq(&a, &f);
     fp_mul3(&a, &p, &fp_1);
     fp_mul3_2(&f, &p, &fp_1);
-    biguint_print_lower(&a);
-    biguint_print_lower(&f);
+    test_fp_eq(&a, &f);
     fp_mul3(&a, &p, &p);
     fp_mul3_2(&f, &p, &p);
-    biguint_print_lower(&a);
-    biguint_print_lower(&f);
+    test_fp_eq(&a, &f);
     fp_mul3(&a, &b, &p);
     fp_mul3_2(&f, &b, &p);
-    biguint_print_lower(&a);
-    biguint_print_lower(&f);
+    test_fp_eq(&a, &f);;
 }
 
 void ultimate_test(void){

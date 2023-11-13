@@ -43,6 +43,7 @@
    
 .endm
 
+
 //////////////////////////////////////////// MACRO
 .macro MUL128_COMBA_CUT  A0, A1, B0, B1, C0, C1, C2, C3, T0
     mul     \A0, \A1, \B0
@@ -59,7 +60,6 @@
     adds    \C2, \C2, \T0
     adc     \C3, \C3, \B1
 .endm
-
 
 //////////////////////////////////////////// MACRO
 .macro    MUL256_KARATSUBA_COMBA  M,A0,A1,A2,A3,B0,B1,B2,B3,C0,C1,C2,C3,C4,C5,C6,C7,T0,T1
@@ -422,6 +422,7 @@ _uint_mul:
     add sp, sp, #288
     ret
 
+	
 
 
 /* x0 = x0 == x1 
@@ -536,13 +537,15 @@ _fp_mul3:
     stp x19, x20, [sp, #16] //store x19 and x20 to avoid segmentation fault
     stp x21, x22, [sp, #32] //store x21 and x22 to avoid segmentation fault
 
-    mov x0, x2 // Move x2 to x0 for multiplication
+    mov x0, x2 // Move second part of multiplication to x0
     add x2, sp, #64 // result for mul = stack address + 16 + (16+8*16) words
     bl _uint_mul // x2 = x0 * x1
+    //result correct here
     mov x0, x2 // copy result address of mul to x0 (this points to stack + 64)
     ldr x1, [sp, #8] // load back initial result address to x1
     bl _monte_reduce
     ldp lr, x0, [sp, #0] // get back lr
+   // mov x0, x1 // copy result address to x0
     ldp x19, x20, [sp, #16] //get back x19 - x22
     ldp x21, x22, [sp, #32]
 
@@ -1090,3 +1093,4 @@ using uint_random
 _fp_random:
     adrp x1, _p@PAGE
     add x1, x1, _p@PAGEOFF
+    b _uint_random
