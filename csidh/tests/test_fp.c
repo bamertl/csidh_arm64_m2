@@ -284,11 +284,12 @@ void test_issquare(void){
 
 void ultimate_uint_test(void){
     fp a = {{1,2,3,4,5,6,7,8}};
-    //fp b = {{0, 0, 0, 0, 0, 0, 0, 0}};
+    fp b = {{0, 0, 0, 0, 0, 0, 0, 1}};
     uint c = {{0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff}};
     biguint d = {{0}};
-    uint_mul(&p, &c, &d);
+    uint_mul(&b, &c, &d);
     biguint_print(&d);
+   
 }
 
 
@@ -296,7 +297,7 @@ int main(void)
 {
     //test_fp_eq();
     //test_fp_add();
-    //test_mul_3();
+    test_mul_3();
     //test_mul_more();
     //test_fp_sub();
     //test_encode_decode();
@@ -308,7 +309,7 @@ int main(void)
     //test_issquare();
     //test_uint_mul();
     //ultimate_test();
-    ultimate_uint_test();
+    //ultimate_uint_test();
     printf("All tests passed!\n");
     return 0;
 }
