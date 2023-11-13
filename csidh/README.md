@@ -3,14 +3,24 @@ make ARCH=GENERIC BITS=512
 make ARCH=x86 BITS=512
 make ARCH=ARM64
 
+MUL_TYPE = MONTE_MUL | MONTE_REDUCTION_SUB_KARATSUBA
+
 ## Test
 make test_uint
-make ARCH=ARM64 test_uint
+make ARCH=ARM64 MUL=MONTE_MUL test_uint
 
 
 lldb ...
 br set -n name
 register
+
+## Montgomery Multiplication vs Montgomery Recution with Subtractive Karatsuba Multiplication
+make ARCH=ARM64 MUL_TYPE=MONTE_MUL (standard)
+make ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SUB_KARATSUBA
+
+
+## Test BigMul
+make ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SUB_KARATSUBA test_bigmul
 
 
 

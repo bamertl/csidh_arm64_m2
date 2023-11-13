@@ -56,7 +56,7 @@ double mean(uint64_t *vals)
     return sum / (double) its;
 }
 
-int main()
+int main(void)
 {
     bool ret; (void) ret;
     clock_t t0, t1;
