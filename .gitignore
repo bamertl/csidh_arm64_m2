@@ -11,6 +11,7 @@ csidh/*.exe
 *.obj
 *.ko
 *.so
+*.dSYM
 
 # Assembly listing files
 *.lst
