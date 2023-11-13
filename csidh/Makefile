@@ -103,11 +103,16 @@ test_bigmul: src/p${BITS}/params.h ${includes} ${sources} tests/test_bigmul.c
 	@cc -I ./src/ -I ./src/p${BITS}/ -I ./tests/ -std=c99 -pedantic -g $(sources) tests/test_bigmul.c -o tests/test_bigmul
 	./tests/test_bigmul
 
+test_reduction: src/p${BITS}/params.h ${includes} ${sources} tests/test_reduction.c
+	@cc -I ./src/ -I ./src/p${BITS}/ -I ./tests/ -std=c99 -pedantic -g $(sources) tests/test_bigmul.c -o tests/test_reduction
+	./tests/test_reduction
+
 clean:
 	@rm -f main debug bench libcsidh.so $(TEST_OUT)
 	@rm -rf ./tests/test_uint.DSYM
 	@rm -rf ./tests/test_fp.DSYM
 	@rm -rf ./tests/test_bigmul.DSYM
+	@rm -rf ./tests/test_reduction.DSYM
 
 
 
