@@ -49,7 +49,6 @@ _fp_mul3:
     ldp x21, x22, [sp, #32]
 
     add sp, sp, #224 //give back the stack
-
     ret
 
 /*
@@ -61,7 +60,6 @@ Output:
     C ≡ a*R^(−1) mod p such that 0 ≤ C < p
     Operation: c[x1] = a [x0] mod p
 
-not defined in fp.c
 */
 _monte_reduce:
     // Make place in the stack for
@@ -106,7 +104,7 @@ _monte_reduce:
     SBCS x10, x10, x20
     //SBCS x11, x11, xzr // this is the error.
     // The carry into x21
-    SBC x21, xzr, xzr
+    SBCS x21, xzr, xzr
 
     // If the result of a + b - p was negative, the mask will be 1, otherwise 0
     and x12, x12, x21
@@ -126,7 +124,7 @@ _monte_reduce:
     ADCS x7, x7, x16
     ADCS x8, x8, x17
     ADCS x9, x9, x19
-    ADC x10, x10, x20
+    ADCS x10, x10, x20
 
     // load result address
     ldr x1, [sp, #8]
@@ -252,10 +250,11 @@ _add2_16_words:
     mul     \T0, \A1, \B0       ; T1 = A1 * B0 (low word)
     adds    \C1, \C1, \T0       ; C1 += T1 (with carry)
     adcs     \C2, \C2, xzr       ; C2 += carry from previous addition    
+    adcs    \C3, xzr, xzr      ; C3 = potential carry prop
     ; to the same for the highers into C2
     umulh   \T0, \A0, \B1       ; T0 = A0 * B1 (high word)
     adds    \C2, \T0, \C2       ; C2 = T0 + C2
-    adcs     \C3, xzr, xzr       ; C3 = carry from previous addition
+    adcs     \C3, \C3, xzr       ; C3 = carry from previous addition
     umulh   \T0, \A1, \B0       ; T0 = A1 * B0 (high word)
     adds    \C2, \C2, \T0       ; C2 += T0 
     adcs     \C3, \C3, xzr       ; C3 += carry from previous addition
@@ -334,16 +333,16 @@ _add2_16_words:
     adds \T0, \T0, \T4
     adcs \T1, \T1, xzr
     adcs \T2, \T2, xzr
-    adc \T3, \T3, xzr
-
+    adcs \T3, \T3, xzr
+    adcs \T4, \A2, xzr // carry of two's
    
     // +- M*2^128 from (L+H-M)*2^128(2 words)
     adds \C2, \C2, \T0
     adcs \C3, \C3, \T1
     adcs \C4, \C4, \T2
     adcs \C5, \C5, \T3
-    adcs \C6, \C6, \A2
-    adcs \C7, \C7, \A2
+    adcs \C6, \C6, \T4
+    adcs \C6, \C6, \T4
 
 .endm
 
@@ -491,6 +490,7 @@ _uint_mul_512x512:
     adcs x8, x8, xzr
     adcs x9, x9, xzr
     adcs x10, x10, xzr
+    adcs x30, x30, xzr // carry of two's
 
     // +- M*2^256 from (L+H-M)*2^256(4 words offset)
     ldp x24, x25, [x2, #96] // load C12-C15
@@ -506,7 +506,7 @@ _uint_mul_512x512:
     adcs x22, x22, x9
     adcs x23, x23, x10
 
-    adcs x24, x24, x30 // carry propagation x30 is ffff or 0
+    adcs x24, x24, x30 // carry propagation 
     adcs x25, x25, x30
     adcs x26, x26, x30
     adcs x27, x27, x30

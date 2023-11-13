@@ -85,6 +85,8 @@ void test_mul_3(void){
     fp c = r_squared_mod_p;
     fp expected1 = fp_1;  
     fp_mul3(&a, &b, &c);
+    fp_print(&a);
+    fp_print(&expected1);
     assert(fp_eq(&a, &expected1));
 }
 
