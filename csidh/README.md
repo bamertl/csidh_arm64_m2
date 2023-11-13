@@ -1,26 +1,36 @@
-make -> at the moment build it generic with p512
+# Implementation for CSIDH in ARM64 for Apple M2 Chips
+
+
+## BUILD MAIN
+```bash
+make ARCH=ARM64
 make ARCH=GENERIC BITS=512
 make ARCH=x86 BITS=512
-make ARCH=ARM64
-
-MUL_TYPE = MONTE_MUL | MONTE_REDUCTION_SUB_KARATSUBA
-
-## Test
-make test_uint
-make ARCH=ARM64 MUL=MONTE_MUL test_uint
-
-
-lldb ...
-br set -n name
-register
-
-## Montgomery Multiplication vs Montgomery Recution with Subtractive Karatsuba Multiplication
-make ARCH=ARM64 MUL_TYPE=MONTE_MUL (standard)
+make ARCH=ARM64 MUL_TYPE=MONTE_MUL
 make ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SUB_KARATSUBA
 
+./main
+```
+## Different Multiplication Variants
+MUL_TYPE = MONTE_MUL | MONTE_REDUCTION_SUB_KARATSUBA
+### Monte_MUL
+Normal Montgommery Multiplication
+### MONTE_REDUCTION_SUB_KARATSUBA
+Subtractive Karatsuba Multiplication and after that montgommery reduction
 
-## Test BigMul
+
+## Test
+```bash
+make test_uint
+make ARCH=ARM64 MUL_TYPE=MONTE_MUL test_uint
+make ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SUB_KARATSUBA | MONTE_MUL test_fp
 make ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SUB_KARATSUBA test_bigmul
+
+```
+
+## Important Information for Apple M2
+    Do not use x18 and x29 registers. 
+[ARM64 Apple](https://developer.apple.com/documentation/xcode/writing-arm64-code-for-apple-platforms)
 
 
 
