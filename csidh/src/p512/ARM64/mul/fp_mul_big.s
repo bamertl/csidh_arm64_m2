@@ -490,7 +490,7 @@ _uint_mul_512x512:
     adcs x8, x8, xzr
     adcs x9, x9, xzr
     adcs x10, x10, xzr
-    adcs x30, x30, xzr // carry of two's
+    adcs x30, x30, xzr // x30 was ffffff if negative, 0 if positive ->  fffff | 0 | 1 afterwards
 
     // +- M*2^256 from (L+H-M)*2^256(4 words offset)
     ldp x24, x25, [x2, #96] // load C12-C15
