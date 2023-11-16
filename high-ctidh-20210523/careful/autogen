@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 
 data = (
   (511, # same CSIDH-512 prime but only 2^220 keys

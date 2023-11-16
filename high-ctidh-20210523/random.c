@@ -4,8 +4,21 @@
 #include "randombytes.h"
 #include "crypto_declassify.h"
 
-#include "int32_sort.h"
 #include "int32mask.h"
+
+
+void sort_int32(int32_t *x,long long n)
+{
+  for (long long i = 0;i < n;++i) {
+    int32_t m = x[i];
+    long long j = i;
+    while (j > 0 && x[j-1] > m) {
+      x[j] = x[j-1];
+      --j;
+    }
+    x[j] = m;
+  }
+}
 
 void random_boundedl1(int8_t *e,const long long w,const long long S)
 {
@@ -36,7 +49,7 @@ void random_boundedl1(int8_t *e,const long long w,const long long S)
     randombytes(r,4*rnum);
     for (long long j = 0;j < rnum;++j) r[j] &= ~1;
     for (long long j = 0;j < w;++j) r[j] |= 1;
-    int32_sort(r,rnum);
+    sort_int32(r,rnum);
     long long collision = 0;
     for (long long j = 1;j < w;++j)
       collision |= int32mask_zero((r[j]^r[j-1])&~1);

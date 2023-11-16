@@ -12,10 +12,10 @@ csidh/*.exe
 *.ko
 *.so
 *.dSYM
-
+*.testrandom
 # Assembly listing files
 *.lst
-
+high-ctidh-20210523/testrandom
 # Map files
 *.map
 

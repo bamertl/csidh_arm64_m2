@@ -726,23 +726,19 @@ steps.o: steps.c steps.h Makefile
 	$(CC) -D'NAMESPACEGENERIC(x)=highctidh_##x' \
 		-c steps.c
 
-random.o: random.c random.h int32_sort.h randombytes.h Makefile
+random.o: random.c random.h randombytes.h Makefile
 	$(CC) -D'NAMESPACEGENERIC(x)=highctidh_##x' \
 		-c random.c
 
 # ----- functions that libhighctidh wants from a core crypto library:
 
-libtest.a: crypto_classify.o crypto_declassify.o randombytes.o int32_sort.o Makefile
-	ar cr libtest.a crypto_classify.o crypto_declassify.o randombytes.o int32_sort.o
+libtest.a: crypto_classify.o crypto_declassify.o randombytes.o Makefile
+	ar cr libtest.a crypto_classify.o crypto_declassify.o randombytes.o 
 	ranlib libtest.a
 
 randombytes.o: randombytes.c randombytes.h Makefile
 	$(CC) -D'NAMESPACEGENERIC(x)=highctidh_##x' \
 		-c randombytes.c
-
-int32_sort.o: int32_sort.c int32_sort.h Makefile
-	$(CC) -D'NAMESPACEGENERIC(x)=highctidh_##x' \
-		-c int32_sort.c
 
 crypto_declassify.o: crypto_declassify.c crypto_declassify.h Makefile
 	$(CC) -D'NAMESPACEGENERIC(x)=highctidh_##x' \
