@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+
+import os
+import math
+import re
+import sys
+
+
+print("Generating uintbig512_arm64.S ...")
