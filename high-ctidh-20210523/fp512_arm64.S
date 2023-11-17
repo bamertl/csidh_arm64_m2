@@ -3,6 +3,8 @@
 #include "uintbig_namespace.h"
 #include "fp_namespace.h"
 .extern _uintbig_p
+.extern _uintbig_mul3_64
+.extern _uintbig_mul3_64_full
 
 
 .set pbits,511 
@@ -330,5 +332,38 @@ _minus_number:
 	stp x9, x10, [x0, #48]
 	ldp x19, x20, [sp, #0]
 	add sp, sp, #16
+	ret
+
+	sub sp, sp, #32
+	stp x19, x20, [sp, #0]
+	stp x21, x22, [sp, #16]
+/* LOAD A and B */
+	ldp x2, x3, [x0, #0]
+	ldp x4, x5, [x0, #16]
+	ldp x6, x7, [x0, #32]
+	ldp x8, x9, [x0, #48]
+tldr x10, [x0, #64]
+	ldp x11, x12, [x1, #0]
+	ldp x13, x14, [x1, #16]
+	ldp x15, x16, [x1, #32]
+	ldp x17, x19, [x1, #48]
+	ldr x20, [x1, #64]
+/* A + B */
+	ADDS x2, x2, x11
+	ADCS x3, x3, x12
+	ADCS x4, x4, x13
+	ADCS x5, x5, x14
+	ADCS x6, x6, x15
+	ADCS x7, x7, x16
+	ADCS x8, x8, x17
+	ADCS x9, x9, x19
+	stp x2, x3, [x0, #0]
+	stp x4, x5, [x0, #16]
+	stp x6, x7, [x0, #32]
+	stp x8, x9, [x0, #48]
+	str x10, [x0, #64]
+	ldp x19, x20, [sp, #0]
+	ldp x21, x22, [sp, #16]
+	add sp, sp, #32
 	ret
 

@@ -8,6 +8,8 @@ import sys
 limbs = 8
 EXTERN_LABELS = {
     'uintbig_p': '_uintbig_p',
+    'uintbig_mul3_64': '_uintbig_mul3_64',
+    'uintbig_mul3_64_full': '_uintbig_mul3_64_full',
 }
 
 globals = {
@@ -105,6 +107,144 @@ def add_extern_labels(f):
     for label in EXTERN_LABELS.values():
         f.write('.extern %s\n' % label)
     f.write('\n')
+
+
+def write_uint_add2_9_words(f):
+    A_ADDR_REG = 'x0'
+    B_ADDR_REG = 'x1'
+    REGS_TO_STORE = ["x19", "x20", "x21", "x22"]
+    sub_stack_and_store_on_stack(f,REGS_TO_STORE, 0)
+    A_REGS = ['x2','x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9','x10']
+    B_REGS = ['x11', 'x12', 'x13', 'x14', 'x15', 'x16', 'x17','x19', 'x20']
+    comment(f, "LOAD A and B")
+    for i in range(int(limbs/2)):
+        offset = i*16
+        f.write('\tldp %s, %s, [%s, #%d]\n' % (A_REGS[i*2], A_REGS[i*2+1], A_ADDR_REG, offset))
+    f.write('tldr %s, [%s, #64]\n' % (A_REGS[8], A_ADDR_REG))
+    for i in range(int(limbs/2)):
+        offset = i*16
+        f.write('\tldp %s, %s, [%s, #%d]\n' % (B_REGS[i*2], B_REGS[i*2+1], B_ADDR_REG, offset))
+    f.write('\tldr %s, [%s, #64]\n' % (B_REGS[8], B_ADDR_REG))    
+
+    comment(f, "A + B")
+    f.write('\tADDS %s, %s, %s\n' % (A_REGS[0], A_REGS[0], B_REGS[0]))
+    for i in range(1, limbs):
+        f.write('\tADCS %s, %s, %s\n' % (A_REGS[i], A_REGS[i], B_REGS[i]))
+    for i in range(int(limbs/2)):
+        f.write('\tstp %s, %s, [%s, #%d]\n' % (A_REGS[i*2], A_REGS[i*2+1], A_ADDR_REG, i*16))
+    f.write('\tstr %s, [%s, #64]\n' % (A_REGS[8], A_ADDR_REG))
+
+    add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, 0)
+    f.write('\tret\n\n')
+
+def write_radix_monte_mul(f):
+    c_addr = 64
+    temp_addr = 144
+    comment(f, "A[x0] = A[x0] * B[x1] mod P \n directly into fp_mul3")
+    introduce_global_function(f, globals['fp_mul2'])
+    f.write('\tmov x2, x0\n') 
+    comment(f, "Montgomery multiplication\n C[x0] = A[x1] * B[x2] mod P")
+    introduce_global_function(f, globals['fp_mul3'])
+    comment(f, "Increment mul/sq counter")
+    load_label_address_into_register(f, globals['fp_mulsq_count'], 'x3')
+    f.write('\tldr x4, [x3]\n')
+    f.write('\tadd x4, x4, #1\n')
+    f.write('\tstr x4, [x3]\n\n')
+    a_addr = 16
+    b_addr = 24
+    STORE_REGS = ["lr", "x0", "x1", "x17", "x19", "x20", "x21"]
+    sub_stack_and_store_on_stack(f, STORE_REGS, 2*(64+16) + 16)
+    comment(f, "Init C and Temp with 0")
+    for i in range(int(limbs/2) + 1):
+        offset = i * 16 + c_addr
+        f.write('\tstp xzr, xzr, [sp, #%d]\n' % (offset))
+    for i in range(int(limbs/2) + 1):
+        offset = i * 16 + temp_addr
+        f.write('\tstp xzr, xzr, [sp, #%d]\n' % (offset))
+    f.write('\n')
+
+    comment(f, "Counter = x5, Offset = x6")
+    counter_reg = 'x5'
+    offset_reg = 'x6'
+    counter_adr = temp_addr + 8*10
+    offset_adr = counter_adr + 8
+    f.write('\tmov %s, #0\n' % counter_reg)
+    f.write('\tmov %s, #0\n' % offset_reg)
+    f.write('\tstr %s, [sp, #%d]\n' % (counter_reg, counter_adr))
+    f.write('\tstr %s, [sp, #%d]\n' % (offset_reg, offset_adr))
+    f.write('\n')
+    f.write('_fp_mul_loop:\n')
+    comment(f, 'C <- C + A[i] * B')
+    f.write('\tldr x2, [sp, #%d] // load a_adr \n' % (offset_adr))
+    f.write('\tadd x2, x2, x6 // add offset to a_adr\n')
+    f.write('\tldr x1, [sp, #%d] // load b_adr \n' % (b_addr))
+    f.write('\tadd x0, x0, #%d // load temp_addr \n' % (temp_addr))
+    comment(f, 'temp = A[i] * B' )
+    f.write('\tbl %s \n' % EXTERN_LABELS['uintbig_mul3_64_full'])
+
+    comment(f, '3. C ← (C + p*q) /r')
+    f.write('\tadd x0, sp, #%d // load temp_addr \n' % (temp_addr))
+    load_label_address_into_register(f, EXTERN_LABELS['uintbig_p'], 'x1')
+    f.write('\tldr x2, [sp, #%d] // load lsb word of temp (q) \n' % (temp_addr))
+    f.write('\tbl %s // temp = q*p \n' % EXTERN_LABELS['uintbig_mul3_64_full'])
+    f.write('\tadd x0, sp, #%d // load temp_addr \n' % (temp_addr)) 
+    f.write('\tadd x1, sp, #%d // load c_addr \n' % (c_addr))
+    comment('add together')
+    f.write('\tbl %s // c = c + q*p \n' % EXTERN_LABELS['uintbig_add2_9_words'])
+    comment(f, '4. C ← C/r')
+    for i in range(int(limbs/2)):
+        offset_temp = i*16 + 8 + temp_addr # we do / by leaving out the first word
+        offset_c = i*16 + c_addr
+        f.write('\tldp x0, x1, [sp, #%d] // load temp_addr \n' % (offset_temp))
+        f.write('\tstp x0, x1, [sp, #%d] // store into c_addr \n' % (offset_c))
+    f.write('\tstr xzr, [sp, #%d] // store into c_addr \n' % (c_addr + 8*8))
+    comment(f, '5. i ← i + 1')
+    f.write('\tldr %s, [sp, #%d] // load counter \n' % (counter_reg, counter_adr))
+    f.write('\tldr %s, [sp, #%d] // load offset \n' % (offset_reg, offset_adr))
+    f.write('\tadd %s, %s, #1 // increment counter \n' % (counter_reg, counter_reg))
+    f.write('\tadd %s, %s, #8 // increment offset \n' % (offset_reg, offset_reg))
+    f.write('\tstp %s, %s, [sp, #%d] // store counter \n' % (counter_reg, offset_reg, counter_adr))
+    comment(f, '6. if i < 8 goto loop again')
+    f.write('\tcmp %s, #8\n' % counter_reg)
+    f.write('\tb.lt _fp_mul_loop\n')
+    ## Finish loop
+    comment(f, 'if C >= p then C = C - p')
+    C_REGS = ['x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9','x10', 'x11'] # 9 words
+    P_REGS = ['x12', 'x13', 'x14', 'x15', 'x16', 'x17', 'x19', 'x20'] # 8 words
+    for i in range(int(limbs/2)):
+        offset = i*16 + c_addr
+        f.write('\tldp %s, %s, [sp, #%d]\n' % (C_REGS[i*2], C_REGS[i*2+1], offset))
+    f.write('\tldr %s, [sp, #%d]\n' % (C_REGS[8], c_addr + 8*8))
+    load_label_address_into_register(f, EXTERN_LABELS['uintbig_p'], 'x0')
+    comment('load p')
+    for i in range(int(limbs/2)):
+        offset = i*16
+        f.write('\tldp %s, %s, [x0, #%d]\n' % (P_REGS[i*2], P_REGS[i*2+1], offset))
+    comment('C - P')
+    f.write('\tsubs %s, %s, %s\n' % (C_REGS[0], C_REGS[0], P_REGS[0]))
+    for i in range(1, limbs):
+        f.write('\tsbcs %s, %s, %s\n' % (C_REGS[i], C_REGS[i], P_REGS[i]))
+    CARRY_REG = 'x21'
+    f.write('\tadc %s, xzr, xzr\n' % CARRY_REG)
+    comment('and with carry')
+    for i in range(limbs):
+        offset = i*8
+        f.write('\tand %s, %s, %s\n' % (P_REGS[i], P_REGS[i], CARRY_REG))
+    comment('C + P')
+    f.write('\tadds %s, %s, %s\n' % (C_REGS[0], C_REGS[0], P_REGS[0]))
+    for i in range(1, limbs):
+        f.write('\tadcs %s, %s, %s\n' % (C_REGS[i], C_REGS[i], P_REGS[i]))
+    comment('store C')
+    f.write('\ldr x0, [sp, #%d]\n' % (a_addr))
+
+    for i in range(int(limbs/2)):
+        offset = i*16
+        f.write('\tstp %s, %s, [x0, #%d]\n' % (C_REGS[i*2], C_REGS[i*2+1], offset))
+    
+    add_stack_and_restore_regs_from_stack(f, STORE_REGS, 2*(64+16) + 16)
+    f.write('\tret\n\n')
+
+
 fn = '../fp512_arm64.S'
 with open(fn+'.tmp','w') as f:
     f.write('/* DO NOT EDIT! generated by autogen */\n\n')
@@ -331,5 +471,7 @@ with open(fn+'.tmp','w') as f:
         f.write('\tstp %s, %s, [x0, #%d]\n' % (A_REGS[i*2], A_REGS[i*2+1], offset))
     add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, 0)
     f.write('\tret\n\n') 
+
+    write_uint_add2_9_words(f)
 
     maybeupdate(fn)
