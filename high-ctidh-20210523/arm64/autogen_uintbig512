@@ -200,9 +200,35 @@ with open(fn+'.tmp','w') as f:
   f.write('\tret\n\n')
 
 
-
-
-
+  ## _UINTBIG_MUL3_64_full ______________________________________________________________________________________________
+  ## Results in 9 words
+  comment(f, "Operation: A[x0] = B[x1] * C[x2] and C = direct value 64 bit not address\n results in 9 words")
+  introduce_global_function(f, globals['uintbig_mul3_64_full'])
+  for i in range(int(limbs/2)):
+    offset = i*16 
+    comment(f, str(i*2) + " Limb")
+    f.write('\tldp x3, x4, [x1, #%d]\n' % (i*16))
+    f.write('\tmul x5, x3, x2 // low mul\n')   
+    if i == 0:
+      f.write('\tumulh x6, x3, x2 // high mul\n')
+      f.write('\tstr x5, [x0, #%d]\n\n' % (i*16))
+      comment(f, str(i*2 + 1) + " Limb")
+      f.write('\tmul x5, x4, x2 // low mul\n')
+      f.write('\tadds x5, x5, x6 // add past higher mul\n')
+      f.write('\tstr x5, [x0, #%d]\n' % (i*16+8))
+      f.write('\tumulh x6, x4, x2 // high mul\n\n')
+    if i > 0:
+      f.write('\tadcs x5, x5, x6 // add past higher mul\n')
+      f.write('\tstr x5, [x0, #%d]\n' % (i*16))
+      f.write('\tumulh x6, x3, x2 // high mul\n') 
+      comment(f, str(i*2 + 1) + " Limb")
+      f.write('\tmul x5, x4, x2 // low mul\n')
+      f.write('\tadcs x5, x5, x6 // add past higher mul\n')
+      f.write('\tstr x5, [x0, #%d]\n' % (i*16+8)) 
+      f.write('\tumulh x6, x4, x2 // high mul \n\n')
+  f.write('\adc x6, x6, xzr')
+  f.write('\tstr x6, [x0, #%d]\n' % (8*8))
+  f.write('\tret\n\n')
 
 
 

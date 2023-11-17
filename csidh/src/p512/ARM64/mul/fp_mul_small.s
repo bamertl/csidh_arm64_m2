@@ -120,7 +120,7 @@ _finish_fp_mul:
     ldp x5, x6, [sp, #80]
     ldp x7, x8, [sp, #96]
     ldp x9, x10, [sp, #112]
-    ldr x11, [sp, #120] 
+    ldr x11, [sp, #120]  // lol we ignore this shitter here
 
     // load p into x12-x20
     adrp x0, _p@PAGE
@@ -270,7 +270,7 @@ _uint_add3_9_words:
     ldp x19, x20, [x1, #48]
     ldr x21, [x1, #64]
 
-    // Add x0 + x1 with carry into register X0
+    // Add x0 + x1 
     adds x2, x2, x12
     adcs x3, x3, x13 
     adcs x4, x4, x14
