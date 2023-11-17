@@ -57,7 +57,6 @@ def add_stack_and_restore_regs_from_stack(f, regs, additional_offset):
     total_offset = len(regs)*8 + additional_offset 
     if total_offset % 16 != 0:
         total_offset = ((total_offset // 16) + 1) * 16
-    f.write('\tadd sp, sp, #%d\n' % total_offset)
     offset = 0
     i = 0
     while i < len(regs):
@@ -71,6 +70,7 @@ def add_stack_and_restore_regs_from_stack(f, regs, additional_offset):
             f.write('\tldr %s, [sp, #%d]\n' % (regs[i],offset))
             i += 1
         offset += 16
+    f.write('\tadd sp, sp, #%d\n' % total_offset)
 
 fn = '../fp512_arm64.S'
 with open(fn+'.tmp','w') as f:
