@@ -136,7 +136,8 @@
     adcs    \C4, \C4, \A0
     adcs    \C5, \C5, \A1
     adcs    \C6, \T0, \C6
-    adc     \C7, \B0, xzr
+    adc    \C7, \B0, xzr
+
 .endm
 
 /* 
@@ -147,7 +148,7 @@ a = 8 words, b = 8 words, c = 16 words
 .global _uint_mul
 _uint_mul:
     // add more space to the stack
-    sub     sp, sp, #288
+    sub     sp, sp, #320
     // 176-192 :: x18
     // 192-208 :: backup for x18
     // 208-224 :: x29
@@ -155,6 +156,8 @@ _uint_mul:
     // 240-256 :: backup for x8
     // 256-272 :: carry flag
     // 272-288 :: backup for x19
+    // 288-304 :: combined carry
+    // 304-320 :: safe heaven for combined carry
     stp lr, x19, [sp,#96]
     stp x20, x21, [sp,#112]
     stp x22, x23, [sp,#128]
@@ -179,24 +182,19 @@ _uint_mul:
     ldp     x13, x14, [x1,#16]
     adcs    x28, x5, x9
     ldp     x15, x16, [x1,#32]
-    //replace x29 here
+    //change x29 start
     str     x0, [sp,#224]
     ldr     x0, [sp,#208]
     adcs    x0, x6, x10
     str     x0, [sp,#208]
     ldr     x0, [sp,#224]
-    // change end
-    //replace x18 here
-    // change start
-    //backup x0 
+    // change x29 end
+    // change x18 start
     str     x0, [sp,#192]
-    // no previous x18 there, so no need to load it from stack
     ldp     x17, x0, [x1,#48]
-    // store prov x18
     str     x0, [sp,#176]
-    //restore x0
     ldr     x0, [sp,#192]
-    //change end
+    //change x18 end
     adc     x7, xzr, xzr
 
     // For some reason store x19 and x20 in stack
@@ -209,9 +207,7 @@ _uint_mul:
     stp     x23, x24, [sp,#32]
     adcs    x13, x13, x17
     // change x18 start
-    // backup x0
     str     x0, [sp,#192]
-    // get x18 value into x0
     ldr     x0, [sp,#176]
     adcs    x14, x14, x0
     str     x0, [sp,#176]
@@ -237,46 +233,45 @@ _uint_mul:
     and     x19, x26, x10
     and     x20, x27, x10
     and     x21, x28, x10
-    //replace x29 here
+    //change x29 start
     str     x0, [sp,#224]
     ldr     x0, [sp,#208]
-    //no previous x29 here, so we can ignore the load
     and     x22, x0, x10
     str     x0, [sp,#208]
     ldr     x0, [sp,#224]
-    //change end
+    //change x29 end
 
     // x15-x18 <- masked (AH+AL) + masked (BH+BL), step 1
     adds    x15, x15, x19
     adcs    x16, x16, x20
     adcs    x17, x17, x21
     stp     x26, x27, [x2,#0] //those two values are used for the Karatsuba later
-    // replace x18 here
-    // change start
-    //backup x0
+    // change x18 start
     str     x0, [sp,#192]
     ldr     x0, [sp,#176]
+    // update carry start
     str     x9, [sp,#272]
+    // a carry can occur, if both operants have a carry
+    and     x9, x7, x8
+    // a carry can also occur, if the result of the masked addition has a carry
     adcs     x0, x0, x22
-    adc     x9, xzr, xzr
-    //added by Jan to store the carry flag
+    adc     x9, x9, xzr
     str     x9, [sp,#256]
     ldr     x9, [sp,#272]
+    // update carry end
     str     x0, [sp,#176]
     ldr     x0, [sp,#192]
-    //change end
-    // put x29 into x0
+    //change x18 end
+    //change x29 start
     str     x0, [sp,#224]
-    //load prev. x29 into x1
     ldr     x0, [sp,#208]
     
     // x8-x10,x19-x23 <- (AH+AL) x (BH+BL), low part
     MUL256_KARATSUBA_COMBA  x2, x26, x27, x28, x0, x11, x12, x13, x14, x8, x9, x10, x19, x20, x21, x22, x23, x24, x25  
 
-    // re-replace x29
     str     x0, [sp,#208]
     ldr     x0, [sp,#224]
-    //change end
+    //change x29 end
 
     // x15-x18 <- (AH+AL) x (BH+BL), final step
     adds    x15, x15, x20
@@ -285,24 +280,29 @@ _uint_mul:
     adcs    x17, x17, x22
     ldp     x13, x14, [x1,#16]
     //change x18 start
-    //backup x0
     str     x0, [sp,#192]
-    //get x18 value into x0
     ldr     x0, [sp,#176]
-    adc     x0, x0, x23
+    adcs     x0, x0, x23
+     // update carry start
+    str     x9, [sp,#272]
+    ldr     x9, [sp,#256]
+    // a carry can occur, if the addition of the upper part has a carry
+    adc     x9, x9, xzr
+    str     x9, [sp,#256]
+    ldr     x9, [sp,#272]
+    // update carry end
     str     x0, [sp,#176]
     ldr     x0, [sp,#192]
-    //change end
-    // put x29 into x1
+    //change x18 end
+    // change x29 start
     str    x1, [sp,#224]
     ldr    x1, [sp,#208]
     // x20-x27 <- AL x BL
     MUL256_KARATSUBA_COMBA  x0, x3, x4, x5, x6, x11, x12, x13, x14, x20, x21, x22, x23, x24, x25, x26, x27, x28, x1
 
-   // put the original x1 back
    str   x1, [sp,#208]
    ldr  x1, [sp,#224]
-    //change end
+    //change x29 end
 
     // x8-x10, x19, x15-x18 <- (AH+AL) x (BH+BL) - ALxBL
     subs    x8, x8, x20 
@@ -320,26 +320,33 @@ _uint_mul:
     sbcs    x17, x17, x26
     stp     x24, x25, [x2,#32]
     //change x18 start
-    //backup x0
     str     x0, [sp,#192]
-    //get x18 value into x0
     ldr     x0, [sp,#176]
-    sbc     x0, x0, x27
+    sbcs     x0, x0, x27
+    // update carry start
+    str     x9, [sp,#272]
+    ldr     x9, [sp,#256]
+    // the subtraction of the upper part can "use" the carry
+    sbc     x9, x9, xzr
+    str     x9, [sp,#256]
+    ldr     x9, [sp,#272]
+    // update carry end
     str    x0, [sp,#176]
     ldr   x0, [sp,#192]
-    //change end
+    //change x18 end
 
     // x20-x25, x1, x7 <- AH x BH
     add     x0, x0, #32
 
-    //change x29 here into x8
+    //change x29 start
     str     x8, [sp,#240]
     ldr     x8, [sp,#208]
 
     MUL256_KARATSUBA_COMBA  x0, x3, x4, x5, x6, x11, x12, x13, x14, x20, x21, x22, x23, x24, x25, x1, x7, x28, x8
-    // get the real x8 back
+    
     str     x8, [sp,#208]
     ldr     x8, [sp,#240]
+    //change x29 end
 
     // x8-x10, x19, x15-x18 <- (AH+AL) x (BH+BL) - ALxBL - AHxBH
     subs    x8, x8, x20 
@@ -347,25 +354,31 @@ _uint_mul:
     ldp     x3, x4, [x2,#32]
     sbcs    x10, x10, x22
     sbcs    x19, x19, x23
-    // change x29 with x0 here
+    // change x29 start
     str     x0, [sp,#224]
     ldr     x0, [sp,#208]
     ldr     x0, [sp,#80]
     str     x0, [sp,#208]
     ldr     x0, [sp,#224]
-    //change over
+    //change x29 end
     sbcs    x15, x15, x24
     sbcs    x16, x16, x25
     sbcs    x17, x17, x1
     // change x18 start
-    //backup x0
     str     x0, [sp,#192]
-    //get x18 value into x0
     ldr     x0, [sp,#176]
-    sbc     x0, x0, x7
+    sbcs     x0, x0, x7
+    // update carry start
+    str     x9, [sp,#272]
+    ldr     x9, [sp,#256]
+    // the subtraction of the upper part can "use" the carry
+    sbc     x9, x9, xzr
+    str     x9, [sp,#256]
+    ldr     x9, [sp,#272]
+    // update carry end
     str    x0, [sp,#176]
     ldr  x0, [sp,#192]
-    //change end
+    //change x18 end
 
     //here now we should have step_4 correctly in (from highest to lowest) x0, x17, x16, x15, x19, x10, x9, x8
     // so step_5: step_2 + half_padded step_4 + full_padded step_1
@@ -386,23 +399,22 @@ _uint_mul:
     stp     x15, x16, [x2,#64]
     adcs    x17, x17, x22
     ldp     x21, x22, [sp,#16]
-    //replace x18 here
-    // change start
+    // change x18 start
     str    x0, [sp,#192]
     ldr   x0, [sp,#176]
-    //loading additional carry
     adcs    x0, x0, x23
     stp     x17, x0, [x2,#80] 
     str   x0, [sp,#176]
     ldr   x0, [sp,#192]
     adcs    x24, x24, xzr
-        // adding conditional carry started
-    str x19, [sp,#160]
+    //update carry start
+    str x19, [sp,#272]
     ldr x19, [sp,#256]
+    //problem, what if the carry is negative?
     adcs x24, x24, x19
     str x19, [sp,#256]
-    ldr x19, [sp,#160]
-    // adding conditional carry ended 
+    ldr x19, [sp,#272]
+    //udpate carry end
     adcs    x25, x25, xzr //only change
     stp     x24, x25, [x2,#96] 
     //from here, x18 does not seem to be a problem
@@ -412,18 +424,14 @@ _uint_mul:
     adc     x7, x7, xzr
     stp     x1, x7,   [x2,#112]    
     
-    
     ldp lr, x19, [sp,#96]
     ldp x20, x21, [sp,#112]
     ldp x22, x23, [sp,#128]
     ldr x24, [sp,#144]
     ldr x29, [sp,#80]
 
-    add sp, sp, #288
+    add sp, sp, #320
     ret
-
-	
-
 
 /* x0 = x0 == x1 
     return 1 if equal, 0 otherwise

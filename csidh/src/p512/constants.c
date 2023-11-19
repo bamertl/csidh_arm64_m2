@@ -11,6 +11,7 @@ const struct uint p = {{
     0x5afbfcc69322c9cd, 0xb42d083aedc88c42, 0xfc8ab0d15e3e4c4a, 0x65b48e8f740f89bf,
 }};
 
+
 /* (p+1)/prod(primes) */
 const struct uint p_cofactor = {{4}};
 
