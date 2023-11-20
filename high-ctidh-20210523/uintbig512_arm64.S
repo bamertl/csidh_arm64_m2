@@ -24,9 +24,13 @@ _uintbig_four_sqrt_p:
 /* A[x0][0] = x1, rest 0 */
 .global _uintbig_set
 _uintbig_set: 
-\str x1, [x0]
-mov x2, 0
-stp x1, x2, [x0, #0]	stp x2, x2, [x0, #16]	stp x2, x2, [x0, #32]	stp x2, x2, [x0, #48]	et
+	str x1, [x0]
+	mov x2, 0
+	stp x1, x2, [x0, #0]
+	stp x2, x2, [x0, #16]
+	stp x2, x2, [x0, #32]
+	stp x2, x2, [x0, #48]
+	ret
 
 /* Operation: x0 = x0[x1] == 1 */
 /* Checks if bit at position x1 is set */
@@ -152,5 +156,61 @@ _uintbig_mul3_64:
 	str x5, [x0, #56]
 	umulh x6, x4, x2 // high mul 
 
+	ret
+
+/* Operation: A[x0] = B[x1] * C[x2] and C = direct value 64 bit not address
+ results in 9 words */
+.global _uintbig_mul3_64_full
+_uintbig_mul3_64_full: 
+/* 0 Limb */
+	ldp x3, x4, [x1, #0]
+	mul x5, x3, x2 // low mul
+	umulh x6, x3, x2 // high mul
+	str x5, [x0, #0]
+
+/* 1 Limb */
+	mul x5, x4, x2 // low mul
+	adds x5, x5, x6 // add past higher mul
+	str x5, [x0, #8]
+	umulh x6, x4, x2 // high mul
+
+/* 2 Limb */
+	ldp x3, x4, [x1, #16]
+	mul x5, x3, x2 // low mul
+	adcs x5, x5, x6 // add past higher mul
+	str x5, [x0, #16]
+	umulh x6, x3, x2 // high mul
+/* 3 Limb */
+	mul x5, x4, x2 // low mul
+	adcs x5, x5, x6 // add past higher mul
+	str x5, [x0, #24]
+	umulh x6, x4, x2 // high mul 
+
+/* 4 Limb */
+	ldp x3, x4, [x1, #32]
+	mul x5, x3, x2 // low mul
+	adcs x5, x5, x6 // add past higher mul
+	str x5, [x0, #32]
+	umulh x6, x3, x2 // high mul
+/* 5 Limb */
+	mul x5, x4, x2 // low mul
+	adcs x5, x5, x6 // add past higher mul
+	str x5, [x0, #40]
+	umulh x6, x4, x2 // high mul 
+
+/* 6 Limb */
+	ldp x3, x4, [x1, #48]
+	mul x5, x3, x2 // low mul
+	adcs x5, x5, x6 // add past higher mul
+	str x5, [x0, #48]
+	umulh x6, x3, x2 // high mul
+/* 7 Limb */
+	mul x5, x4, x2 // low mul
+	adcs x5, x5, x6 // add past higher mul
+	str x5, [x0, #56]
+	umulh x6, x4, x2 // high mul 
+
+	adc x6, x6, xzr
+	str x6, [x0, #64]
 	ret
 

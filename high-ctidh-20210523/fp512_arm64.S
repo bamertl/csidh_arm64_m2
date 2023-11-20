@@ -166,7 +166,8 @@ _fp_cswap:
 /* A[x0] = A[x0] + B[x1] */
 .global _fp_add2
 _fp_add2: 
-\mov x0, x2/* A[x0] = A[x0] + B[x1] + C[x2] */
+	mov x0, x2
+/* A[x0] = A[x0] + B[x1] + C[x2] */
 .global _fp_add3
 _fp_add3: 
 /* Increment add/sub counter */
@@ -177,8 +178,9 @@ _fp_add3:
 	str x4, [x3]
 
 /* LOAD A */
-	sub sp, sp, #16
-	str x19, x20, x21, [sp, #0]
+	sub sp, sp, #32
+	stp x19, x20, [sp, #0]
+	str x21, [sp, #16]
 /* load A and B */
 	ldp x3, x4, [x0, #0]
 	ldp x11, x12, [x1, #0]
@@ -238,14 +240,17 @@ _fp_add3:
 	stp x5, x6, [x0, #16]
 	stp x7, x8, [x0, #32]
 	stp x9, x10, [x0, #48]
-	ldr x19, x20, x21, [sp, #0]
-	add sp, sp, #16
+	ldp x19, x20, [sp, #0]
+	ldr x21, [sp, #16]
+	add sp, sp, #32
 	ret
 
 /* A[x0] = A[x0] - B[x1] */
 .global _fp_sub2
 _fp_sub2: 
-	mov x2, x1	mov x1, x0	sub sp, sp, #96
+	mov x2, x1
+	mov x1, x0
+	sub sp, sp, #96
 	stp lr, x19, [sp, #0]
 	stp x20, x21, [sp, #16]
 /* A[x0] = A[x0] - B[x1] - C[x2] */
@@ -258,7 +263,9 @@ _fp_sub3:
 	add x4, x4, #1
 	str x4, [x3]
 
-	mov x19, x0	mov x20, x1/* stack + 32 = -x2 */
+	mov x19, x0
+	mov x20, x1
+/* stack + 32 = -x2 */
 	mov x1, x2
 	add x0, sp, #32
 	bl _minus_number
@@ -342,7 +349,7 @@ _minus_number:
 	ldp x4, x5, [x0, #16]
 	ldp x6, x7, [x0, #32]
 	ldp x8, x9, [x0, #48]
-tldr x10, [x0, #64]
+	ldr x10, [x0, #64]
 	ldp x11, x12, [x1, #0]
 	ldp x13, x14, [x1, #16]
 	ldp x15, x16, [x1, #32]

@@ -518,8 +518,8 @@ libhighctidh_511.a: uintbig511.o fp511.o fp_inv511.o fp_sqrt511.o primes511.o po
 	ar cr libhighctidh_511.a uintbig511.o fp511.o fp_inv511.o fp_sqrt511.o primes511.o poly511.o mont511.o elligator511.o skgen511.o validate511.o csidh511.o
 	ranlib libhighctidh_511.a
 
-libhighctidh_512.a: uintbig512.o fp512.o fp_inv512.o fp_sqrt512.o primes512.o poly512.o mont512.o elligator512.o skgen512.o validate512.o csidh512.o Makefile
-	ar cr libhighctidh_512.a uintbig512.o fp512.o fp_inv512.o fp_sqrt512.o primes512.o poly512.o mont512.o elligator512.o skgen512.o validate512.o csidh512.o
+libhighctidh_512.a: uintbig512_arm64.o fp512_arm64.o fp_inv512.o fp_sqrt512.o primes512.o poly512.o mont512.o elligator512.o skgen512.o validate512.o csidh512.o Makefile
+	ar cr libhighctidh_512.a uintbig512_arm64.o fp512_arm64.o fp_inv512.o fp_sqrt512.o primes512.o poly512.o mont512.o elligator512.o skgen512.o validate512.o csidh512.o
 	ranlib libhighctidh_512.a
 
 libhighctidh_1024.a: uintbig1024.o fp1024.o fp_inv1024.o fp_sqrt1024.o primes1024.o poly1024.o mont1024.o elligator1024.o skgen1024.o validate1024.o csidh1024.o Makefile
@@ -678,9 +678,9 @@ fp511.o: fp511.S fp.h fp_namespace.h uintbig.h uintbig_namespace.h Makefile
 	$(SCC) -DBITS=511 -D'NAMESPACEBITS(x)=highctidh_511_##x' -D'NAMESPACEGENERIC(x)=highctidh_##x' \
 		-c fp511.S
 
-fp512.o: fp512.S fp.h fp_namespace.h uintbig.h uintbig_namespace.h Makefile
+fp512_arm64.o: fp512_arm64.S fp.h fp_namespace.h uintbig.h uintbig_namespace.h Makefile
 	$(SCC) -DBITS=512 -D'NAMESPACEBITS(x)=highctidh_512_##x' -D'NAMESPACEGENERIC(x)=highctidh_##x' \
-		-c fp512.S
+		-c fp512_arm64.S
 
 fp1024.o: fp1024.S fp.h fp_namespace.h uintbig.h uintbig_namespace.h Makefile
 	$(SCC) -DBITS=1024 -D'NAMESPACEBITS(x)=highctidh_1024_##x' -D'NAMESPACEGENERIC(x)=highctidh_##x' \
@@ -694,9 +694,9 @@ uintbig511.o: uintbig511.S uintbig.h uintbig_namespace.h Makefile
 	$(SCC) -DBITS=511 -D'NAMESPACEBITS(x)=highctidh_511_##x' -D'NAMESPACEGENERIC(x)=highctidh_##x' \
 		-c uintbig511.S
 
-uintbig512.o: uintbig512.S uintbig.h uintbig_namespace.h Makefile
+uintbig512_arm64.o: uintbig512_arm64.S uintbig.h uintbig_namespace.h Makefile
 	$(SCC) -DBITS=512 -D'NAMESPACEBITS(x)=highctidh_512_##x' -D'NAMESPACEGENERIC(x)=highctidh_##x' \
-		-c uintbig512.S
+		-c uintbig512_arm64.S
 
 uintbig1024.o: uintbig1024.S uintbig.h uintbig_namespace.h Makefile
 	$(SCC) -DBITS=1024 -D'NAMESPACEBITS(x)=highctidh_1024_##x' -D'NAMESPACEGENERIC(x)=highctidh_##x' \

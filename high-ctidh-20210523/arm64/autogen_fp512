@@ -120,7 +120,7 @@ def write_uint_add2_9_words(f):
     for i in range(int(limbs/2)):
         offset = i*16
         f.write('\tldp %s, %s, [%s, #%d]\n' % (A_REGS[i*2], A_REGS[i*2+1], A_ADDR_REG, offset))
-    f.write('tldr %s, [%s, #64]\n' % (A_REGS[8], A_ADDR_REG))
+    f.write('\tldr %s, [%s, #64]\n' % (A_REGS[8], A_ADDR_REG))
     for i in range(int(limbs/2)):
         offset = i*16
         f.write('\tldp %s, %s, [%s, #%d]\n' % (B_REGS[i*2], B_REGS[i*2+1], B_ADDR_REG, offset))
@@ -349,7 +349,7 @@ with open(fn+'.tmp','w') as f:
     #_FP_ADD2, just straight to _fp_add3 _____________________________________________________________________________________
     comment(f, "A[x0] = A[x0] + B[x1]")
     introduce_global_function(f, globals['fp_add2'])
-    f.write('\mov x0, x2')
+    f.write('\tmov x0, x2\n')
     #_FP_ADD3 _____________________________________________________________________________________
     comment(f, "A[x0] = A[x0] + B[x1] + C[x2]")
     introduce_global_function(f, globals['fp_add3'])
@@ -360,7 +360,7 @@ with open(fn+'.tmp','w') as f:
     f.write('\tstr x4, [x3]\n\n')
 
     comment(f, "LOAD A")
-    REGS_TO_STORE = ["x19, x20, x21"]
+    REGS_TO_STORE = ["x19", "x20", "x21"]
     A_REGS = ['x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9','x10']
     B_REGS = ['x11', 'x12', 'x13', 'x14', 'x15', 'x16', 'x17','x19']
     P_REGS = ['x12', 'x13', 'x14', 'x15', 'x16', 'x17', 'x19', 'x20']
@@ -407,8 +407,8 @@ with open(fn+'.tmp','w') as f:
     #_FP_SUB2, just straight to _fp_sub3 _____________________________________________________________________________________
     comment(f, "A[x0] = A[x0] - B[x1]")
     introduce_global_function(f, globals['fp_sub2'])
-    f.write('\tmov x2, x1')
-    f.write('\tmov x1, x0')
+    f.write('\tmov x2, x1\n')
+    f.write('\tmov x1, x0\n')
     #_FP_SUB3
     REGS_TO_STORE = ["lr", "x19", "x20", "x21"]
     sub_stack_and_store_on_stack(f, REGS_TO_STORE, 64)
@@ -419,8 +419,8 @@ with open(fn+'.tmp','w') as f:
     f.write('\tldr x4, [x3]\n')
     f.write('\tadd x4, x4, #1\n')
     f.write('\tstr x4, [x3]\n\n')
-    f.write('\tmov x19, x0')
-    f.write('\tmov x20, x1')
+    f.write('\tmov x19, x0\n')
+    f.write('\tmov x20, x1\n')
     comment(f, 'stack + 32 = -x2')
     f.write('\tmov x1, x2\n')
     f.write('\tadd x0, sp, #32\n')
