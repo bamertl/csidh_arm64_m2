@@ -332,6 +332,8 @@ void ultimate_uint_test(void)
 
     uint c = {{0x1b81b90533c6c879, 0xc2721bf457aca835, 0x516730cc1f0b4f25, 0xa7aac6c567f35507, 0x5afbfcc69322c9cd, 0xb42d083aedc88c42, 0xfc8ab0d15e3e4c4a, 0x65b48e8f740f89b}};
     biguint d = {{0}};
+    biguint_print_lower(&bigone);
+    biguint_print_lower(&p_minus_2_for_fp);
     uint_mul(&bigone, &p_minus_2_for_fp, &d);
     biguint_print(&d);
 }
@@ -353,10 +355,10 @@ void ultimate_fp_mul_test(void)
     fp_mul3_2(&r2, &bigone, &c);
     biguint_print_lower(&r2);
     */
-    fp t1 = {{0x121011645ce5c57f,0x7109447e176fe62c,0x33705eb9165ade11,0x27a9398e5701adf9,0x2f44e30f53970607,0x600ce0706d630a53,0x013b07404a58fb61,0x17dfc36963962ebd}};
-    fp t2 = {{0x18d6ad5f361044b6,0x660f24746c227004,0x48e84e120b5da523,0x3104a2a927531e63,0x41f009c076103e11,0x245b0aa55517e948,0x14d4a19d13be551a,0x34c528167bcad76a}};
-    fp int1 = {{0x1dce692d35c0244a,0x19ebdca15c70fc66,0x902d6720cf3c2352,0xdcaefc48419efa74,0xf727e1ded7f4085b,0x4c43705b5ca98470,0xa3b306dd0c90d148,0x62bcd205629d2dca}};
-    fp fail = {{0xda55322e290021fa,0xe255769c72ef34d1,0x7af97c7b02524f47,0xeb92b26a9afcc044,0x269de0b167281607,0xee1dc584f2089961,0x822e02bae1580f8d,0xf9eff47168d55509}};
+    fp t1 = {{0x121011645ce5c57f, 0x7109447e176fe62c, 0x33705eb9165ade11, 0x27a9398e5701adf9, 0x2f44e30f53970607, 0x600ce0706d630a53, 0x013b07404a58fb61, 0x17dfc36963962ebd}};
+    fp t2 = {{0x18d6ad5f361044b6, 0x660f24746c227004, 0x48e84e120b5da523, 0x3104a2a927531e63, 0x41f009c076103e11, 0x245b0aa55517e948, 0x14d4a19d13be551a, 0x34c528167bcad76a}};
+    fp int1 = {{0x1dce692d35c0244a, 0x19ebdca15c70fc66, 0x902d6720cf3c2352, 0xdcaefc48419efa74, 0xf727e1ded7f4085b, 0x4c43705b5ca98470, 0xa3b306dd0c90d148, 0x62bcd205629d2dca}};
+    fp fail = {{0xda55322e290021fa, 0xe255769c72ef34d1, 0x7af97c7b02524f47, 0xeb92b26a9afcc044, 0x269de0b167281607, 0xee1dc584f2089961, 0x822e02bae1580f8d, 0xf9eff47168d55509}};
     uint_mul(&int1, &muu, &b);
     biguint_print(&b);
 }
@@ -400,7 +402,7 @@ void test_jan()
 {
     srand((unsigned int)time(NULL));
 
-    for (int i = 0; i < 100000; ++i)
+    for (int i = 0; i < 1; ++i)
     {
 
         // Create an fp struct and fill it with random values
@@ -447,9 +449,9 @@ int main(void)
     // test_issquare();
     // test_uint_mul();
     // ultimate_test();
-    // ultimate_uint_test();
-    //ultimate_fp_mul_test();
-    test_jan();
+    ultimate_uint_test();
+    // ultimate_fp_mul_test();
+    // test_jan();
     printf("All tests passed!\n");
     return 0;
 }

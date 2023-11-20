@@ -140,13 +140,167 @@
 
 .endm
 
+/////////////////////////////////////////////////MACRO
+/*
+C --> LIMB to be calculated on
+M --> multiplier LIMBS
+A --> registers for storing the new results
+B --> registers with the old results
+ */
+
+.macro  SCHOOLBOOK_STEP_512 C0,M0,M1,M2,M3,M4,M5,M6,M7,A0,A1,A2,A3,A4,A5,A6,A7,A8,B0,B1,B2,B3,B4,B5,B6,B7
+
+
+    mul     \A0, \M0, \C0 // lower part
+    adds    \A0, \A0, \B0 
+    umulh   \A1, \M0, \C0 // upper part
+    // 2/9 in x12
+    mul     \A2, \M1, \C0 // lower part
+    adcs    \A1, \A2, \A1
+    adcs    \A1, \A1, \B1 
+    umulh   \A2, \M1, \C0 // upper part
+    // 3/9in x13
+    mul     \A3, \M2, \C0
+    adcs    \A2, \A3, \A2 // lower part
+    adcs    \A2, \A2, \B2 
+    umulh   \A3, \M2, \C0 // upper part
+    // 4/9 in x14
+    mul     \A4, \M3, \C0
+    adcs    \A3, \A4, \A3 // lower part
+    adcs    \A3, \A3, \B3 
+    umulh   \A4, \M3, \C0 // upper part
+    // 5/9 in x15
+    mul     \A5, \M4, \C0
+    adcs    \A4, \A5, \A4 // lower part
+    adcs    \A4, \A4, \B4 
+    umulh   \A5, \M4, \C0 // upper part
+    // 6/9 in x16
+    mul     \A6, \M5, \C0
+    adcs    \A5, \A6, \A5 // lower part
+    adcs    \A5, \A5, \B5
+    umulh   \A6, \M5, \C0 // upper part
+    // 7/9 in x17
+    mul     \A7, \M6, \C0
+    adcs    \A6, \A7, \A6 // lower part
+    adcs    \A6, \A6, \B6
+    umulh   \A7, \M6, \C0 // upper part
+    // 8/9 in x19
+    mul     \A8, \M7, \C0
+    adcs    \A7, \A8, \A7 // lower part
+    adcs    \A7, \A7, \B7 
+    umulh   \A8, \M7, \C0 // upper part
+    // 9/9 in x20
+    adc    \A8, \A8, xzr // carry of multiplication
+
+.endm
+
+/*
+schoolbook multiplication of 512x512 bit numbers
+c [x2] = a [x0] * b [x1]
+ */
+.global _uint_mul
+_uint_mul:
+    // Input parameters:
+    // x: address of the first 512-bit number
+    // y: address of the second 512-bit number
+    // result: address of the result buffer
+    sub     sp, sp, #64
+    stp     lr, x19, [sp,#0]
+    stp     x20, x21, [sp,#16]
+    stp     x22, x23, [sp,#32]
+    stp     x24, x29, [sp,#48]
+
+    // x3-x10 A registers
+    ldp     x3, x4, [x0]
+    ldp     x5, x6, [x0,#16]
+    ldp     x7, x8, [x0,#32]
+    ldp     x9, x10, [x0,#48]
+
+    //x11-x17, x19-x20  for the first iteration
+    ldr     x0, [x1]
+    // 1/9 in x20 --> just that it is nice to continue with the macros later
+    mul     x20, x3, x0 // lower part
+    umulh   x11, x3, x0 // upper part
+    // 2/9 in x11
+    mul     x12, x4, x0 // lower part
+    adds    x11, x12, x11//add the carry from previous step
+    umulh   x12, x4, x0 // upper part
+    // 3/9in x12
+    mul     x13, x5, x0
+    adcs    x12, x13, x12 // lower part
+    umulh   x13, x5, x0 // upper part
+    // 4/9 in x13
+    mul     x14, x6, x0
+    adcs    x13, x14, x13 // lower part
+    umulh   x14, x6, x0 // upper part
+    // 5/9 in x14
+    mul     x15, x7, x0
+    adcs    x14, x15, x14 // lower part
+    umulh   x15, x7, x0 // upper part
+    // 6/9 in x15
+    mul     x16, x8, x0
+    adcs    x15, x16, x15 // lower part
+    umulh   x16, x8, x0 // upper part
+    // 7/9 in x16
+    mul     x17, x9, x0
+    adcs    x16, x17, x16 // lower part
+    umulh   x17, x9, x0 // upper part
+    // 8/9 in x17
+    mul     x19, x10, x0
+    adcs    x17, x19, x17 // lower part
+    umulh   x19, x10, x0 // upper part
+    // 9/9 in x19
+    adcs    x19, x19, xzr // carry of multiplication
+    //store the first result
+    str     x20, [x2,#0]
+    
+    ldr     x0, [x1, #8]
+    // remark Jan: I can use x29 here, because the result will always be a valid frame record (The frame pointer register (FP, X29) must always address a valid frame record.
+    SCHOOLBOOK_STEP_512 x0, x3, x4, x5, x6, x7, x8, x9, x10, x21, x22, x23, x24, x25, x26, x27, x28, x29, x11, x12, x13, x14, x15, x16, x17, x19
+    // now we can take the lowest limb and store it, because nothing more will come
+    str     x21, [x2, #8]
+    // new base results now in x22-x29, freely available regsiters x11-x20
+    ldr     x0, [x1, #16]
+    SCHOOLBOOK_STEP_512 x0,x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17,x19, x20, x22, x23, x24, x25, x27, x27, x28, x29
+    str     x11, [x2, #16]
+    ldr     x0, [x1, #24]
+    SCHOOLBOOK_STEP_512 x0,x3, x4, x5, x6, x7, x8, x9, x10, x21, x22, x23, x24, x25, x26, x27, x28, x29, x12, x13, x14, x15, x16, x17, x19, x20
+    str     x21, [x2, #24]
+    ldr     x0, [x1, #32]
+    SCHOOLBOOK_STEP_512 x0,x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17,x19, x20, x22, x23, x24, x25, x27, x27, x28, x29
+    str     x11, [x2, #32]
+    ldr     x0, [x1, #40]
+    SCHOOLBOOK_STEP_512 x0,x3, x4, x5, x6, x7, x8, x9, x10, x21, x22, x23, x24, x25, x26, x27, x28, x29, x12, x13, x14, x15, x16, x17, x19, x20
+    str     x21, [x2, #40]
+    ldr     x0, [x1, #48]
+    SCHOOLBOOK_STEP_512 x0,x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17,x19, x20, x22, x23, x24, x25, x27, x27, x28, x29
+    str     x11, [x2, #48]
+    ldr     x0, [x1, #56]
+    SCHOOLBOOK_STEP_512 x0,x3, x4, x5, x6, x7, x8, x9, x10, x21, x22, x23, x24, x25, x26, x27, x28, x29, x12, x13, x14, x15, x16, x17, x19, x20
+    str     x21, [x2, #56]
+    //8 limbs over, now we have the result in x11-x19 which are final, since no multiplication will happen anymore
+    stp     x11, x12, [x2, #64]
+    stp     x13, x14, [x2, #80]
+    stp     x15, x16, [x2, #96]
+    stp     x17, x19, [x2, #112]
+    str     x20, [x2, #128]
+
+
+    ldp     lr, x19, [sp,#0]
+    ldp     x20, x21, [sp,#16]
+    ldp     x22, x23, [sp,#32]
+    ldp     x24, x29, [sp,#48]
+    add     sp,sp, #64
+
+    ret
+
 /* 
 mul a la https://github.com/microsoft/PQCrypto-SIDH/blob/master/src/P503/ARM64/fp_arm64_asm.S
 //  Operation: c [x2] = a [x0] * b [x1]
 a = 8 words, b = 8 words, c = 16 words
 */
-.global _uint_mul
-_uint_mul:
+.global _uint_mul_a
+_uint_mul_a:
     // add more space to the stack
     sub     sp, sp, #320
     // 176-192 :: x18
@@ -1102,3 +1256,52 @@ _fp_random:
     adrp x1, _p@PAGE
     add x1, x1, _p@PAGEOFF
     b _uint_random
+
+
+/*
+tester for Jan:
+ // x21-x28. x11 <-carry 
+    // 1/9 in x11
+    mul     x21, x3, x0 // lower part
+    adds    x21, x21, x12 //add the previous carry now
+    umulh   x22, x3, x0 // upper part
+    // 2/9 in x12
+    mul     x23, x4, x0 // lower part
+    adcs    x22, x23, x22
+    adcs    x22, x22, x13 //add the previous result
+    umulh   x23, x4, x0 // upper part
+    // 3/9in x13
+    mul     x24, x5, x0
+    adcs    x23, x24, x23 // lower part
+    adcs    x23, x23, x14 //add the previous result
+    umulh   x24, x5, x0 // upper part
+    // 4/9 in x14
+    mul     x25, x6, x0
+    adcs    x24, x25, x24 // lower part
+    adcs    x24, x24, x15 
+    umulh   x25, x6, x0 // upper part
+    // 5/9 in x15
+    mul     x26, x7, x0
+    adcs    x25, x26, x25 // lower part
+    adcs    x25, x25, x16 
+    umulh   x26, x7, x0 // upper part
+    // 6/9 in x16
+    mul     x27, x8, x0
+    adcs    x26, x27, x26 // lower part
+    adcs    x26, x26, x17
+    umulh   x27, x8, x0 // upper part
+    // 7/9 in x17
+    mul     x28, x9, x0
+    adcs    x27, x28, x27 // lower part
+    adcs    x27, x27, x19
+    umulh   x28, x9, x0 // upper part
+    // 8/9 in x19
+    mul     x11, x10, x0
+    adcs    x28, x11, x28 // lower part
+    adcs    x28, x28, x20 
+    umulh   x11, x10, x0 // upper part
+    // 9/9 in x20
+    adcs    x11, x11, xzr // carry of multiplication
+
+    just in case schoolbook is not working
+ */
