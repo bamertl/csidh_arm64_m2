@@ -10,6 +10,7 @@ EXTERN_LABELS = {
     'uintbig_p': '_uintbig_p',
     'uintbig_mul3_64': '_uintbig_mul3_64',
     'uintbig_mul3_64_full': '_uintbig_mul3_64_full',
+    'uintbig_add2_9_words': '_uintbig_add2_9_words',
 }
 
 globals = {
@@ -108,7 +109,6 @@ def add_extern_labels(f):
         f.write('.extern %s\n' % label)
     f.write('\n')
 
-
 def write_uint_add2_9_words(f):
     A_ADDR_REG = 'x0'
     B_ADDR_REG = 'x1'
@@ -189,7 +189,7 @@ def write_radix_monte_mul(f):
     f.write('\tbl %s // temp = q*p \n' % EXTERN_LABELS['uintbig_mul3_64_full'])
     f.write('\tadd x0, sp, #%d // load temp_addr \n' % (temp_addr)) 
     f.write('\tadd x1, sp, #%d // load c_addr \n' % (c_addr))
-    comment('add together')
+    comment(f, 'add together')
     f.write('\tbl %s // c = c + q*p \n' % EXTERN_LABELS['uintbig_add2_9_words'])
     comment(f, '4. C ← C/r')
     for i in range(int(limbs/2)):
@@ -216,26 +216,26 @@ def write_radix_monte_mul(f):
         f.write('\tldp %s, %s, [sp, #%d]\n' % (C_REGS[i*2], C_REGS[i*2+1], offset))
     f.write('\tldr %s, [sp, #%d]\n' % (C_REGS[8], c_addr + 8*8))
     load_label_address_into_register(f, EXTERN_LABELS['uintbig_p'], 'x0')
-    comment('load p')
+    comment(f,'load p')
     for i in range(int(limbs/2)):
         offset = i*16
         f.write('\tldp %s, %s, [x0, #%d]\n' % (P_REGS[i*2], P_REGS[i*2+1], offset))
-    comment('C - P')
+    comment(f,'C - P')
     f.write('\tsubs %s, %s, %s\n' % (C_REGS[0], C_REGS[0], P_REGS[0]))
     for i in range(1, limbs):
         f.write('\tsbcs %s, %s, %s\n' % (C_REGS[i], C_REGS[i], P_REGS[i]))
     CARRY_REG = 'x21'
     f.write('\tadc %s, xzr, xzr\n' % CARRY_REG)
-    comment('and with carry')
+    comment(f,'and with carry')
     for i in range(limbs):
         offset = i*8
         f.write('\tand %s, %s, %s\n' % (P_REGS[i], P_REGS[i], CARRY_REG))
-    comment('C + P')
+    comment(f, 'C + P')
     f.write('\tadds %s, %s, %s\n' % (C_REGS[0], C_REGS[0], P_REGS[0]))
     for i in range(1, limbs):
         f.write('\tadcs %s, %s, %s\n' % (C_REGS[i], C_REGS[i], P_REGS[i]))
-    comment('store C')
-    f.write('\ldr x0, [sp, #%d]\n' % (a_addr))
+    comment(f, 'store C')
+    f.write('\tldr x0, [sp, #%d]\n' % (a_addr))
 
     for i in range(int(limbs/2)):
         offset = i*16
@@ -472,6 +472,22 @@ with open(fn+'.tmp','w') as f:
     add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, 0)
     f.write('\tret\n\n') 
 
+    #UINT_ADD_2_9_WORDS
     write_uint_add2_9_words(f)
+    #MONTE MULTIPLICATION fp_mul2, fp_mul3 _____________________________________________________________________
+    write_radix_monte_mul(f)
 
+    #FP_SQ1 _____________________________________________________________________________________
+    comment(f, 'x0 = x0^2, straight to fp_sq2')
+    introduce_global_function(f, globals['fp_sq1'])
+    f.write('\tmov x1, x0\n')
+    comment(f, 'x0 = x1^2 mod p')
+    introduce_global_function(f, globals['fp_sq2'])
+    comment(f, 'Increment sq counter')
+    load_label_address_into_register(f, globals['fp_sq_count'], 'x3')
+    f.write('\tldr x4, [x3]\n')
+    f.write('\tadd x4, x4, #1\n')
+    f.write('\tstr x4, [x3]\n\n')
+    f.write('\tmov x2, x0\n')
+    f.write('\tb _fp_mul3\n')
     maybeupdate(fn)

@@ -5,6 +5,7 @@
 .extern _uintbig_p
 .extern _uintbig_mul3_64
 .extern _uintbig_mul3_64_full
+.extern _uintbig_add2_9_words
 
 
 .set pbits,511 
@@ -374,3 +375,149 @@ _minus_number:
 	add sp, sp, #32
 	ret
 
+/* A[x0] = A[x0] * B[x1] mod P 
+ directly into fp_mul3 */
+.global _fp_mul2
+_fp_mul2: 
+	mov x2, x0
+/* Montgomery multiplication
+ C[x0] = A[x1] * B[x2] mod P */
+.global _fp_mul3
+_fp_mul3: 
+/* Increment mul/sq counter */
+	adrp x3, _fp_mulsq_count @PAGE
+	add x3, x3, _fp_mulsq_count@PAGEOFF
+	ldr x4, [x3]
+	add x4, x4, #1
+	str x4, [x3]
+
+	sub sp, sp, #240
+	stp lr, x0, [sp, #0]
+	stp x1, x17, [sp, #16]
+	stp x19, x20, [sp, #32]
+	str x21, [sp, #48]
+/* Init C and Temp with 0 */
+	stp xzr, xzr, [sp, #64]
+	stp xzr, xzr, [sp, #80]
+	stp xzr, xzr, [sp, #96]
+	stp xzr, xzr, [sp, #112]
+	stp xzr, xzr, [sp, #128]
+	stp xzr, xzr, [sp, #144]
+	stp xzr, xzr, [sp, #160]
+	stp xzr, xzr, [sp, #176]
+	stp xzr, xzr, [sp, #192]
+	stp xzr, xzr, [sp, #208]
+
+/* Counter = x5, Offset = x6 */
+	mov x5, #0
+	mov x6, #0
+	str x5, [sp, #224]
+	str x6, [sp, #232]
+
+_fp_mul_loop:
+/* C <- C + A[i] * B */
+	ldr x2, [sp, #232] // load a_adr 
+	add x2, x2, x6 // add offset to a_adr
+	ldr x1, [sp, #24] // load b_adr 
+	add x0, x0, #144 // load temp_addr 
+/* temp = A[i] * B */
+	bl _uintbig_mul3_64_full 
+/* 3. C ← (C + p*q) /r */
+	add x0, sp, #144 // load temp_addr 
+	adrp x1, _uintbig_p @PAGE
+	add x1, x1, _uintbig_p@PAGEOFF
+	ldr x2, [sp, #144] // load lsb word of temp (q) 
+	bl _uintbig_mul3_64_full // temp = q*p 
+	add x0, sp, #144 // load temp_addr 
+	add x1, sp, #64 // load c_addr 
+/* add together */
+	bl _uintbig_add2_9_words // c = c + q*p 
+/* 4. C ← C/r */
+	ldp x0, x1, [sp, #152] // load temp_addr 
+	stp x0, x1, [sp, #64] // store into c_addr 
+	ldp x0, x1, [sp, #168] // load temp_addr 
+	stp x0, x1, [sp, #80] // store into c_addr 
+	ldp x0, x1, [sp, #184] // load temp_addr 
+	stp x0, x1, [sp, #96] // store into c_addr 
+	ldp x0, x1, [sp, #200] // load temp_addr 
+	stp x0, x1, [sp, #112] // store into c_addr 
+	str xzr, [sp, #128] // store into c_addr 
+/* 5. i ← i + 1 */
+	ldr x5, [sp, #224] // load counter 
+	ldr x6, [sp, #232] // load offset 
+	add x5, x5, #1 // increment counter 
+	add x6, x6, #8 // increment offset 
+	stp x5, x6, [sp, #224] // store counter 
+/* 6. if i < 8 goto loop again */
+	cmp x5, #8
+	b.lt _fp_mul_loop
+/* if C >= p then C = C - p */
+	ldp x3, x4, [sp, #64]
+	ldp x5, x6, [sp, #80]
+	ldp x7, x8, [sp, #96]
+	ldp x9, x10, [sp, #112]
+	ldr x11, [sp, #128]
+	adrp x0, _uintbig_p @PAGE
+	add x0, x0, _uintbig_p@PAGEOFF
+/* load p */
+	ldp x12, x13, [x0, #0]
+	ldp x14, x15, [x0, #16]
+	ldp x16, x17, [x0, #32]
+	ldp x19, x20, [x0, #48]
+/* C - P */
+	subs x3, x3, x12
+	sbcs x4, x4, x13
+	sbcs x5, x5, x14
+	sbcs x6, x6, x15
+	sbcs x7, x7, x16
+	sbcs x8, x8, x17
+	sbcs x9, x9, x19
+	sbcs x10, x10, x20
+	adc x21, xzr, xzr
+/* and with carry */
+	and x12, x12, x21
+	and x13, x13, x21
+	and x14, x14, x21
+	and x15, x15, x21
+	and x16, x16, x21
+	and x17, x17, x21
+	and x19, x19, x21
+	and x20, x20, x21
+/* C + P */
+	adds x3, x3, x12
+	adcs x4, x4, x13
+	adcs x5, x5, x14
+	adcs x6, x6, x15
+	adcs x7, x7, x16
+	adcs x8, x8, x17
+	adcs x9, x9, x19
+	adcs x10, x10, x20
+/* store C */
+	ldr x0, [sp, #16]
+	stp x3, x4, [x0, #0]
+	stp x5, x6, [x0, #16]
+	stp x7, x8, [x0, #32]
+	stp x9, x10, [x0, #48]
+	ldp lr, x0, [sp, #0]
+	ldp x1, x17, [sp, #16]
+	ldp x19, x20, [sp, #32]
+	ldr x21, [sp, #48]
+	add sp, sp, #240
+	ret
+
+/* x0 = x0^2, straight to fp_sq2 */
+.global _fp_sq1
+_fp_sq1: 
+	mov x1, x0
+/* x0 = x1^2 mod p */
+.global _fp_sq2
+_fp_sq2: 
+/* Increment sq counter */
+	adrp x3, _fp_sq_count @PAGE
+	add x3, x3, _fp_sq_count@PAGEOFF
+	ldr x4, [x3]
+	add x4, x4, #1
+	str x4, [x3]
+
+	mov x2, x0
+	b _fp_mul3
