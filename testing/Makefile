@@ -1,52 +1,41 @@
-# Define cross-compiler and assembler
-CC = clang
-# Flags
+SCC=gcc
+CC=clang -O3 -Os -g -march=native -mtune=native -std=gnu99 -pedantic -Wall -Wextra -Wno-language-extension-token -fwrapv 
 
-# Folders
-SRC_DIR = src
-ASM_DIR = asm
-OBJ_DIR = obj
-TEST_DIR = tests
+test: test1
 
-# Exclude main.o from test builds
-C_SOURCES = $(wildcard $(SRC_DIR)/*.c)
-C_SOURCES_NO_MAIN = $(filter-out $(SRC_DIR)/main.c, $(C_SOURCES))
-# Test targets
-TEST_SOURCES = $(wildcard $(TEST_DIR)/test_*.c)
-TEST_EXECUTABLES = $(patsubst $(TEST_DIR)/%.c, $(TEST_DIR)/%, $(TEST_SOURCES))
 
-# Build targets
-ASM_SOURCES = $(wildcard $(ASM_DIR)/*.S)
+libhighctidh_512.a: uintbig512_arm64.o fp512_arm64.o Makefile
+	@ar cr libhighctidh_512.a uintbig512_arm64.o fp512_arm64.o
+	@ranlib libhighctidh_512.a
 
-test: $(TEST_EXECUTABLES)
-	@echo "Running tests..."
-	@for executable in $^; do \
-		echo "Running $$executable..."; \
-		./$$executable; \
-		if [ $$? -eq 0 ]; then \
-			echo "$$executable passed"; \
-		else \
-			echo "$$executable failed"; \
-		fi; \
-	done
+uintbig512_arm64.o: pre_uintbig512 uintbig512_arm64.S uintbig.h uintbig_namespace.h Makefile
+	@$(SCC) -DBITS=512 -D'NAMESPACEBITS(x)=_highctidh_512_##x' -D'NAMESPACEGENERIC(x)=_highctidh_##x' \
+		-c uintbig512_arm64.S
 
-$(TEST_DIR)/%: $(TEST_DIR)/%.c $(C_SOURCES_NO_MAIN) $(ASM_SOURCES)
-	${CC} -g  -I ./src/asm/ $(ASM_SOURCES) $(C_SOURCES_NO_MAIN) $<  -o $@ 
+fp512_arm64.o: pre_fp512_arm64 fp512_arm64.S fp.h fp_namespace.h uintbig.h uintbig_namespace.h Makefile
+	@$(SCC) -DBITS=512 -D'NAMESPACEBITS(x)=_highctidh_512_##x' -D'NAMESPACEGENERIC(x)=_highctidh_##x' \
+		-c fp512_arm64.S
 
-# Targets
-all: main
+pre_uintbig512:
+	@echo "Generating uintbig512_arm64.S from autogen in ctidh/arm64 folder" 
+	@./../high-ctidh-20210523/arm64/autogen_uintbig512
+	@mv ../uintbig512_arm64.S ./uintbig512_arm64.S
 
-main: $(C_SOURCES) $(ASM_SOURCES)
-	@${CC} \
-		$(C_SOURCES) $(ASM_SOURCES) \
-		-o main
+pre_fp512_arm64:
+	@echo "Generating fp512_arm64.S from autogen in ctidh/arm64 folder" 
+	@./../high-ctidh-20210523/arm64/autogen_fp512
+	@mv ../fp512_arm64.S ./fp512_arm64.S
 
-# Phony targets
-.PHONY: clean run	
+test1: ./tests/test1.c \
+libhighctidh_512.a fp.h
+	@$(CC) -DBITS=512 -D'NAMESPACEBITS(x)=highctidh_512_##x' -D'NAMESPACEGENERIC(x)=highctidh_##x' \
+		-I ./ \
+		-I ../high-ctidh-20210523/ \
+		./tests/test1.c \
+		libhighctidh_512.a \
+		-o tests/test1
+	./tests/test1
 
 clean:
-	rm -f $(OBJ_DIR)/*.o main
-
-	find $(TEST_DIR) -type f ! -name "*.*" ! -name "*.c" -exec rm -f {} \;
-run: main
-	./main
+	@rm -f *.o *.a ./*.S *.out
+	@rm -rf *.dSYM tests/*.dSYM

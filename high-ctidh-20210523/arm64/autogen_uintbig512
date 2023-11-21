@@ -8,14 +8,15 @@ limbs = 8
 sys.setrecursionlimit(10000)
 
 globals = {
-  'uint_big_p': '_uintbig_p',
-  'uint_big_1': '_uintbig_1',
-  'uintbig_bit': '_uintbig_bit',
-  'uintbig_set': '_uintbig_set',
-  'uintbig_add3': '_uintbig_add3',
-  'uintbig_sub3': '_uintbig_sub3',
-  'uintbig_mul3_64': '_uintbig_mul3_64',
-  'uintbig_four_sqrt_p': '_uintbig_four_sqrt_p', }
+  'uint_big_p': 'uintbig_p',
+  'uint_big_1': 'uintbig_1',
+  'uintbig_bit': 'uintbig_bit',
+  'uintbig_set': 'uintbig_set',
+  'uintbig_add3': 'uintbig_add3',
+  'uintbig_sub3': 'uintbig_sub3',
+  'uintbig_mul3_64': 'uintbig_mul3_64',
+  'uintbig_four_sqrt_p': 'uintbig_four_sqrt_p', 
+  'uintbig_mul3_64_full': 'uintbig_mul3_64_full'}
 
 def maybeupdate(fn):
   if os.access(fn,os.F_OK):
@@ -103,14 +104,14 @@ with open(fn+'.tmp','w') as f:
   ## _UINTBIG_SET ______________________________________________________________________________________________
   comment(f, "A[x0][0] = x1, rest 0")
   introduce_global_function(f, globals['uintbig_set'])
-  f.write('\str x1, [x0]\n')
-  f.write('mov x2, 0\n')
-  f.write('stp x1, x2, [x0, #0]\t')
+  f.write('\tstr x1, [x0]\n')
+  f.write('\tmov x2, 0\n')
+  f.write('\tstp x1, x2, [x0, #0]\n')
   
   for i in range(1, int(limbs/2)):
     offset = i*16
-    f.write('stp x2, x2, [x0, #%d]\t' % offset)
-  f.write('\ret\n\n')
+    f.write('\tstp x2, x2, [x0, #%d]\n' % offset)
+  f.write('\tret\n\n')
 
   ## _UINTBIG_BIT ______________________________________________________________________________________________
   comment(f, "Operation: x0 = x0[x1] == 1")
@@ -226,7 +227,7 @@ with open(fn+'.tmp','w') as f:
       f.write('\tadcs x5, x5, x6 // add past higher mul\n')
       f.write('\tstr x5, [x0, #%d]\n' % (i*16+8)) 
       f.write('\tumulh x6, x4, x2 // high mul \n\n')
-  f.write('\adc x6, x6, xzr')
+  f.write('\tadc x6, x6, xzr\n')
   f.write('\tstr x6, [x0, #%d]\n' % (8*8))
   f.write('\tret\n\n')
 

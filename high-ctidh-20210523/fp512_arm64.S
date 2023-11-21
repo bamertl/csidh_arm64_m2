@@ -2,28 +2,28 @@
 
 #include "uintbig_namespace.h"
 #include "fp_namespace.h"
-.extern _uintbig_p
-.extern _uintbig_mul3_64
-.extern _uintbig_mul3_64_full
+.extern uintbig_p
+.extern uintbig_mul3_64
+.extern uintbig_mul3_64_full
 
 
 .set pbits,511 
 .set pbytes,64 
 .set plimbs,8 
 
-_inv_min_p_mod_r: 
+inv_min_p_mod_r: 
 	.quad 0x66c1301f632e294d
 
-.global _fp_0
-_fp_0: 
+.global fp_0
+fp_0: 
 	.zero 64
-.global _fp_1
-_fp_1: 
+.global fp_1
+fp_1: 
 	.quad 0xc8fc8df598726f0a, 0x7b1bc81750a6af95, 0x5d319e67c1e961b4, 0xb0aa7275301955f1
 	.quad 0x4a080672d9ba6c64, 0x97a5ef8a246ee77b, 0x06ea9e5d4383676a, 0x3496e2e117e0ec80
 
-.global _fp_2
-_fp_2: 
+.global fp_2
+fp_2: 
 	.quad 0x767762e5fd1e1599, 0x33c5743a49a0b6f6, 0x68fc0c0364c77443, 0xb9aa1e24f83f56db
 	.quad 0x3914101f20520efb, 0x7b1ed6d95b1542b4, 0x114a8be928c8828a, 0x03793732bbb24f40
 
@@ -32,14 +32,14 @@ _r_squared_mod_p:
 	.quad 0x5dae03ee2f5de3d0, 0x1e9248731776b371, 0xad5f166e20e4f52d, 0x4ed759aea6f3917e
 
 .data
-.global _fp_mulsq_count
-_fp_mulsq_count: 
+.global fp_mulsq_count
+fp_mulsq_count: 
 	.quad 0
-.global _fp_sq_count
-_fp_sq_count: 
+.global fp_sq_count
+fp_sq_count: 
 	.quad 0
-.global _fp_addsub_count
-_fp_addsub_count: 
+.global fp_addsub_count
+fp_addsub_count: 
 	.quad 0
 
 .text
@@ -47,8 +47,8 @@ _fp_addsub_count:
 /* this means 16 byte alignment */
 
 /* x1 = x0  x0 is being copied to x1(8 words) */
-.global _fp_copy
-_fp_copy: 
+.global fp_copy
+fp_copy: 
 	ldp x2, x3, [x1, #0]
 	stp x2, x3, [x0, #0]
 	ldp x2, x3, [x1, #16]
@@ -60,8 +60,8 @@ _fp_copy:
 	ret
 
 /* A[x0] = B[x1] if d[x2], we make it time-constant */
-.global _fp_cmov
-_fp_cmov: 
+.global fp_cmov
+fp_cmov: 
 /* Loop 4 times through the 8 words */
 /* (AxorB)^d xor A = A */
 /* LOOP 0 */
@@ -107,8 +107,8 @@ _fp_cmov:
 	ret
 
 /* A[x0] <-> B[x1] if d[x2], we make it time-constant */
-.global _fp_cswap
-_fp_cswap: 
+.global fp_cswap
+fp_cswap: 
 /* LOOP 0 */
 	ldp x3, x4, [x0, #0]
 	ldp x5, x6, [x1, #0]
@@ -164,21 +164,23 @@ _fp_cswap:
 	ret
 
 /* A[x0] = A[x0] + B[x1] */
-.global _fp_add2
-_fp_add2: 
-\mov x0, x2/* A[x0] = A[x0] + B[x1] + C[x2] */
-.global _fp_add3
-_fp_add3: 
+.global fp_add2
+fp_add2: 
+	mov x0, x2
+/* A[x0] = A[x0] + B[x1] + C[x2] */
+.global fp_add3
+fp_add3: 
 /* Increment add/sub counter */
-	adrp x3, _fp_addsub_count @PAGE
-	add x3, x3, _fp_addsub_count@PAGEOFF
+	adrp x3, fp_addsub_count @PAGE
+	add x3, x3, fp_addsub_count@PAGEOFF
 	ldr x4, [x3]
 	add x4, x4, #1
 	str x4, [x3]
 
 /* LOAD A */
-	sub sp, sp, #16
-	str x19, x20, x21, [sp, #0]
+	sub sp, sp, #32
+	stp x19, x20, [sp, #0]
+	str x21, [sp, #16]
 /* load A and B */
 	ldp x3, x4, [x0, #0]
 	ldp x11, x12, [x1, #0]
@@ -238,34 +240,39 @@ _fp_add3:
 	stp x5, x6, [x0, #16]
 	stp x7, x8, [x0, #32]
 	stp x9, x10, [x0, #48]
-	ldr x19, x20, x21, [sp, #0]
-	add sp, sp, #16
+	ldp x19, x20, [sp, #0]
+	ldr x21, [sp, #16]
+	add sp, sp, #32
 	ret
 
 /* A[x0] = A[x0] - B[x1] */
-.global _fp_sub2
-_fp_sub2: 
-	mov x2, x1	mov x1, x0	sub sp, sp, #96
+.global fp_sub2
+fp_sub2: 
+	mov x2, x1
+	mov x1, x0
+	sub sp, sp, #96
 	stp lr, x19, [sp, #0]
 	stp x20, x21, [sp, #16]
 /* A[x0] = A[x0] - B[x1] - C[x2] */
-.global _fp_sub3
-_fp_sub3: 
+.global fp_sub3
+fp_sub3: 
 /* Increment add/sub counter */
-	adrp x3, _fp_addsub_count @PAGE
-	add x3, x3, _fp_addsub_count@PAGEOFF
+	adrp x3, fp_addsub_count @PAGE
+	add x3, x3, fp_addsub_count@PAGEOFF
 	ldr x4, [x3]
 	add x4, x4, #1
 	str x4, [x3]
 
-	mov x19, x0	mov x20, x1/* stack + 32 = -x2 */
+	mov x19, x0
+	mov x20, x1
+/* stack + 32 = -x2 */
 	mov x1, x2
 	add x0, sp, #32
 	bl _minus_number
 	mov x2, x0
 	mov x0, x19
 	mov x1, x20
-	bl _fp_add3
+	bl fp_add3
 	ldp lr, x19, [sp, #0]
 	ldp x20, x21, [sp, #16]
 	add sp, sp, #96
@@ -276,8 +283,8 @@ _minus_number:
 	sub sp, sp, #16
 	stp x19, x20, [sp, #0]
 /* LOAD A and P */
-	adrp x2, _uintbig_p @PAGE
-	add x2, x2, _uintbig_p@PAGEOFF
+	adrp x2, uintbig_p @PAGE
+	add x2, x2, uintbig_p@PAGEOFF
 	ldp x3, x4, [x1, #0]
 	ldp x5, x6, [x1, #16]
 	ldp x7, x8, [x1, #32]
@@ -334,36 +341,190 @@ _minus_number:
 	add sp, sp, #16
 	ret
 
+/* A[x0] = A[x0] + B[x1] */
+.global _uintbig_add2_9_words
+_uintbig_add2_9_words: 
 	sub sp, sp, #32
 	stp x19, x20, [sp, #0]
 	stp x21, x22, [sp, #16]
-/* LOAD A and B */
-	ldp x2, x3, [x0, #0]
-	ldp x4, x5, [x0, #16]
-	ldp x6, x7, [x0, #32]
-	ldp x8, x9, [x0, #48]
-tldr x10, [x0, #64]
-	ldp x11, x12, [x1, #0]
-	ldp x13, x14, [x1, #16]
-	ldp x15, x16, [x1, #32]
-	ldp x17, x19, [x1, #48]
-	ldr x20, [x1, #64]
-/* A + B */
-	ADDS x2, x2, x11
-	ADCS x3, x3, x12
-	ADCS x4, x4, x13
-	ADCS x5, x5, x14
-	ADCS x6, x6, x15
-	ADCS x7, x7, x16
-	ADCS x8, x8, x17
-	ADCS x9, x9, x19
-	stp x2, x3, [x0, #0]
-	stp x4, x5, [x0, #16]
-	stp x6, x7, [x0, #32]
-	stp x8, x9, [x0, #48]
-	str x10, [x0, #64]
+/* Load A */
+	ldp x3, x4, [x0, #0]
+	ldp x5, x6, [x0, #16]
+	ldp x7, x8, [x0, #32]
+	ldp x9, x10, [x0, #48]
+	ldr x11, [x0, #64]
+/* Load B */
+	ldp x13, x14, [x1, #0]
+	ldp x15, x16, [x1, #16]
+	ldp x17, x19, [x1, #32]
+	ldp x20, x21, [x1, #48]
+	ldr x22, [x1, #64]
+
+	adds x3, x3, x13
+	adcs x4, x4, x14
+	adcs x5, x5, x15
+	adcs x6, x6, x16
+	adcs x7, x7, x17
+	adcs x8, x8, x19
+	adcs x9, x9, x20
+	adcs x10, x10, x21
+	adcs x11, x11, x22
+	adcs x12, xzr, xzr // carry into 10th word
+/* Store Result 10 words */
+	stp x3, x4, [x0, #0]
+	stp x5, x6, [x0, #16]
+	stp x7, x8, [x0, #32]
+	stp x9, x10, [x0, #48]
+	stp x11, x12, [x0, #64]
 	ldp x19, x20, [sp, #0]
 	ldp x21, x22, [sp, #16]
 	add sp, sp, #32
+	ret 
+
+/* A[x0] = A[x0] * B[x1] mod P 
+ directly into fp_mul3 */
+.global fp_mul2
+fp_mul2: 
+	mov x2, x0
+/* Montgomery multiplication
+ C[x0] = A[x1] * B[x2] mod P */
+.global fp_mul3
+fp_mul3: 
+/* Increment mul/sq counter */
+	adrp x3, fp_mulsq_count @PAGE
+	add x3, x3, fp_mulsq_count@PAGEOFF
+	ldr x4, [x3]
+	add x4, x4, #1
+	str x4, [x3]
+
+	sub sp, sp, #240
+	stp lr, x0, [sp, #0]
+	stp x1, x17, [sp, #16]
+	stp x19, x20, [sp, #32]
+	str x21, [sp, #48]
+/* Init C and Temp with 0 */
+	stp xzr, xzr, [sp, #64]
+	stp xzr, xzr, [sp, #80]
+	stp xzr, xzr, [sp, #96]
+	stp xzr, xzr, [sp, #112]
+	stp xzr, xzr, [sp, #128]
+	stp xzr, xzr, [sp, #144]
+	stp xzr, xzr, [sp, #160]
+	stp xzr, xzr, [sp, #176]
+	stp xzr, xzr, [sp, #192]
+	stp xzr, xzr, [sp, #208]
+
+/* Counter = x5, Offset = x6 */
+	mov x5, #0
+	mov x6, #0
+	str x5, [sp, #224]
+	str x6, [sp, #232]
+
+_fp_mul_loop:
+/* C <- C + a[i] * B */
+	ldr x2, [sp, #8] // load a_adr 
+	add x2, x2, x6 // add offset to a_adr
+	ldr x2, [x2] // load actual value of a[i]
+	ldr x1, [sp, #16] // load b_adr 
+	add x0, sp, #144 // load temp_addr 
+/* temp = A[i] * B */
+	bl uintbig_mul3_64_full 
+/* 3. C ← (C + p*q) /r */
+	add x0, sp, #144 // load temp_addr 
+	adrp x1, uintbig_p @PAGE
+	add x1, x1, uintbig_p@PAGEOFF
+	ldr x2, [sp, #144] // load lsb word of temp (q) 
+	bl uintbig_mul3_64_full // temp = q*p 
+	add x0, sp, #144 // load temp_addr 
+	add x1, sp, #64 // load c_addr 
+/* add together */
+	bl _uintbig_add2_9_words // c = c + q*p 
+/* 4. C ← C/r */
+	ldp x0, x1, [sp, #152] // load temp_addr 
+	stp x0, x1, [sp, #64] // store into c_addr 
+	ldp x0, x1, [sp, #168] // load temp_addr 
+	stp x0, x1, [sp, #80] // store into c_addr 
+	ldp x0, x1, [sp, #184] // load temp_addr 
+	stp x0, x1, [sp, #96] // store into c_addr 
+	ldp x0, x1, [sp, #200] // load temp_addr 
+	stp x0, x1, [sp, #112] // store into c_addr 
+	str xzr, [sp, #128] // store into c_addr 
+/* 5. i ← i + 1 */
+	ldr x5, [sp, #224] // load counter 
+	ldr x6, [sp, #232] // load offset 
+	add x5, x5, #1 // increment counter 
+	add x6, x6, #8 // increment offset 
+	stp x5, x6, [sp, #224] // store counter 
+/* 6. if i < 8 goto loop again */
+	cmp x5, #8
+	b.lt _fp_mul_loop
+/* if C >= p then C = C - p */
+	ldp x3, x4, [sp, #64]
+	ldp x5, x6, [sp, #80]
+	ldp x7, x8, [sp, #96]
+	ldp x9, x10, [sp, #112]
+	ldr x11, [sp, #128]
+	adrp x0, uintbig_p @PAGE
+	add x0, x0, uintbig_p@PAGEOFF
+/* load p */
+	ldp x12, x13, [x0, #0]
+	ldp x14, x15, [x0, #16]
+	ldp x16, x17, [x0, #32]
+	ldp x19, x20, [x0, #48]
+/* C - P */
+	subs x3, x3, x12
+	sbcs x4, x4, x13
+	sbcs x5, x5, x14
+	sbcs x6, x6, x15
+	sbcs x7, x7, x16
+	sbcs x8, x8, x17
+	sbcs x9, x9, x19
+	sbcs x10, x10, x20
+	adc x21, xzr, xzr
+/* and with carry */
+	and x12, x12, x21
+	and x13, x13, x21
+	and x14, x14, x21
+	and x15, x15, x21
+	and x16, x16, x21
+	and x17, x17, x21
+	and x19, x19, x21
+	and x20, x20, x21
+/* C + P */
+	adds x3, x3, x12
+	adcs x4, x4, x13
+	adcs x5, x5, x14
+	adcs x6, x6, x15
+	adcs x7, x7, x16
+	adcs x8, x8, x17
+	adcs x9, x9, x19
+	adcs x10, x10, x20
+/* store C */
+	ldr x0, [sp, #8]
+	stp x3, x4, [x0, #0]
+	stp x5, x6, [x0, #16]
+	stp x7, x8, [x0, #32]
+	stp x9, x10, [x0, #48]
+	ldp lr, x0, [sp, #0]
+	ldp x1, x17, [sp, #16]
+	ldp x19, x20, [sp, #32]
+	ldr x21, [sp, #48]
+	add sp, sp, #240
 	ret
 
+/* x0 = x0^2, straight to fp_sq2 */
+.global fp_sq1
+fp_sq1: 
+	mov x1, x0
+/* x0 = x1^2 mod p */
+.global fp_sq2
+fp_sq2: 
+/* Increment sq counter */
+	adrp x3, fp_sq_count @PAGE
+	add x3, x3, fp_sq_count@PAGEOFF
+	ldr x4, [x3]
+	add x4, x4, #1
+	str x4, [x3]
+
+	mov x2, x0
+	b fp_mul3
