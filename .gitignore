@@ -18,7 +18,18 @@ csidh/*.exe
 high-ctidh-20210523/testrandom
 # Map files
 *.map
-
+high-ctidh-20210523/bench512cycles
+*/test512
+*/tunecycles512
+*/tunemults512
+*/ubench512
+*/umults512
+*/bench512cycles
+*/bench512mults
+*/bench512untuned
+*/checkct512cycles
+*/checkct512mults
+*/checkct512untuned
 # Archives
 *.lib
 *.a

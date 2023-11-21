@@ -7,6 +7,10 @@ default: generic 511 512 1024 2048
 
 all: default timecop
 
+clean:
+	@rm -rf *.dSYM *.o *.a *.out 
+	@rm -f bench512cycles bench512mults bench512untuned test512 tunemults512 ubench512 tunecycles512 testrandom checkct512cycles checkct512mults checkct512untuned umults512
+
 generic: testrandom.out
 
 511: costpoly511.out checkct511untuned bench511untuned test511.out \
