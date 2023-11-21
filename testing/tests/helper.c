@@ -9,8 +9,7 @@ void uintbig_print(uintbig const *x){
     printf("\n");
 }
 
-
-void assert_equal(uintbig const *expected, uintbig const *actual){
+void uintbig_assert_equal(uintbig const *expected, uintbig const *actual){
     for(int i = 0; i < UINTBIG_LIMBS; i++) {
         assert(expected->c[i] == actual->c[i]);
     }

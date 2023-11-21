@@ -7,6 +7,6 @@
 
 void uintbig_print(uintbig const *x);                                          
 
-void assert_equal(uintbig const *expected, uintbig const *actual);
+void uintbig_assert_equal(uintbig const *expected, uintbig const *actual);
 
 #endif

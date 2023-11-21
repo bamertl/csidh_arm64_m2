@@ -1,7 +1,7 @@
 SCC=gcc
 CC=clang -O3 -Os -g -march=native -mtune=native -std=gnu99 -pedantic -Wall -Wextra -Wno-language-extension-token -fwrapv 
 
-test: test_uintbig
+test: test_uintbig test_fp
 
 
 libhighctidh_512.a: uintbig512_arm64.o fp512_arm64.o Makefile
@@ -40,6 +40,19 @@ libhighctidh_512.a ../high-ctidh-20210523/fp.h ./tests/helper.h ./tests/helper.c
 		-o tests/test_uintbig
 	./tests/test_uintbig
 
+test_fp: ./tests/test_fp.c \
+libhighctidh_512.a ../high-ctidh-20210523/fp.h ./tests/helper.h ./tests/helper.c 
+	@$(CC) -DBITS=512 -D'NAMESPACEBITS(x)=highctidh_512_##x' -D'NAMESPACEGENERIC(x)=highctidh_##x' \
+		-I ./ \
+		-I ./tests/ \
+		-I ../high-ctidh-20210523/ \
+		./tests/test_fp.c \
+		./tests/helper.c \
+		libhighctidh_512.a \
+		-o tests/test_fp
+	./tests/test_fp
+
 clean:
 	@rm -f *.o *.a ./*.S *.out
 	@rm -rf *.dSYM tests/*.dSYM
+	@rm -f tests/test_uintbig tests/test_fp
