@@ -17,6 +17,7 @@ csidh/*.exe
 *.lst
 high-ctidh-20210523/testrandom
 */tests/test_uintbig
+*/tests/test_fp
 # Map files
 *.map
 high-ctidh-20210523/bench512cycles

@@ -39,10 +39,28 @@ void test_fp_add(void){
     uintbig_assert_equal(&a.x, &expected2.x);
 }
 
+void test_fp_add3(void){
+    fp a = {{1,2,3,4,5,6,7,8}};
+    fp_add3(&a, &a, &fp_p);
+    fp expected = {{1,2,3,4,5,6,7,8}};
+    uintbig_assert_equal(&a.x, &expected.x);
+}
+void test_fp_sub(void){
+    fp a = {{1,2,3,4,5,6,7,8}};
+    fp b = {{1,2,3,4,5,6,7,8}};
+    fp c = {{1,2,3,4,5,6,7,8}};
+    fp expected = {{0}};
+    fp_sub3(&a, &b, &c);
+    fp_sub2(&b, &c);
+    uintbig_assert_equal(&a.x, &expected.x);
+    uintbig_assert_equal(&b.x, &expected.x);
+}
 
 
 int main(void){
     test_fp_cswap();
     test_fp_cmov();
     test_fp_add();
+    test_fp_add3();
+    test_fp_sub();
 }

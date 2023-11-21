@@ -321,8 +321,8 @@ with open(fn+'.tmp','w') as f:
         f.write('\tldp x5, x6, [x0, #%d]\n' % (memory_offset))
         f.write('\teor x3, x3, x5\n')
         f.write('\teor x4, x4, x6\n')
-        f.write('\teor x3, x3, x2\n')
-        f.write('\teor x4, x4, x2\n')
+        f.write('\tand x3, x3, x2\n')
+        f.write('\tand x4, x4, x2\n')
         f.write('\teor x3, x3, x5\n')
         f.write('\teor x4, x4, x6\n')
         f.write('\tstp x3, x4, [x0, #%d]\n' % (memory_offset))
@@ -331,6 +331,10 @@ with open(fn+'.tmp','w') as f:
 
     # _FP_CSWAP _____________________________________________________________________________________
     comment(f, "A[x0] <-> B[x1] if d[x2], we make it time-constant")
+    # A xor A = 0
+    # A xor 0 = A
+    # (A xor B ) and 1 xor A = B
+    # (A xor B ) and 0 xor A = A
     introduce_global_function(f, globals['fp_cswap'])
     for i in range(int(limbs/2)):
         comment(f, "LOOP %d" % i)
@@ -340,8 +344,8 @@ with open(fn+'.tmp','w') as f:
         f.write('\teor x7, x3, x5\n')
         f.write('\teor x8, x4, x6\n')
 
-        f.write('\teor x7, x7, x2\n')
-        f.write('\teor x8, x8, x2\n')
+        f.write('\tand x7, x7, x2\n')
+        f.write('\tand x8, x8, x2\n')
 
         f.write('\teor x3, x7, x3\n')
         f.write('\teor x4, x8, x4\n')
@@ -355,9 +359,9 @@ with open(fn+'.tmp','w') as f:
     #_FP_ADD2, just straight to _fp_add3 _____________________________________________________________________________________
     comment(f, "A[x0] = A[x0] + B[x1]")
     introduce_global_function(f, globals['fp_add2'])
-    f.write('\tmov x0, x2\n')
+    f.write('\tmov x2, x0\n')
     #_FP_ADD3 _____________________________________________________________________________________
-    comment(f, "A[x0] = A[x0] + B[x1] + C[x2]")
+    comment(f, "A[x0] = B[x1] + C[x2]")
     introduce_global_function(f, globals['fp_add3'])
     comment(f, "Increment add/sub counter")
     load_label_address_into_register(f, globals['fp_addsub_count'], 'x3')
@@ -368,15 +372,16 @@ with open(fn+'.tmp','w') as f:
     comment(f, "LOAD A")
     REGS_TO_STORE = ["x19", "x20", "x21"]
     A_REGS = ['x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9','x10']
-    B_REGS = ['x11', 'x12', 'x13', 'x14', 'x15', 'x16', 'x17','x19']
+    B_REGS = ['x12', 'x13', 'x14', 'x15', 'x16', 'x17', 'x19','x20']
     P_REGS = ['x12', 'x13', 'x14', 'x15', 'x16', 'x17', 'x19', 'x20']
 
     sub_stack_and_store_on_stack(f, REGS_TO_STORE, 0)
 
     comment(f, "load A and B")
     for i in range(int(limbs/2)):
-        f.write("\tldp %s, %s, [x0, #%d]\n" % (A_REGS[i*2], A_REGS[i*2+1], i*16))
-        f.write("\tldp %s, %s, [x1, #%d]\n" % (B_REGS[i*2], B_REGS[i*2+1], i*16))
+        f.write("\tldp %s, %s, [x1, #%d]\n" % (A_REGS[i*2], A_REGS[i*2+1], i*16))
+    for i in range(int(limbs/2)):
+        f.write("\tldp %s, %s, [x2, #%d]\n" % (B_REGS[i*2], B_REGS[i*2+1], i*16))
     comment(f, "A + B")    
     f.write("\tADDS %s, %s, %s\n" % (A_REGS[0], A_REGS[0], B_REGS[0]))
     for i in range(1, limbs):
@@ -384,6 +389,7 @@ with open(fn+'.tmp','w') as f:
     #Carry into x11
     f.write("\tADCS x11, xzr, xzr\n")
     comment(f, "LOAD P")
+    load_label_address_into_register(f, EXTERN_LABELS['uintbig_p'], 'x21')
     for i in range(int(limbs/2)):
         f.write("\tldp %s, %s, [x21, #%d]\n" % (P_REGS[i*2], P_REGS[i*2+1], i*16))
     comment(f, "A + B - P")
@@ -416,10 +422,10 @@ with open(fn+'.tmp','w') as f:
     f.write('\tmov x2, x1\n')
     f.write('\tmov x1, x0\n')
     #_FP_SUB3
-    REGS_TO_STORE = ["lr", "x19", "x20", "x21"]
-    sub_stack_and_store_on_stack(f, REGS_TO_STORE, 64)
     comment(f, "A[x0] = A[x0] - B[x1] - C[x2]")
     introduce_global_function(f, globals['fp_sub3'])
+    REGS_TO_STORE = ["lr", "x19", "x20", "x21"]
+    sub_stack_and_store_on_stack(f, REGS_TO_STORE, 64)
     comment(f, "Increment add/sub counter")
     load_label_address_into_register(f, globals['fp_addsub_count'], 'x3')
     f.write('\tldr x4, [x3]\n')
@@ -458,7 +464,7 @@ with open(fn+'.tmp','w') as f:
         f.write('\tsbcs %s, %s, %s\n' % (A_REGS[i], P_REGS[i], A_REGS[i]))
     comment(f, "check if a = 0 by orr x3-x10 ")
     f.write('\torr x20, x3, x4\n') 
-    for i in range(1, limbs):
+    for i in range(2, limbs):
         f.write('\torr x20, x20, %s\n' % A_REGS[i])
     f.write('\tcmp x20, #0\n')
     f.write('\tcset x20, eq\n')

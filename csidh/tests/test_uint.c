@@ -39,7 +39,7 @@ void test_eq(void){
     assert(result2 == true);
 }
 
-void test_uint_set(void){
+void test_uintbig_set(void){
     uint a = {{0,0,0,0,0,0,0,0}};
     uint_set(&a, 1);
     uint expected = {{1,0,0,0,0,0,0,0}};
@@ -101,7 +101,7 @@ int main(void)
     test_add();
     test_len();
     test_eq();
-    test_uint_set();
+    test_uintbig_set();
     test_uint_bit();
     test_uint_mul3_64();
     test_uint_add3();
