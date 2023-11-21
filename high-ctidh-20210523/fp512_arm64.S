@@ -341,24 +341,24 @@ _minus_number:
 	add sp, sp, #16
 	ret
 
-/* A[x0] = A[x1] + B[x2] */
+/* A[x0] = A[x0] + B[x1] */
 .global _uintbig_add2_9_words
 _uintbig_add2_9_words: 
 	sub sp, sp, #32
 	stp x19, x20, [sp, #0]
 	stp x21, x22, [sp, #16]
 /* Load A */
-	ldp x3, x4, [x1, #0]
-	ldp x5, x6, [x1, #16]
-	ldp x7, x8, [x1, #32]
-	ldp x9, x10, [x1, #48]
-	ldr x11, [x1, #64]
+	ldp x3, x4, [x0, #0]
+	ldp x5, x6, [x0, #16]
+	ldp x7, x8, [x0, #32]
+	ldp x9, x10, [x0, #48]
+	ldr x11, [x0, #64]
 /* Load B */
-	ldp x13, x14, [x2, #0]
-	ldp x15, x16, [x2, #16]
-	ldp x17, x19, [x2, #32]
-	ldp x20, x21, [x2, #48]
-	ldr x22, [x2, #64]
+	ldp x13, x14, [x1, #0]
+	ldp x15, x16, [x1, #16]
+	ldp x17, x19, [x1, #32]
+	ldp x20, x21, [x1, #48]
+	ldr x22, [x1, #64]
 
 	adds x3, x3, x13
 	adcs x4, x4, x14

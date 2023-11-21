@@ -110,13 +110,13 @@ def add_extern_labels(f):
     f.write('\n')
 
 def write_uintbig_add2_9_words(f):
-    comment(f, "A[x0] = A[x1] + B[x2]")
+    comment(f, "A[x0] = A[x0] + B[x1]")
     introduce_global_function(f, globals['uintbig_add2_9_words'])
     REGS_TO_STORE = ["x19", "x20", "x21", "x22"]
     sub_stack_and_store_on_stack(f, REGS_TO_STORE, 0)
     RESULT_ADR = 'x0'
-    A_ADR = 'x1'
-    B_ADR = 'x2'
+    A_ADR = 'x0'
+    B_ADR = 'x1'
     A_REGS = ['x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9','x10', 'x11', 'x12'] # 9 + 1 words
     B_REGS = ['x13', 'x14', 'x15', 'x16', 'x17', 'x19', 'x20', 'x21', 'x22'] # 9 words
     comment(f, 'Load A')
@@ -182,7 +182,7 @@ def write_radix_monte_mul(f):
     f.write('\tldr x2, [sp, #%d] // load a_adr \n' % (offset_adr))
     f.write('\tadd x2, x2, x6 // add offset to a_adr\n')
     f.write('\tldr x1, [sp, #%d] // load b_adr \n' % (b_addr))
-    f.write('\tadd x0, x0, #%d // load temp_addr \n' % (temp_addr))
+    f.write('\tadd x0, sp, #%d // load temp_addr \n' % (temp_addr))
     comment(f, 'temp = A[i] * B' )
     f.write('\tbl %s \n' % EXTERN_LABELS['uintbig_mul3_64_full'])
 
