@@ -65,7 +65,6 @@ def add_stack_and_restore_regs_from_stack(f, regs, additional_offset):
     total_offset = len(regs)*8 + additional_offset 
     if total_offset % 16 != 0:
         total_offset = ((total_offset // 16) + 1) * 16
-    f.write('\tadd sp, sp, #%d\n' % total_offset)
     offset = 0
     i = 0
     while i < len(regs):
@@ -79,6 +78,8 @@ def add_stack_and_restore_regs_from_stack(f, regs, additional_offset):
             f.write('\tldr %s, [sp, #%d]\n' % (regs[i],offset))
             i += 1
         offset += 16
+    f.write('\tadd sp, sp, #%d\n' % total_offset)
+
 print("Generating uintbig512_arm64.S ...")
 
 fn = "../uintbig512_arm64.S"
@@ -119,7 +120,7 @@ with open(fn+'.tmp','w') as f:
   introduce_global_function(f, globals['uintbig_bit'])
   f.write('\tand x2, x1, #0x3F   // x2 = x0 % 64 using bitwise AND\n')
   f.write('\tlsr x1, x1, #6      // x1 = x1 / 64 by right-shifting\n')
-  f.write('\tlsl x1, x1, #3      // 8 * (x1 / 64)')
+  f.write('\tlsl x1, x1, #3      // 8 * (x1 / 64) \n')
   f.write('\tldr x3, [x0, x1]    // Load the limb at: x0 + 8 * (k / 64) \n')
   f.write('\tlsr x3, x3, x2  // Right shift by x0%64 to bring the bit of interest to the least significant position\n')
   f.write('\tand x0, x3, #1  // Check if the least significant bit is set\n')
