@@ -1,5 +1,6 @@
-# Some info for debugging
+# test autogens of ctidh
 
-
-# Terminal 1
-gdb -tui -ex "layout regs" -ex "layout asm" ./tests/test_monte_mul
+```
+make test
+make clean
+```

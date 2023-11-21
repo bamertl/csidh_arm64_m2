@@ -154,8 +154,8 @@ def write_radix_monte_mul(f):
     f.write('\tldr x4, [x3]\n')
     f.write('\tadd x4, x4, #1\n')
     f.write('\tstr x4, [x3]\n\n')
-    a_addr = 16
-    b_addr = 24
+    a_addr = 8
+    b_addr = 16
     STORE_REGS = ["lr", "x0", "x1", "x17", "x19", "x20", "x21"]
     sub_stack_and_store_on_stack(f, STORE_REGS, 2*(64+16) + 16)
     comment(f, "Init C and Temp with 0")
@@ -177,10 +177,12 @@ def write_radix_monte_mul(f):
     f.write('\tstr %s, [sp, #%d]\n' % (counter_reg, counter_adr))
     f.write('\tstr %s, [sp, #%d]\n' % (offset_reg, offset_adr))
     f.write('\n')
+    ## MUL LOOP
     f.write('_fp_mul_loop:\n')
-    comment(f, 'C <- C + A[i] * B')
-    f.write('\tldr x2, [sp, #%d] // load a_adr \n' % (offset_adr))
+    comment(f, 'C <- C + a[i] * B')
+    f.write('\tldr x2, [sp, #%d] // load a_adr \n' % (a_addr))
     f.write('\tadd x2, x2, x6 // add offset to a_adr\n')
+    f.write('\tldr x2, [x2] // load actual value of a[i]\n')
     f.write('\tldr x1, [sp, #%d] // load b_adr \n' % (b_addr))
     f.write('\tadd x0, sp, #%d // load temp_addr \n' % (temp_addr))
     comment(f, 'temp = A[i] * B' )

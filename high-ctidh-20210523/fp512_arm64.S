@@ -421,11 +421,12 @@ fp_mul3:
 	str x6, [sp, #232]
 
 _fp_mul_loop:
-/* C <- C + A[i] * B */
-	ldr x2, [sp, #232] // load a_adr 
+/* C <- C + a[i] * B */
+	ldr x2, [sp, #8] // load a_adr 
 	add x2, x2, x6 // add offset to a_adr
-	ldr x1, [sp, #24] // load b_adr 
-	add x0, x0, #144 // load temp_addr 
+	ldr x2, [x2] // load actual value of a[i]
+	ldr x1, [sp, #16] // load b_adr 
+	add x0, sp, #144 // load temp_addr 
 /* temp = A[i] * B */
 	bl uintbig_mul3_64_full 
 /* 3. C ← (C + p*q) /r */
@@ -499,7 +500,7 @@ _fp_mul_loop:
 	adcs x9, x9, x19
 	adcs x10, x10, x20
 /* store C */
-	ldr x0, [sp, #16]
+	ldr x0, [sp, #8]
 	stp x3, x4, [x0, #0]
 	stp x5, x6, [x0, #16]
 	stp x7, x8, [x0, #32]
