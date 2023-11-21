@@ -3,18 +3,18 @@
 #include "uintbig_namespace.h" 
 .data
 
-.global _uintbig_1
-_uintbig_1: 
+.global uintbig_1
+uintbig_1: 
 	.quad 1, 0, 0, 0
 	.quad 0, 0, 0, 0
 
-.global _uintbig_p
-_uintbig_p: 
+.global uintbig_p
+uintbig_p: 
 	.quad 0x1b81b90533c6c87b, 0xc2721bf457aca835, 0x516730cc1f0b4f25, 0xa7aac6c567f35507
 	.quad 0x5afbfcc69322c9cd, 0xb42d083aedc88c42, 0xfc8ab0d15e3e4c4a, 0x65b48e8f740f89bf
 
-.global _uintbig_four_sqrt_p
-_uintbig_four_sqrt_p: 
+.global uintbig_four_sqrt_p
+uintbig_four_sqrt_p: 
 	.quad 0x17895e71e1a20b3f, 0x38d0cd95f8636a56, 0x142b9541e59682cd, 0x856f1399d91d6592
 	.quad 2, 0, 0, 0
 
@@ -22,8 +22,8 @@ _uintbig_four_sqrt_p:
 .align 4
 
 /* A[x0][0] = x1, rest 0 */
-.global _uintbig_set
-_uintbig_set: 
+.global uintbig_set
+uintbig_set: 
 	str x1, [x0]
 	mov x2, 0
 	stp x1, x2, [x0, #0]
@@ -34,8 +34,8 @@ _uintbig_set:
 
 /* Operation: x0 = x0[x1] == 1 */
 /* Checks if bit at position x1 is set */
-.global _uintbig_bit
-_uintbig_bit: 
+.global uintbig_bit
+uintbig_bit: 
 	and x2, x1, #0x3F   // x2 = x0 % 64 using bitwise AND
 	lsr x1, x1, #6      // x1 = x1 / 64 by right-shifting
 	lsl x1, x1, #3      // 8 * (x1 / 64)	ldr x3, [x0, x1]    // Load the limb at: x0 + 8 * (k / 64) 
@@ -44,8 +44,8 @@ _uintbig_bit:
 	ret
 
 /* Operation: A[x0] = B[x1] + C[x2] and x0 = carry */
-.global _uintbig_add3
-_uintbig_add3: 
+.global uintbig_add3
+uintbig_add3: 
 	sub sp, sp, #16
 	stp x19, x20, [sp, #0]
 	ldp x3, x4, [x1, #0]
@@ -75,8 +75,8 @@ _uintbig_add3:
 	ret
 
 /* Operation: A[x0] = B[x1] - C[x2] and x0 = borrow */
-.global _uintbig_sub3
-_uintbig_sub3: 
+.global uintbig_sub3
+uintbig_sub3: 
 	sub sp, sp, #16
 	stp x19, x20, [sp, #0]
 	ldp x3, x4, [x1, #0]
@@ -106,8 +106,8 @@ _uintbig_sub3:
 	ret
 
 /* Operation: A[x0] = B[x1] * C[x2] and C = direct value 64 bit not address */
-.global _uintbig_mul3_64
-_uintbig_mul3_64: 
+.global uintbig_mul3_64
+uintbig_mul3_64: 
 /* 0 Limb */
 	ldp x3, x4, [x1, #0]
 	mul x5, x3, x2 // low mul
@@ -160,8 +160,8 @@ _uintbig_mul3_64:
 
 /* Operation: A[x0] = B[x1] * C[x2] and C = direct value 64 bit not address
  results in 9 words */
-.global _uintbig_mul3_64_full
-_uintbig_mul3_64_full: 
+.global uintbig_mul3_64_full
+uintbig_mul3_64_full: 
 /* 0 Limb */
 	ldp x3, x4, [x1, #0]
 	mul x5, x3, x2 // low mul

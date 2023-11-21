@@ -35,18 +35,18 @@ checkct512untuned checkct512mults checkct512cycles \
 checkct1024untuned checkct1024mults checkct1024cycles \
 checkct2048untuned checkct2048mults checkct2048cycles \
 
-	valgrind ./checkct511untuned
-	valgrind ./checkct511mults
-	valgrind ./checkct511cycles
-	valgrind ./checkct512untuned
-	valgrind ./checkct512mults
-	valgrind ./checkct512cycles
-	valgrind ./checkct1024untuned
-	valgrind ./checkct1024mults
-	valgrind ./checkct1024cycles
-	valgrind ./checkct2048untuned
-	valgrind ./checkct2048mults
-	valgrind ./checkct2048cycles
+	./checkct511untuned
+	./checkct511mults
+	./checkct511cycles
+	./checkct512untuned
+	./checkct512mults
+	./checkct512cycles
+	./checkct1024untuned
+	./checkct1024mults
+	./checkct1024cycles
+	./checkct2048untuned
+	./checkct2048mults
+	./checkct2048cycles
 
 # ----- benchmarks:
 
@@ -679,7 +679,7 @@ fp511.o: fp511.S fp.h fp_namespace.h uintbig.h uintbig_namespace.h Makefile
 		-c fp511.S
 
 fp512_arm64.o: fp512_arm64.S fp.h fp_namespace.h uintbig.h uintbig_namespace.h Makefile
-	$(SCC) -DBITS=512 -D'NAMESPACEBITS(x)=highctidh_512_##x' -D'NAMESPACEGENERIC(x)=highctidh_##x' \
+	$(SCC) -DBITS=512 -D'NAMESPACEBITS(x)=_highctidh_512_##x' -D'NAMESPACEGENERIC(x)=_highctidh_##x' \
 		-c fp512_arm64.S
 
 fp1024.o: fp1024.S fp.h fp_namespace.h uintbig.h uintbig_namespace.h Makefile
@@ -695,7 +695,7 @@ uintbig511.o: uintbig511.S uintbig.h uintbig_namespace.h Makefile
 		-c uintbig511.S
 
 uintbig512_arm64.o: uintbig512_arm64.S uintbig.h uintbig_namespace.h Makefile
-	$(SCC) -DBITS=512 -D'NAMESPACEBITS(x)=highctidh_512_##x' -D'NAMESPACEGENERIC(x)=highctidh_##x' \
+	$(SCC) -DBITS=512 -D'NAMESPACEBITS(x)=_highctidh_512_##x' -D'NAMESPACEGENERIC(x)=_highctidh_##x' \
 		-c uintbig512_arm64.S
 
 uintbig1024.o: uintbig1024.S uintbig.h uintbig_namespace.h Makefile

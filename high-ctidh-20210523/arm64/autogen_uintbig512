@@ -8,15 +8,15 @@ limbs = 8
 sys.setrecursionlimit(10000)
 
 globals = {
-  'uint_big_p': '_uintbig_p',
-  'uint_big_1': '_uintbig_1',
-  'uintbig_bit': '_uintbig_bit',
-  'uintbig_set': '_uintbig_set',
-  'uintbig_add3': '_uintbig_add3',
-  'uintbig_sub3': '_uintbig_sub3',
-  'uintbig_mul3_64': '_uintbig_mul3_64',
-  'uintbig_four_sqrt_p': '_uintbig_four_sqrt_p', 
-  'uintbig_mul3_64_full': '_uintbig_mul3_64_full'}
+  'uint_big_p': 'uintbig_p',
+  'uint_big_1': 'uintbig_1',
+  'uintbig_bit': 'uintbig_bit',
+  'uintbig_set': 'uintbig_set',
+  'uintbig_add3': 'uintbig_add3',
+  'uintbig_sub3': 'uintbig_sub3',
+  'uintbig_mul3_64': 'uintbig_mul3_64',
+  'uintbig_four_sqrt_p': 'uintbig_four_sqrt_p', 
+  'uintbig_mul3_64_full': 'uintbig_mul3_64_full'}
 
 def maybeupdate(fn):
   if os.access(fn,os.F_OK):

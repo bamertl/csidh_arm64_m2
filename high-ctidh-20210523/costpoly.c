@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "poly.h"
 
-int main()
+int main(void)
 {
   printf("tree1 = (0");
   for (long long n = 1;n <= 64;++n) {
