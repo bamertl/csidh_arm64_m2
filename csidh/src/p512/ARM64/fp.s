@@ -17,8 +17,9 @@ _fp_mul_counter: .quad 0
 .global _fp_sqt_counter
 _fp_sqt_counter: .quad 0
 
-
 .text
+.align 4
+
 
 .macro COPY_8_WORD_NUMBER, num1, num2, reg1, reg2
     LDP \reg1, \reg2, [\num1,#0] 
@@ -494,9 +495,10 @@ _fp_issquare:
     adrp x3, _fp_sqt_counter@PAGE
     add x3, x3, _fp_sqt_counter@PAGEOFF
     ldr x4, [x3]
+    cbz x4, 0f
     add x4, x4, #1
     str x4, [x3]
-
+    0:
 
     sub sp, sp, #16
     str lr, [sp, #0] //bad_access

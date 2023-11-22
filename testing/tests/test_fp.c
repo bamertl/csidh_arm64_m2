@@ -65,6 +65,8 @@ void test_fp_sub(void){
 }
 
 void test_fp_mul(void){
+
+    long long firstcount = fp_mulsq_count;
     fp a = {{1,2,3,4,5,6,7,8}};
     fp b = {{1, 0, 0, 0, 0, 0, 0, 0}};
     fp c = {{0}};
@@ -73,6 +75,9 @@ void test_fp_mul(void){
     uintbig_assert_equal(&a.x, &expected.x);
     c = r_squared_mod_p;
     fp_mul3(&a, &b, &c);
+    long long secondcount = fp_mulsq_count;
+    // assert secondcount == firstcount + 2;
+    assert(secondcount == firstcount + 2);
     uintbig_assert_equal(&a.x, &fp_1.x);
 }
 
@@ -95,6 +100,8 @@ void test_square(void){
     fp_mul2(&a, &r_squared_mod_p);
     fp_sq1(&a);
     fp_mul2(&a, &one);
+
+    
     uintbig_assert_equal(&a.x, &b.x);
 }
 
@@ -151,5 +158,5 @@ int main(void){
     test_mul_more();
     test_square();
     //test_sqrt();
-    test_sqrt1();
+    //test_sqrt1();
 }

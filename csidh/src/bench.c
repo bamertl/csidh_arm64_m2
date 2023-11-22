@@ -38,7 +38,7 @@ bool csidh(public_key *out, public_key const *in, private_key const *priv);
 
 int cmp_uint64_t(const void *x, const void *y) { return * (uint64_t *) x - * (uint64_t *) y; }
 
-extern uint64_t *fp_mul_counter;
+extern uint64_t fp_mul_counter;
 extern uint64_t *fp_sq_counter;
 extern uint64_t *fp_inv_counter;
 extern uint64_t *fp_sqt_counter;
@@ -76,23 +76,14 @@ int main(void)
              *invss = calloc(its, sizeof(uint64_t)),
              *sqtss = calloc(its, sizeof(uint64_t));
 
-#ifdef BENCH_VERBOSE
-    size_t xmuls_sz = pbits + 1;
-    size_t isogs_sz = primes[NUM_PRIMES-1] + 1;
-
-    uint64_t *xmuls = calloc(xmuls_sz, sizeof(uint64_t)),
-             *isogs = calloc(isogs_sz, sizeof(uint64_t));
-#endif
-
     private_key priv;
     public_key pub = base;
 
     // __asm__ __volatile__ ("mov %%rsp, %0" : "=m"(stack));
     __asm__ __volatile__ ("mov %0, sp" : "=r"(stack));
     stack -= stacksz;
-
     for (unsigned long i = 0; i < its; ++i) {
-
+        fp_mul_counter = 0;
         if (its < 100 || i % (its / 100) == 0) {
             printf("%2lu%%", 100 * i / its);
             fflush(stdout);
@@ -107,14 +98,12 @@ int main(void)
         for (size_t j = 0; j < stacksz; ++j)
             stack[j] = canary;
 
-        fp_mul_counter = &mulss[i];
-        fp_sq_counter = &sqss[i];
-        fp_inv_counter = &invss[i];
-        fp_sqt_counter = &sqtss[i];
-#ifdef BENCH_VERBOSE
-        xmul_counters = xmuls;
-        isog_counters = isogs;
-#endif
+        //fp_mul_counter = &mulss[i];
+        //fp_sq_counter = &sqss[i];
+        //fp_inv_counter = &invss[i];
+        //fp_sqt_counter = &sqtss[i];
+
+        // print the unsigned long long value of fp_mul_counter
 
         t0 = clock();   /* uses stack, but not too much */
         c0 = rdtsc();
@@ -129,14 +118,12 @@ int main(void)
         c1 = rdtsc();
         t1 = clock();
 
-        fp_mul_counter = NULL;
+        // set mulss[i] to fp_mul_counter
+        mulss[i] = fp_mul_counter;
+
         fp_sq_counter = NULL;
         fp_inv_counter = NULL;
         fp_sqt_counter = NULL;
-#ifdef BENCH_VERBOSE
-        xmul_counters = NULL;
-        isog_counters = NULL;
-#endif
 
         cycless[i] = c1 - c0;
         times[i] = t1 - t0;
