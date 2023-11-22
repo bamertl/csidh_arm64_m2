@@ -5,6 +5,7 @@
 .extern uintbig_p
 .extern uintbig_mul3_64
 .extern uintbig_mul3_64_full
+.extern inv_min_p_mod_r
 
 
 .set pbits,511 
@@ -69,8 +70,8 @@ fp_cmov:
 	ldp x5, x6, [x0, #0]
 	eor x3, x3, x5
 	eor x4, x4, x6
-	eor x3, x3, x2
-	eor x4, x4, x2
+	and x3, x3, x2
+	and x4, x4, x2
 	eor x3, x3, x5
 	eor x4, x4, x6
 	stp x3, x4, [x0, #0]
@@ -79,8 +80,8 @@ fp_cmov:
 	ldp x5, x6, [x0, #16]
 	eor x3, x3, x5
 	eor x4, x4, x6
-	eor x3, x3, x2
-	eor x4, x4, x2
+	and x3, x3, x2
+	and x4, x4, x2
 	eor x3, x3, x5
 	eor x4, x4, x6
 	stp x3, x4, [x0, #16]
@@ -89,8 +90,8 @@ fp_cmov:
 	ldp x5, x6, [x0, #32]
 	eor x3, x3, x5
 	eor x4, x4, x6
-	eor x3, x3, x2
-	eor x4, x4, x2
+	and x3, x3, x2
+	and x4, x4, x2
 	eor x3, x3, x5
 	eor x4, x4, x6
 	stp x3, x4, [x0, #32]
@@ -99,8 +100,8 @@ fp_cmov:
 	ldp x5, x6, [x0, #48]
 	eor x3, x3, x5
 	eor x4, x4, x6
-	eor x3, x3, x2
-	eor x4, x4, x2
+	and x3, x3, x2
+	and x4, x4, x2
 	eor x3, x3, x5
 	eor x4, x4, x6
 	stp x3, x4, [x0, #48]
@@ -114,8 +115,8 @@ fp_cswap:
 	ldp x5, x6, [x1, #0]
 	eor x7, x3, x5
 	eor x8, x4, x6
-	eor x7, x7, x2
-	eor x8, x8, x2
+	and x7, x7, x2
+	and x8, x8, x2
 	eor x3, x7, x3
 	eor x4, x8, x4
 	eor x5, x7, x5
@@ -127,8 +128,8 @@ fp_cswap:
 	ldp x5, x6, [x1, #16]
 	eor x7, x3, x5
 	eor x8, x4, x6
-	eor x7, x7, x2
-	eor x8, x8, x2
+	and x7, x7, x2
+	and x8, x8, x2
 	eor x3, x7, x3
 	eor x4, x8, x4
 	eor x5, x7, x5
@@ -140,8 +141,8 @@ fp_cswap:
 	ldp x5, x6, [x1, #32]
 	eor x7, x3, x5
 	eor x8, x4, x6
-	eor x7, x7, x2
-	eor x8, x8, x2
+	and x7, x7, x2
+	and x8, x8, x2
 	eor x3, x7, x3
 	eor x4, x8, x4
 	eor x5, x7, x5
@@ -153,8 +154,8 @@ fp_cswap:
 	ldp x5, x6, [x1, #48]
 	eor x7, x3, x5
 	eor x8, x4, x6
-	eor x7, x7, x2
-	eor x8, x8, x2
+	and x7, x7, x2
+	and x8, x8, x2
 	eor x3, x7, x3
 	eor x4, x8, x4
 	eor x5, x7, x5
@@ -166,8 +167,8 @@ fp_cswap:
 /* A[x0] = A[x0] + B[x1] */
 .global fp_add2
 fp_add2: 
-	mov x0, x2
-/* A[x0] = A[x0] + B[x1] + C[x2] */
+	mov x2, x0
+/* A[x0] = B[x1] + C[x2] */
 .global fp_add3
 fp_add3: 
 /* Increment add/sub counter */
@@ -182,25 +183,27 @@ fp_add3:
 	stp x19, x20, [sp, #0]
 	str x21, [sp, #16]
 /* load A and B */
-	ldp x3, x4, [x0, #0]
-	ldp x11, x12, [x1, #0]
-	ldp x5, x6, [x0, #16]
-	ldp x13, x14, [x1, #16]
-	ldp x7, x8, [x0, #32]
-	ldp x15, x16, [x1, #32]
-	ldp x9, x10, [x0, #48]
-	ldp x17, x19, [x1, #48]
+	ldp x3, x4, [x1, #0]
+	ldp x5, x6, [x1, #16]
+	ldp x7, x8, [x1, #32]
+	ldp x9, x10, [x1, #48]
+	ldp x12, x13, [x2, #0]
+	ldp x14, x15, [x2, #16]
+	ldp x16, x17, [x2, #32]
+	ldp x19, x20, [x2, #48]
 /* A + B */
-	ADDS x3, x3, x11
-	ADCS x4, x4, x12
-	ADCS x5, x5, x13
-	ADCS x6, x6, x14
-	ADCS x7, x7, x15
-	ADCS x8, x8, x16
-	ADCS x9, x9, x17
-	ADCS x10, x10, x19
+	ADDS x3, x3, x12
+	ADCS x4, x4, x13
+	ADCS x5, x5, x14
+	ADCS x6, x6, x15
+	ADCS x7, x7, x16
+	ADCS x8, x8, x17
+	ADCS x9, x9, x19
+	ADCS x10, x10, x20
 	ADCS x11, xzr, xzr
 /* LOAD P */
+	adrp x21, uintbig_p @PAGE
+	add x21, x21, uintbig_p@PAGEOFF
 	ldp x12, x13, [x21, #0]
 	ldp x14, x15, [x21, #16]
 	ldp x16, x17, [x21, #32]
@@ -250,12 +253,12 @@ fp_add3:
 fp_sub2: 
 	mov x2, x1
 	mov x1, x0
-	sub sp, sp, #96
-	stp lr, x19, [sp, #0]
-	stp x20, x21, [sp, #16]
 /* A[x0] = A[x0] - B[x1] - C[x2] */
 .global fp_sub3
 fp_sub3: 
+	sub sp, sp, #96
+	stp lr, x19, [sp, #0]
+	stp x20, x21, [sp, #16]
 /* Increment add/sub counter */
 	adrp x3, fp_addsub_count @PAGE
 	add x3, x3, fp_addsub_count@PAGEOFF
@@ -304,7 +307,6 @@ _minus_number:
 	sbcs x10, x19, x10
 /* check if a = 0 by orr x3-x10  */
 	orr x20, x3, x4
-	orr x20, x20, x4
 	orr x20, x20, x5
 	orr x20, x20, x6
 	orr x20, x20, x7
@@ -399,7 +401,7 @@ fp_mul3:
 
 	sub sp, sp, #240
 	stp lr, x0, [sp, #0]
-	stp x1, x17, [sp, #16]
+	stp x1, x2, [sp, #16]
 	stp x19, x20, [sp, #32]
 	str x21, [sp, #48]
 /* Init C and Temp with 0 */
@@ -422,19 +424,32 @@ fp_mul3:
 
 _fp_mul_loop:
 /* C <- C + a[i] * B */
-	ldr x2, [sp, #8] // load a_adr 
+	ldr x2, [sp, #16] // load a_adr 
 	add x2, x2, x6 // add offset to a_adr
 	ldr x2, [x2] // load actual value of a[i]
-	ldr x1, [sp, #16] // load b_adr 
+	ldr x1, [sp, #24] // load b_adr 
 	add x0, sp, #144 // load temp_addr 
 /* temp = A[i] * B */
 	bl uintbig_mul3_64_full 
+/* C = C + temp */
+	mov x1, x0 // move temp_addr into x1 
+	add x0, sp, #64 // load c_addr 
+	bl _uintbig_add2_9_words // c = c + temp 
+
+/* q = C * mu mod r */
+	adrp x1, inv_min_p_mod_r @PAGE
+	add x1, x1, inv_min_p_mod_r@PAGEOFF
+	ldr x0, [x0] // load first value of c 
+	ldr x1, [x1] // load first value of mu 
+	mul x2, x0, x1 // q = c * mu % r // mod r means we only care about the first word 
+
 /* 3. C ← (C + p*q) /r */
 	add x0, sp, #144 // load temp_addr 
 	adrp x1, uintbig_p @PAGE
 	add x1, x1, uintbig_p@PAGEOFF
-	ldr x2, [sp, #144] // load lsb word of temp (q) 
 	bl uintbig_mul3_64_full // temp = q*p 
+
+/* temp <- C + temp /r */
 	add x0, sp, #144 // load temp_addr 
 	add x1, sp, #64 // load c_addr 
 /* add together */
@@ -480,7 +495,7 @@ _fp_mul_loop:
 	sbcs x8, x8, x17
 	sbcs x9, x9, x19
 	sbcs x10, x10, x20
-	adc x21, xzr, xzr
+	sbc x21, xzr, xzr
 /* and with carry */
 	and x12, x12, x21
 	and x13, x13, x21
@@ -499,14 +514,14 @@ _fp_mul_loop:
 	adcs x8, x8, x17
 	adcs x9, x9, x19
 	adcs x10, x10, x20
-/* store C */
+/* store C into result address */
 	ldr x0, [sp, #8]
 	stp x3, x4, [x0, #0]
 	stp x5, x6, [x0, #16]
 	stp x7, x8, [x0, #32]
 	stp x9, x10, [x0, #48]
 	ldp lr, x0, [sp, #0]
-	ldp x1, x17, [sp, #16]
+	ldp x1, x2, [sp, #16]
 	ldp x19, x20, [sp, #32]
 	ldr x21, [sp, #48]
 	add sp, sp, #240

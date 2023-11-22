@@ -952,7 +952,7 @@ static void test_nike(void)
   }
 }
 
-int main()
+int main(void)
 {
   test_iszero();
   test_sqrt();

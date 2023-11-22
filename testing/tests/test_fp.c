@@ -56,6 +56,29 @@ void test_fp_sub(void){
     uintbig_assert_equal(&b.x, &expected.x);
 }
 
+void test_fp_mul(void){
+    fp a = {{1,2,3,4,5,6,7,8}};
+    fp b = {{1, 0, 0, 0, 0, 0, 0, 0}};
+    fp c = {{0}};
+    fp_mul3(&a, &b, &c);
+    fp expected = {{0}};
+    uintbig_assert_equal(&a.x, &expected.x);
+    c = r_squared_mod_p;
+    fp_mul3(&a, &b, &c);
+    uintbig_assert_equal(&a.x, &fp_1.x);
+}
+
+void test_mul_more(void){
+    fp one = {{1,0,0,0,0,0,0,0}};
+    fp a = {{5,0,0,0,0,0,0,0}};
+    fp b = {{6,0,0,0,0,0,0,0}};
+    fp_mul2(&a, &r_squared_mod_p);
+    fp_mul2(&b, &r_squared_mod_p);
+    fp_mul2(&a, &b);
+    fp_mul2(&a, &one);
+    fp expected = {{30,0,0,0,0,0,0,0}};
+    uintbig_assert_equal(&a.x, &expected.x);
+}
 
 int main(void){
     test_fp_cswap();
@@ -63,4 +86,6 @@ int main(void){
     test_fp_add();
     test_fp_add3();
     test_fp_sub();
+    test_fp_mul();
+    test_mul_more();
 }

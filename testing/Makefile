@@ -8,25 +8,25 @@ libhighctidh_512.a: uintbig512_arm64.o fp512_arm64.o Makefile
 	@ar cr libhighctidh_512.a uintbig512_arm64.o fp512_arm64.o
 	@ranlib libhighctidh_512.a
 
-uintbig512_arm64.o: pre_uintbig512 uintbig512_arm64.S ../high-ctidh-20210523/uintbig.h ../high-ctidh-20210523/uintbig_namespace.h Makefile
+uintbig512_arm64.o: pre_uintbig512 ../high-ctidh-20210523/uintbig512_arm64.S ../high-ctidh-20210523/uintbig.h ../high-ctidh-20210523/uintbig_namespace.h Makefile
 	@$(SCC) -DBITS=512 -D'NAMESPACEBITS(x)=_highctidh_512_##x' -D'NAMESPACEGENERIC(x)=_highctidh_##x' \
 		-I ../high-ctidh-20210523/ \
-		-c uintbig512_arm64.S
+		-c ../high-ctidh-20210523/uintbig512_arm64.S
 
-fp512_arm64.o: pre_fp512_arm64 fp512_arm64.S ../high-ctidh-20210523/fp.h ../high-ctidh-20210523/fp_namespace.h ../high-ctidh-20210523/uintbig.h ../high-ctidh-20210523/uintbig_namespace.h Makefile
+fp512_arm64.o: pre_fp512_arm64 ../high-ctidh-20210523/fp512_arm64.S ../high-ctidh-20210523/fp.h ../high-ctidh-20210523/fp_namespace.h ../high-ctidh-20210523/uintbig.h ../high-ctidh-20210523/uintbig_namespace.h Makefile
 	@$(SCC) -DBITS=512 -D'NAMESPACEBITS(x)=_highctidh_512_##x' -D'NAMESPACEGENERIC(x)=_highctidh_##x' \
 		-I ../high-ctidh-20210523/ \
-		-c fp512_arm64.S
+		-c ../high-ctidh-20210523/fp512_arm64.S
 
 pre_uintbig512:
 	@echo "Generating uintbig512_arm64.S from autogen in ctidh/arm64 folder" 
 	@./../high-ctidh-20210523/arm64/autogen_uintbig512
-	@mv ../uintbig512_arm64.S ./uintbig512_arm64.S
+	@mv ../uintbig512_arm64.S ../high-ctidh-20210523/uintbig512_arm64.S
 
 pre_fp512_arm64:
 	@echo "Generating fp512_arm64.S from autogen in ctidh/arm64 folder" 
 	@./../high-ctidh-20210523/arm64/autogen_fp512
-	@mv ../fp512_arm64.S ./fp512_arm64.S
+	@mv ../fp512_arm64.S ../high-ctidh-20210523/fp512_arm64.S
 
 test_uintbig: ./tests/test_uintbig.c \
 libhighctidh_512.a ../high-ctidh-20210523/fp.h ./tests/helper.h ./tests/helper.c 
