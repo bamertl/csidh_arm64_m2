@@ -91,7 +91,6 @@ void fp_inv(fp *x);
 long long fp_sqrt(fp *x);
 
 #include "randombytes.h"
-#include "crypto_declassify.h"
 
 static inline void fp_random(fp *x)
 {
@@ -100,8 +99,6 @@ static inline void fp_random(fp *x)
 
     uintbig diff;
     long long accept = uintbig_sub3(&diff,&x->x,&uintbig_p);
-
-    crypto_declassify(&accept,sizeof accept);
     if (accept) return;
   }
 }
