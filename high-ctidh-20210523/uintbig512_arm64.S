@@ -38,7 +38,8 @@ uintbig_set:
 uintbig_bit: 
 	and x2, x1, #0x3F   // x2 = x0 % 64 using bitwise AND
 	lsr x1, x1, #6      // x1 = x1 / 64 by right-shifting
-	lsl x1, x1, #3      // 8 * (x1 / 64)	ldr x3, [x0, x1]    // Load the limb at: x0 + 8 * (k / 64) 
+	lsl x1, x1, #3      // 8 * (x1 / 64) 
+	ldr x3, [x0, x1]    // Load the limb at: x0 + 8 * (k / 64) 
 	lsr x3, x3, x2  // Right shift by x0%64 to bring the bit of interest to the least significant position
 	and x0, x3, #1  // Check if the least significant bit is set
 	ret
@@ -70,8 +71,8 @@ uintbig_add3:
 	stp x9, x10, [x0, #48]
 /* Carry into x11 */
 	adc x0, xzr, xzr
-	add sp, sp, #16
 	ldp x19, x20, [sp, #0]
+	add sp, sp, #16
 	ret
 
 /* Operation: A[x0] = B[x1] - C[x2] and x0 = borrow */
@@ -101,8 +102,8 @@ uintbig_sub3:
 	stp x9, x10, [x0, #48]
 /* Carry into x11 */
 	sbc x0, xzr, xzr
-	add sp, sp, #16
 	ldp x19, x20, [sp, #0]
+	add sp, sp, #16
 	ret
 
 /* Operation: A[x0] = B[x1] * C[x2] and C = direct value 64 bit not address */

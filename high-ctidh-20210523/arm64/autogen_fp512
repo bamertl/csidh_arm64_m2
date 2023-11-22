@@ -10,6 +10,7 @@ EXTERN_LABELS = {
     'uintbig_p': 'uintbig_p',
     'uintbig_mul3_64': 'uintbig_mul3_64',
     'uintbig_mul3_64_full': 'uintbig_mul3_64_full',
+    'inv_min_p_mod_r': 'inv_min_p_mod_r'
 }
 
 globals = {
@@ -154,9 +155,10 @@ def write_radix_monte_mul(f):
     f.write('\tldr x4, [x3]\n')
     f.write('\tadd x4, x4, #1\n')
     f.write('\tstr x4, [x3]\n\n')
-    a_addr = 8
-    b_addr = 16
-    STORE_REGS = ["lr", "x0", "x1", "x17", "x19", "x20", "x21"]
+    result_addr = 8
+    a_addr = 16
+    b_addr = 24
+    STORE_REGS = ["lr", "x0", "x1", "x2", "x19", "x20", "x21"]
     sub_stack_and_store_on_stack(f, STORE_REGS, 2*(64+16) + 16)
     comment(f, "Init C and Temp with 0")
     for i in range(int(limbs/2) + 1):
@@ -187,12 +189,24 @@ def write_radix_monte_mul(f):
     f.write('\tadd x0, sp, #%d // load temp_addr \n' % (temp_addr))
     comment(f, 'temp = A[i] * B' )
     f.write('\tbl %s \n' % EXTERN_LABELS['uintbig_mul3_64_full'])
+    
+    comment(f, 'C = C + temp')
+    f.write('\tmov x1, x0 // move temp_addr into x1 \n')
+    f.write('\tadd x0, sp, #%d // load c_addr \n' % (c_addr))
+    f.write('\tbl %s // c = c + temp \n\n' % globals['uintbig_add2_9_words'])
+
+    comment(f, 'q = C * mu mod r')
+    load_label_address_into_register(f, EXTERN_LABELS['inv_min_p_mod_r'], 'x1')
+    f.write('\tldr x0, [x0] // load first value of c \n')
+    f.write('\tldr x1, [x1] // load first value of mu \n')
+    f.write('\tmul x2, x0, x1 // q = c * mu % r // mod r means we only care about the first word \n\n')
 
     comment(f, '3. C ← (C + p*q) /r')
     f.write('\tadd x0, sp, #%d // load temp_addr \n' % (temp_addr))
     load_label_address_into_register(f, EXTERN_LABELS['uintbig_p'], 'x1')
-    f.write('\tldr x2, [sp, #%d] // load lsb word of temp (q) \n' % (temp_addr))
-    f.write('\tbl %s // temp = q*p \n' % EXTERN_LABELS['uintbig_mul3_64_full'])
+    f.write('\tbl %s // temp = q*p \n\n' % EXTERN_LABELS['uintbig_mul3_64_full'])
+
+    comment(f, 'temp <- C + temp /r')
     f.write('\tadd x0, sp, #%d // load temp_addr \n' % (temp_addr)) 
     f.write('\tadd x1, sp, #%d // load c_addr \n' % (c_addr))
     comment(f, 'add together')
@@ -231,7 +245,7 @@ def write_radix_monte_mul(f):
     for i in range(1, limbs):
         f.write('\tsbcs %s, %s, %s\n' % (C_REGS[i], C_REGS[i], P_REGS[i]))
     CARRY_REG = 'x21'
-    f.write('\tadc %s, xzr, xzr\n' % CARRY_REG)
+    f.write('\tsbc %s, xzr, xzr\n' % CARRY_REG)
     comment(f,'and with carry')
     for i in range(limbs):
         offset = i*8
@@ -240,8 +254,8 @@ def write_radix_monte_mul(f):
     f.write('\tadds %s, %s, %s\n' % (C_REGS[0], C_REGS[0], P_REGS[0]))
     for i in range(1, limbs):
         f.write('\tadcs %s, %s, %s\n' % (C_REGS[i], C_REGS[i], P_REGS[i]))
-    comment(f, 'store C')
-    f.write('\tldr x0, [sp, #%d]\n' % (a_addr))
+    comment(f, 'store C into result address')
+    f.write('\tldr x0, [sp, #%d]\n' % (result_addr))
 
     for i in range(int(limbs/2)):
         offset = i*16

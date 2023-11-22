@@ -7,6 +7,20 @@
 .extern _mu
 .extern _fp_mul3
 
+.data
+.global _fp_sq_counter
+_fp_sq_counter: .quad 0
+.global _fp_inv_counter
+_fp_inv_counter: .quad 0
+.global _fp_mul_counter
+_fp_mul_counter: .quad 0
+.global _fp_sqt_counter
+_fp_sqt_counter: .quad 0
+
+.text
+.align 4
+
+
 .macro COPY_8_WORD_NUMBER, num1, num2, reg1, reg2
     LDP \reg1, \reg2, [\num1,#0] 
     STP \reg1, \reg2, [\num2,#0] 
@@ -327,23 +341,28 @@ _minus_number:
     ret
 
 /*
-todo mul counter?
-x0 = x1^2 mod p
-void fp_sq2(fp *x, fp const *y)
-*/
-.global _fp_sq2
-_fp_sq2:
-    mov x2, x1 // x2 = x1, fake it for x1 * x1
-    b _fp_mul3 // x0 = x1 * x2
-
-/*
 x0 = x0^2
 void fp_sq1(fp *x)
 */
 .global _fp_sq1
 _fp_sq1:
     mov x1, x0 //fake it for x0 * x0
-    b _fp_sq2
+
+/*
+x0 = x1^2 mod p
+void fp_sq2(fp *x, fp const *y)
+*/
+.global _fp_sq2
+_fp_sq2:
+    // add to sq counter
+    adrp x3, _fp_sq_counter@PAGE
+    add x3, x3, _fp_sq_counter@PAGEOFF
+    ldr x4, [x3]
+    add x4, x4, #1
+    str x4, [x3]
+
+    mov x2, x1 // x2 = x1, fake it for x1 * x1
+    b _fp_mul3 // x0 = x1 * x2
 
 /*
 Calculate the inverse of x0 with little fermat
@@ -353,6 +372,13 @@ we want to override a[x0] only at the very end
 */
 .global _fp_inv
 _fp_inv:
+    // add to inv counter
+    adrp x3, _fp_inv_counter@PAGE
+    add x3, x3, _fp_inv_counter@PAGEOFF
+    ldr x4, [x3]
+    add x4, x4, #1
+    str x4, [x3]
+
     adrp x1, _p_minus_2@PAGE  //get _p_minus_2 address into x1 for the fp_pow function
     add x1, x1, _p_minus_2@PAGEOFF //add offset of _p_minus_2 to x1
     b _fp_pow //use the power of fermat
@@ -465,6 +491,15 @@ bool fp_issquare(fp *x)
 */
 .global _fp_issquare
 _fp_issquare:
+    // update square counter
+    adrp x3, _fp_sqt_counter@PAGE
+    add x3, x3, _fp_sqt_counter@PAGEOFF
+    ldr x4, [x3]
+    cbz x4, 0f
+    add x4, x4, #1
+    str x4, [x3]
+    0:
+
     sub sp, sp, #16
     str lr, [sp, #0] //bad_access
     adrp x1, _p_minus_1_halves@PAGE

@@ -1,3 +1,4 @@
+.extern _fp_mul_counter
 /*
 This file contains the fp_mul3 method for montgomery reduction with first a subtractive karatsuba multiplication
 of 256*256 -> 512 bits and then a reduction
@@ -33,6 +34,11 @@ void fp_mul3(fp *x, fp const *y, fp const *z)
 */
 .global _fp_mul3
 _fp_mul3:
+    adrp x3, _fp_mul_counter@PAGE
+    add x3, x3, _fp_mul_counter@PAGEOFF
+    ldr x4, [x3]
+    add x4, x4, #1
+    str x4, [x3]
     sub sp, sp, #224 // make space in the stack for 56 words
     stp lr, x0, [sp, #0] // store lr and result address
     stp x19, x20, [sp, #16] //store x19 and x20 to avoid segmentation fault

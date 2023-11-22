@@ -11,4 +11,6 @@ void uintbig_assert_equal(uintbig const *expected, uintbig const *actual);
 
 fp fp_p;
 
+fp r_squared_mod_p;
+
 #endif

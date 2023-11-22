@@ -16,6 +16,7 @@ csidh/*.exe
 # Assembly listing files
 *.lst
 high-ctidh-20210523/testrandom
+csidh/bench
 */tests/test_uintbig
 */tests/test_fp
 # Map files
