@@ -9,11 +9,16 @@
 #include "rng.h"
 #include "csidh.h"
 
-static __inline__ uint64_t rdtsc(void)
-{
-    uint32_t hi, lo;
-    __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
-    return lo | (uint64_t) hi << 32;
+// static __inline__ uint64_t rdtsc(void)
+// {
+//     uint32_t hi, lo;
+//     __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+//     return lo | (uint64_t) hi << 32;
+// }
+static inline uint64_t rdtsc(void) {
+    uint64_t ticks;
+    __asm__ __volatile__("mrs %0, CNTVCT_EL0" : "=r" (ticks));
+    return ticks;
 }
 
 
@@ -82,7 +87,8 @@ int main(void)
     private_key priv;
     public_key pub = base;
 
-    __asm__ __volatile__ ("mov %%rsp, %0" : "=m"(stack));
+    // __asm__ __volatile__ ("mov %%rsp, %0" : "=m"(stack));
+    __asm__ __volatile__ ("mov %0, sp" : "=r"(stack));
     stack -= stacksz;
 
     for (unsigned long i = 0; i < its; ++i) {
