@@ -38,14 +38,12 @@ bool csidh(public_key *out, public_key const *in, private_key const *priv);
 
 int cmp_uint64_t(const void *x, const void *y) { return * (uint64_t *) x - * (uint64_t *) y; }
 
-extern uint64_t fp_mul_counter;
+extern uint64_t *fp_mul_counter;
 extern uint64_t *fp_sq_counter;
 extern uint64_t *fp_inv_counter;
 extern uint64_t *fp_sqt_counter;
 extern uint64_t *xmul_counters;
 extern uint64_t *isog_counters;
-extern uint64_t xmul_counters_granularity;
-extern uint64_t isog_counters_granularity;
 
 uint64_t median(uint64_t *vals)
 {
@@ -83,7 +81,6 @@ int main(void)
     __asm__ __volatile__ ("mov %0, sp" : "=r"(stack));
     stack -= stacksz;
     for (unsigned long i = 0; i < its; ++i) {
-        fp_mul_counter = 0;
         if (its < 100 || i % (its / 100) == 0) {
             printf("%2lu%%", 100 * i / its);
             fflush(stdout);
@@ -98,10 +95,10 @@ int main(void)
         for (size_t j = 0; j < stacksz; ++j)
             stack[j] = canary;
 
-        //fp_mul_counter = &mulss[i];
-        //fp_sq_counter = &sqss[i];
-        //fp_inv_counter = &invss[i];
-        //fp_sqt_counter = &sqtss[i];
+        fp_mul_counter = &mulss[i];
+        fp_sq_counter = &sqss[i];
+        fp_inv_counter = &invss[i];
+        fp_sqt_counter = &sqtss[i];
 
         // print the unsigned long long value of fp_mul_counter
 
@@ -118,9 +115,7 @@ int main(void)
         c1 = rdtsc();
         t1 = clock();
 
-        // set mulss[i] to fp_mul_counter
-        mulss[i] = fp_mul_counter;
-
+        fp_mul_counter = NULL;
         fp_sq_counter = NULL;
         fp_inv_counter = NULL;
         fp_sqt_counter = NULL;

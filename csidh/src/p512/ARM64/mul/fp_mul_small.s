@@ -16,9 +16,12 @@ _fp_mul3:
 /* Increment mulcounter */
 adrp x3, _fp_mul_counter@PAGE
 add x3, x3, _fp_mul_counter@PAGEOFF
+ldr x3, [x3]
+cbz x3, 0f
 ldr x4, [x3]
 add x4, x4, #1
 str x4, [x3]
+0:
 
 sub sp, sp, #240 // 0-64 lr,x0,x1,x2,x17,19,x20,x21
 // Address C = sp + #8
