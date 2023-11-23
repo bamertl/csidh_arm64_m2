@@ -6,8 +6,8 @@
 void test_fp_cswap(void){
     const uintbig a_remain = {{1,1,1,1,1,1,1,1}};
     fp a = {{1,1,1,1,1,1,1,1}};
-    fp b = {{0}};
-    const uintbig b_remain = {{0}};
+    fp b = {{1,2,3,4,5,6,7,8}};
+    const uintbig b_remain = {{1,2,3,4,5,6,7,8}};
     fp_cswap(&a, &b, 0);
     uintbig_assert_equal(&a_remain, &a.x);
     uintbig_assert_equal(&b_remain, &b.x);

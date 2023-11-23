@@ -119,57 +119,61 @@ fp_cmov:
 .global fp_cswap
 fp_cswap: 
 /* LOOP 0 */
+	subs x9, x2, #1
 	ldp x3, x4, [x0, #0]
 	ldp x5, x6, [x1, #0]
-	eor x7, x3, x5
+	eor x7, x3, x5 // x7,8 = A xor B
 	eor x8, x4, x6
-	and x7, x7, x2
-	and x8, x8, x2
-	eor x3, x7, x3
+	and x7, x7, x9
+	and x8, x8, x9
+	eor x3, x7, x3 // A xor B xor d xor A -> into B
 	eor x4, x8, x4
 	eor x5, x7, x5
 	eor x6, x8, x6
-	stp x3, x4, [x0, #0]
-	stp x5, x6, [x1, #0]
+	stp x3, x4, [x1, #0]
+	stp x5, x6, [x0, #0]
 /* LOOP 1 */
+	subs x9, x2, #1
 	ldp x3, x4, [x0, #16]
 	ldp x5, x6, [x1, #16]
-	eor x7, x3, x5
+	eor x7, x3, x5 // x7,8 = A xor B
 	eor x8, x4, x6
-	and x7, x7, x2
-	and x8, x8, x2
-	eor x3, x7, x3
+	and x7, x7, x9
+	and x8, x8, x9
+	eor x3, x7, x3 // A xor B xor d xor A -> into B
 	eor x4, x8, x4
 	eor x5, x7, x5
 	eor x6, x8, x6
-	stp x3, x4, [x0, #16]
-	stp x5, x6, [x1, #16]
+	stp x3, x4, [x1, #16]
+	stp x5, x6, [x0, #16]
 /* LOOP 2 */
+	subs x9, x2, #1
 	ldp x3, x4, [x0, #32]
 	ldp x5, x6, [x1, #32]
-	eor x7, x3, x5
+	eor x7, x3, x5 // x7,8 = A xor B
 	eor x8, x4, x6
-	and x7, x7, x2
-	and x8, x8, x2
-	eor x3, x7, x3
+	and x7, x7, x9
+	and x8, x8, x9
+	eor x3, x7, x3 // A xor B xor d xor A -> into B
 	eor x4, x8, x4
 	eor x5, x7, x5
 	eor x6, x8, x6
-	stp x3, x4, [x0, #32]
-	stp x5, x6, [x1, #32]
+	stp x3, x4, [x1, #32]
+	stp x5, x6, [x0, #32]
 /* LOOP 3 */
+	subs x9, x2, #1
 	ldp x3, x4, [x0, #48]
 	ldp x5, x6, [x1, #48]
-	eor x7, x3, x5
+	eor x7, x3, x5 // x7,8 = A xor B
 	eor x8, x4, x6
-	and x7, x7, x2
-	and x8, x8, x2
-	eor x3, x7, x3
+	and x7, x7, x9
+	and x8, x8, x9
+	eor x3, x7, x3 // A xor B xor d xor A -> into B
 	eor x4, x8, x4
 	eor x5, x7, x5
 	eor x6, x8, x6
-	stp x3, x4, [x0, #48]
-	stp x5, x6, [x1, #48]
+	stp x3, x4, [x1, #48]
+	stp x5, x6, [x0, #48]
 	ret
 
 /* A[x0] = A[x0] + B[x1] */

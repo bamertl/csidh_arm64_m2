@@ -352,27 +352,32 @@ with open(fn+'.tmp','w') as f:
     comment(f, "A[x0] <-> B[x1] if d[x2], we make it time-constant")
     # A xor A = 0
     # A xor 0 = A
-    # (A xor B ) and 1 xor A = B
+    # x2 -1 = 1->0 and 0 -> 111111
+    # (A xor B ) and 1 xor B = A
+    # (A xor B ) and x2=0 xor B = A into A
+    # (A xor B ) and x2=0 xor A = B into B
+
     # (A xor B ) and 0 xor A = A
     introduce_global_function(f, globals['fp_cswap'])
     for i in range(int(limbs/2)):
         comment(f, "LOOP %d" % i)
         memory_offset = i*16
+        f.write('\tsubs x9, x2, #1\n')
         f.write('\tldp x3, x4, [x0, #%d]\n' % memory_offset)
         f.write('\tldp x5, x6, [x1, #%d]\n' % (memory_offset))
-        f.write('\teor x7, x3, x5\n')
+        f.write('\teor x7, x3, x5 // x7,8 = A xor B\n')
         f.write('\teor x8, x4, x6\n')
 
-        f.write('\tand x7, x7, x2\n')
-        f.write('\tand x8, x8, x2\n')
+        f.write('\tand x7, x7, x9\n')
+        f.write('\tand x8, x8, x9\n')
 
-        f.write('\teor x3, x7, x3\n')
+        f.write('\teor x3, x7, x3 // A xor B xor d xor A -> into B\n')
         f.write('\teor x4, x8, x4\n')
         f.write('\teor x5, x7, x5\n')
         f.write('\teor x6, x8, x6\n')
 
-        f.write('\tstp x3, x4, [x0, #%d]\n' % (memory_offset))
-        f.write('\tstp x5, x6, [x1, #%d]\n' % (memory_offset))	
+        f.write('\tstp x3, x4, [x1, #%d]\n' % (memory_offset))
+        f.write('\tstp x5, x6, [x0, #%d]\n' % (memory_offset))	
     f.write("\tret\n") 
     f.write('\n')
     #_FP_ADD2, just straight to _fp_add3 _____________________________________________________________________________________
