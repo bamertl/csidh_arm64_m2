@@ -19,12 +19,15 @@ void test_fp_cswap(void){
 void test_fp_cmov(void){
     const fp a = {{1,1,1,1,1,1,1,1}};
     const fp a_old = {{1,1,1,1,1,1,1,1}};
-    fp b = {{0}};
-    fp b_old = {{0}};
+    fp b = {{1,2,3,4,5,6,7,8}};
+    fp b_old = {{1,2,3,4,5,6,7,8}};
     fp_cmov(&b, &a, 0);
     uintbig_assert_equal(&b.x, &b_old.x);
+    uintbig_assert_equal(&a.x, &a_old.x);
     fp_cmov(&b, &a, 1);
+    uintbig_assert_equal(&a.x, &a_old.x);
     uintbig_assert_equal(&b.x, &a_old.x);
+    printf("test_fp_cmov passed\n");
 }
 
 void test_fp_add(void){
@@ -94,20 +97,20 @@ void test_mul_more(void){
 }
 
 void test_square(void){
+    fp aa = {{0}};
     fp one = {{1,0,0,0,0,0,0,0}};
     fp a = {{5,0,0,0,0,0,0,0}};
     fp b = {{25,0,0,0,0,0,0,0}};
     fp_mul2(&a, &r_squared_mod_p);
-    fp_sq1(&a);
-    fp_mul2(&a, &one);
+    fp_sq2(&aa, &a);
+    fp_mul2(&aa, &one);
 
     
-    uintbig_assert_equal(&a.x, &b.x);
+    uintbig_assert_equal(&aa.x, &b.x);
 }
 
 void test_sqrt(void)
 {
-  printf("fp_sqrt\n");
 
   for (long long loop = 0;loop < 1;++loop) {
     fp x;
@@ -115,22 +118,18 @@ void test_sqrt(void)
     fp x2;
     fp x2neg;
     fp_random(&x);
-    printf("x = ");
-    uintbig_print(&x.x);
     fp_sq2(&x2,&x);
     // x2 = x^2
-    printf("x2 = ");
-    uintbig_print(&x2.x);
     fp_neg2(&xneg,&x);
     // xneg = fp0 -x
-    printf("xneg = ");      
-    uintbig_print(&xneg.x);
     fp_neg2(&x2neg,&x2);
-    printf("x2neg = ");
-    uintbig_print(&x2neg.x);
-    assert(fp_sqrt(&x) != fp_sqrt(&xneg));
-    assert(fp_sqrt(&x2));
-    assert(!fp_sqrt(&x2neg));
+    long long resultx = fp_sqrt(&x);
+    long long result_xneg = fp_sqrt(&xneg);
+    long long resultx2 = fp_sqrt(&x2);
+    long long resultx2neg = fp_sqrt(&x2neg);
+    assert(resultx!= result_xneg);
+    assert(resultx2);
+    assert(!resultx2neg);
   }
 }
 
@@ -138,14 +137,14 @@ void test_sqrt1(void){
     fp one = {{1,0,0,0,0,0,0,0}};
     fp b;
     fp a = {{3,0,0,0,0,0,0,0}};
+    fp expected = {{3,0,0,0,0,0,0,0}};
     fp_mul2(&a, &r_squared_mod_p);
     fp_mul2(&a, &a);
     fp_mul3(&b, &a, &one);
-    uintbig_print(&b.x);
     long long is_sqrt = fp_sqrt(&a); 
     fp_mul2(&a, &one);
-    uintbig_print(&a.x);
-    printf("is_sqrt = %lld\n", is_sqrt);
+    uintbig_assert_equal(&a.x, &expected.x);
+    assert(is_sqrt == 1);
 }
 
 int main(void){
@@ -157,6 +156,6 @@ int main(void){
     test_fp_mul();
     test_mul_more();
     test_square();
-    //test_sqrt();
-    //test_sqrt1();
+    test_sqrt();
+    test_sqrt1();
 }

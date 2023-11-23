@@ -65,44 +65,52 @@ fp_copy:
 fp_cmov: 
 /* Loop 4 times through the 8 words */
 /* (AxorB)^d xor A = A */
+/* A xor 0 = A */
+/*  d-1 = 1111 or 0000 that why it is like this */
+/* A xor B and 1 xor B = A */
+/* A xor B and 0 xor B = B */
 /* LOOP 0 */
-	ldp x3, x4, [x1, #0]
-	ldp x5, x6, [x0, #0]
-	eor x3, x3, x5
-	eor x4, x4, x6
-	and x3, x3, x2
-	and x4, x4, x2
-	eor x3, x3, x5
+	subs x7, x2, #1
+	ldp x3, x4, [x0, #0] // load A
+	ldp x5, x6, [x1, #0] // load B
+	eor x3, x3, x5 // A xor B
+	eor x4, x4, x6 
+	and x3, x3, x7 // A xor B and d
+	and x4, x4, x7
+	eor x3, x3, x5 // A xor B and d xor B
 	eor x4, x4, x6
 	stp x3, x4, [x0, #0]
 /* LOOP 1 */
-	ldp x3, x4, [x1, #16]
-	ldp x5, x6, [x0, #16]
-	eor x3, x3, x5
-	eor x4, x4, x6
-	and x3, x3, x2
-	and x4, x4, x2
-	eor x3, x3, x5
+	subs x7, x2, #1
+	ldp x3, x4, [x0, #16] // load A
+	ldp x5, x6, [x1, #16] // load B
+	eor x3, x3, x5 // A xor B
+	eor x4, x4, x6 
+	and x3, x3, x7 // A xor B and d
+	and x4, x4, x7
+	eor x3, x3, x5 // A xor B and d xor B
 	eor x4, x4, x6
 	stp x3, x4, [x0, #16]
 /* LOOP 2 */
-	ldp x3, x4, [x1, #32]
-	ldp x5, x6, [x0, #32]
-	eor x3, x3, x5
-	eor x4, x4, x6
-	and x3, x3, x2
-	and x4, x4, x2
-	eor x3, x3, x5
+	subs x7, x2, #1
+	ldp x3, x4, [x0, #32] // load A
+	ldp x5, x6, [x1, #32] // load B
+	eor x3, x3, x5 // A xor B
+	eor x4, x4, x6 
+	and x3, x3, x7 // A xor B and d
+	and x4, x4, x7
+	eor x3, x3, x5 // A xor B and d xor B
 	eor x4, x4, x6
 	stp x3, x4, [x0, #32]
 /* LOOP 3 */
-	ldp x3, x4, [x1, #48]
-	ldp x5, x6, [x0, #48]
-	eor x3, x3, x5
-	eor x4, x4, x6
-	and x3, x3, x2
-	and x4, x4, x2
-	eor x3, x3, x5
+	subs x7, x2, #1
+	ldp x3, x4, [x0, #48] // load A
+	ldp x5, x6, [x1, #48] // load B
+	eor x3, x3, x5 // A xor B
+	eor x4, x4, x6 
+	and x3, x3, x7 // A xor B and d
+	and x4, x4, x7
+	eor x3, x3, x5 // A xor B and d xor B
 	eor x4, x4, x6
 	stp x3, x4, [x0, #48]
 	ret
@@ -541,5 +549,5 @@ fp_sq2:
 	add x4, x4, #1
 	str x4, [x3]
 
-	mov x2, x0
+	mov x2, x1
 	b fp_mul3

@@ -34,7 +34,7 @@ void isog_setup(proj *A,proj *P,proj *K,long long k)
   fp_random(&P->z);
 }
 
-int main()
+int main(void)
 {
   proj A;
   proj P;
