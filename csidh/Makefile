@@ -20,6 +20,8 @@ ifeq "$(MUL_TYPE)" "MONTE_MUL"
 	MUL_FILE = fp_mul_small.s
 else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_SUB_KARATSUBA"
 	MUL_FILE = fp_mul_big.s
+else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_KARATSUBA"
+	MUL_FILE = fp_mul_big_normal.s
 endif
 
 $(info ARCHITECTURE: $(ARCH))
