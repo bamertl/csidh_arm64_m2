@@ -2,96 +2,95 @@
 
 int steps_guess(long long *bs,long long *gs,long long l)
 {
-  /* l=3: bs=0 gs=0 bench=74 baseline=68 */
-  /* l=5: bs=0 gs=0 bench=94 baseline=92 */
-  /* l=7: bs=0 gs=0 bench=118 baseline=121 */
-  /* l=11: bs=0 gs=0 bench=176 baseline=183 */
-  /* l=13: bs=0 gs=0 bench=204 baseline=212 */
-  /* l=17: bs=0 gs=0 bench=262 baseline=269 */
-  /* l=19: bs=0 gs=0 bench=292 baseline=301 */
-  /* l=23: bs=0 gs=0 bench=349 baseline=363 */
-  /* l=29: bs=0 gs=0 bench=437 baseline=449 */
-  /* l=31: bs=0 gs=0 bench=465 baseline=485 */
-  /* l=37: bs=0 gs=0 bench=553 baseline=567 */
-  /* l=41: bs=0 gs=0 bench=612 baseline=625 */
-  /* l=43: bs=0 gs=0 bench=642 baseline=659 */
-  /* l=47: bs=0 gs=0 bench=697 baseline=721 */
-  /* l=53: bs=0 gs=0 bench=784 baseline=804 */
-  /* l=59: bs=0 gs=0 bench=874 baseline=895 */
-  /* l=61: bs=0 gs=0 bench=901 baseline=920 */
-  /* l=67: bs=0 gs=0 bench=1004 baseline=1002 */
+  /* l=3: bs=0 gs=0 bench=73 baseline=93 */
+  /* l=5: bs=0 gs=0 bench=88 baseline=87 */
+  /* l=7: bs=0 gs=0 bench=118 baseline=120 */
+  /* l=11: bs=0 gs=0 bench=176 baseline=182 */
+  /* l=13: bs=0 gs=0 bench=204 baseline=210 */
+  /* l=17: bs=0 gs=0 bench=262 baseline=268 */
+  /* l=19: bs=0 gs=0 bench=291 baseline=301 */
+  /* l=23: bs=0 gs=0 bench=350 baseline=364 */
+  /* l=29: bs=0 gs=0 bench=436 baseline=449 */
+  /* l=31: bs=0 gs=0 bench=466 baseline=483 */
+  /* l=37: bs=0 gs=0 bench=552 baseline=564 */
+  /* l=41: bs=0 gs=0 bench=612 baseline=622 */
+  /* l=43: bs=0 gs=0 bench=641 baseline=656 */
+  /* l=47: bs=0 gs=0 bench=697 baseline=719 */
+  /* l=53: bs=0 gs=0 bench=784 baseline=800 */
+  /* l=59: bs=0 gs=0 bench=873 baseline=890 */
+  /* l=61: bs=0 gs=0 bench=900 baseline=919 */
+  /* l=67: bs=0 gs=0 bench=1056 baseline=1059 */
   /* l=71: bs=0 gs=0 bench=1060 baseline=1066 */
-  /* l=73: bs=0 gs=0 bench=1093 baseline=1086 */
-  /* l=79: bs=0 gs=0 bench=1177 baseline=1181 */
-  /* l=83: bs=0 gs=0 bench=1235 baseline=1235 */
-  /* l=89: bs=0 gs=0 bench=1325 baseline=1320 */
-  /* l=97: bs=0 gs=0 bench=1516 baseline=1572 */
-  if (l <= 97) { *bs = 0; *gs = 0; return 1; }
-  /* l=101: bs=6 gs=4 bench=1562 baseline=1574 */
-  /* l=103: bs=6 gs=4 bench=1510 baseline=1610 */
-  /* l=107: bs=6 gs=4 bench=1574 baseline=1584 */
-  /* l=109: bs=6 gs=4 bench=1585 baseline=1615 */
-  if (l <= 109) { *bs = 6; *gs = 4; return 1; }
-  /* l=113: bs=0 gs=0 bench=1669 baseline=1666 */
-  if (l <= 113) { *bs = 0; *gs = 0; return 1; }
-  /* l=127: bs=6 gs=4 bench=1889 baseline=1934 */
-  if (l <= 127) { *bs = 6; *gs = 4; return 1; }
-  /* l=131: bs=8 gs=4 bench=1839 baseline=1925 */
-  /* l=137: bs=8 gs=4 bench=1914 baseline=2011 */
-  /* l=139: bs=8 gs=4 bench=1939 baseline=2048 */
+  /* l=73: bs=0 gs=0 bench=1124 baseline=1119 */
+  /* l=79: bs=0 gs=0 bench=1209 baseline=1216 */
+  /* l=83: bs=0 gs=0 bench=1271 baseline=1271 */
+  /* l=89: bs=0 gs=0 bench=1363 baseline=1357 */
+  /* l=97: bs=0 gs=0 bench=1479 baseline=1473 */
+  /* l=101: bs=0 gs=0 bench=1538 baseline=1537 */
+  if (l <= 101) { *bs = 0; *gs = 0; return 1; }
+  /* l=103: bs=6 gs=4 bench=1552 baseline=1571 */
+  /* l=107: bs=6 gs=4 bench=1616 baseline=1628 */
+  /* l=109: bs=6 gs=4 bench=1630 baseline=1659 */
+  /* l=113: bs=6 gs=4 bench=1693 baseline=1713 */
+  if (l <= 113) { *bs = 6; *gs = 4; return 1; }
+  /* l=127: bs=6 gs=5 bench=1866 baseline=1934 */
+  if (l <= 127) { *bs = 6; *gs = 5; return 1; }
+  /* l=131: bs=8 gs=4 bench=1891 baseline=1981 */
+  /* l=137: bs=8 gs=4 bench=1965 baseline=2068 */
+  /* l=139: bs=8 gs=4 bench=1997 baseline=2103 */
   if (l <= 139) { *bs = 8; *gs = 4; return 1; }
-  /* l=149: bs=6 gs=6 bench=2073 baseline=2186 */
-  /* l=151: bs=6 gs=6 bench=2105 baseline=2222 */
+  /* l=149: bs=6 gs=6 bench=2132 baseline=2248 */
+  /* l=151: bs=6 gs=6 bench=2163 baseline=2286 */
   if (l <= 151) { *bs = 6; *gs = 6; return 1; }
-  /* l=157: bs=8 gs=4 bench=2191 baseline=2309 */
+  /* l=157: bs=8 gs=4 bench=2247 baseline=2374 */
   if (l <= 157) { *bs = 8; *gs = 4; return 1; }
-  /* l=163: bs=8 gs=5 bench=2135 baseline=2389 */
-  /* l=167: bs=8 gs=5 bench=2185 baseline=2453 */
-  /* l=173: bs=8 gs=5 bench=2275 baseline=2537 */
-  /* l=179: bs=8 gs=5 bench=2347 baseline=2621 */
-  /* l=181: bs=8 gs=5 bench=2378 baseline=2652 */
-  /* l=191: bs=8 gs=5 bench=2532 baseline=2805 */
+  /* l=163: bs=8 gs=5 bench=2196 baseline=2458 */
+  /* l=167: bs=8 gs=5 bench=2247 baseline=2521 */
+  /* l=173: bs=8 gs=5 bench=2338 baseline=2607 */
+  /* l=179: bs=8 gs=5 bench=2410 baseline=2698 */
+  /* l=181: bs=8 gs=5 bench=2445 baseline=2727 */
+  /* l=191: bs=8 gs=5 bench=2606 baseline=2883 */
   if (l <= 191) { *bs = 8; *gs = 5; return 1; }
-  /* l=193: bs=8 gs=6 bench=2408 baseline=2817 */
-  /* l=197: bs=8 gs=6 bench=2455 baseline=2883 */
-  /* l=199: bs=8 gs=6 bench=2483 baseline=2913 */
-  /* l=211: bs=8 gs=6 bench=2644 baseline=3085 */
-  /* l=223: bs=8 gs=6 bench=2819 baseline=3271 */
+  /* l=193: bs=8 gs=6 bench=2477 baseline=2896 */
+  /* l=197: bs=8 gs=6 bench=2525 baseline=2961 */
+  /* l=199: bs=8 gs=6 bench=2553 baseline=2998 */
+  /* l=211: bs=8 gs=6 bench=2721 baseline=3171 */
+  /* l=223: bs=8 gs=6 bench=2900 baseline=3357 */
   if (l <= 223) { *bs = 8; *gs = 6; return 1; }
-  /* l=227: bs=8 gs=7 bench=2819 baseline=3313 */
-  /* l=229: bs=8 gs=7 bench=2845 baseline=3342 */
-  /* l=233: bs=8 gs=7 bench=2910 baseline=3398 */
-  /* l=239: bs=8 gs=7 bench=2995 baseline=3497 */
+  /* l=227: bs=8 gs=7 bench=2901 baseline=3408 */
+  /* l=229: bs=8 gs=7 bench=2931 baseline=3436 */
+  /* l=233: bs=8 gs=7 bench=2992 baseline=3497 */
+  /* l=239: bs=8 gs=7 bench=3080 baseline=3595 */
   if (l <= 239) { *bs = 8; *gs = 7; return 1; }
-  /* l=241: bs=10 gs=6 bench=2877 baseline=3516 */
-  /* l=251: bs=10 gs=6 bench=3013 baseline=3666 */
-  /* l=257: bs=10 gs=6 bench=3110 baseline=3735 */
-  /* l=263: bs=10 gs=6 bench=3180 baseline=3831 */
-  /* l=269: bs=10 gs=6 bench=3287 baseline=3920 */
-  /* l=271: bs=10 gs=6 bench=3301 baseline=3949 */
-  /* l=277: bs=10 gs=6 bench=3398 baseline=4034 */
+  /* l=241: bs=10 gs=6 bench=2956 baseline=3613 */
+  /* l=251: bs=10 gs=6 bench=3095 baseline=3771 */
+  /* l=257: bs=10 gs=6 bench=3197 baseline=3842 */
+  /* l=263: bs=10 gs=6 bench=3270 baseline=3937 */
+  /* l=269: bs=10 gs=6 bench=3379 baseline=4028 */
+  /* l=271: bs=10 gs=6 bench=3394 baseline=4062 */
+  /* l=277: bs=10 gs=6 bench=3488 baseline=4145 */
   if (l <= 277) { *bs = 10; *gs = 6; return 1; }
-  /* l=281: bs=10 gs=7 bench=3305 baseline=4091 */
-  /* l=283: bs=10 gs=7 bench=3320 baseline=4126 */
+  /* l=281: bs=10 gs=7 bench=3312 baseline=4206 */
+  /* l=283: bs=10 gs=7 bench=3330 baseline=4122 */
   if (l <= 283) { *bs = 10; *gs = 7; return 1; }
-  /* l=293: bs=12 gs=6 bench=3424 baseline=4263 */
-  /* l=307: bs=12 gs=6 bench=3630 baseline=4470 */
-  /* l=311: bs=12 gs=6 bench=3685 baseline=4536 */
-  /* l=313: bs=12 gs=6 bench=3702 baseline=4553 */
-  /* l=317: bs=12 gs=6 bench=3758 baseline=4613 */
+  /* l=293: bs=12 gs=6 bench=3437 baseline=4261 */
+  /* l=307: bs=12 gs=6 bench=3641 baseline=4469 */
+  /* l=311: bs=12 gs=6 bench=3689 baseline=4540 */
+  /* l=313: bs=12 gs=6 bench=3709 baseline=4555 */
+  /* l=317: bs=12 gs=6 bench=3767 baseline=4616 */
   if (l <= 317) { *bs = 12; *gs = 6; return 1; }
-  /* l=331: bs=10 gs=8 bench=3740 baseline=4810 */
+  /* l=331: bs=10 gs=8 bench=3747 baseline=4809 */
   if (l <= 331) { *bs = 10; *gs = 8; return 1; }
-  /* l=337: bs=12 gs=7 bench=3788 baseline=4899 */
-  /* l=347: bs=12 gs=7 bench=3914 baseline=5047 */
-  /* l=349: bs=12 gs=7 bench=3943 baseline=5074 */
-  /* l=353: bs=12 gs=7 bench=4006 baseline=5130 */
-  /* l=359: bs=12 gs=7 bench=4086 baseline=5220 */
+  /* l=337: bs=12 gs=7 bench=3798 baseline=4897 */
+  /* l=347: bs=12 gs=7 bench=3917 baseline=5050 */
+  /* l=349: bs=12 gs=7 bench=3950 baseline=5087 */
+  /* l=353: bs=12 gs=7 bench=4015 baseline=5123 */
+  /* l=359: bs=12 gs=7 bench=4090 baseline=5223 */
   if (l <= 359) { *bs = 12; *gs = 7; return 1; }
-  /* l=367: bs=10 gs=9 bench=4141 baseline=5342 */
-  /* l=373: bs=10 gs=9 bench=4170 baseline=5431 */
+  /* l=367: bs=10 gs=9 bench=4142 baseline=5339 */
+  /* l=373: bs=10 gs=9 bench=4177 baseline=5430 */
   if (l <= 373) { *bs = 10; *gs = 9; return 1; }
-  /* l=587: bs=16 gs=9 bench=5593 baseline=8495 */
+  /* l=587: bs=16 gs=9 bench=5598 baseline=8497 */
   if (l <= 587) { *bs = 16; *gs = 9; return 1; }
   return 0;
 }
