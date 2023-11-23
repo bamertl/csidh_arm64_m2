@@ -354,15 +354,32 @@ void fp_sq2(fp *x, fp const *y)
 */
 .global _fp_sq2
 _fp_sq2:
+    // load mul count pointer
+    adrp x3, _fp_mul_counter@PAGE
+    add x3, x3, _fp_mul_counter@PAGEOFF
+    ldr x4, [x3] // pointer_value in x4
+    sub sp, sp, #16
+    stp lr, x4, [sp, #0] // store lr and pointer_value on stack
+    str xzr, [x3] // set pointer_value to 0
     // add to sq counter
     adrp x3, _fp_sq_counter@PAGE
     add x3, x3, _fp_sq_counter@PAGEOFF
+    ldr x3, [x3]
+    cbz x3, 0f
     ldr x4, [x3]
     add x4, x4, #1
     str x4, [x3]
 
+    0:
     mov x2, x1 // x2 = x1, fake it for x1 * x1
-    b _fp_mul3 // x0 = x1 * x2
+    bl _fp_mul3 // x0 = x1 * x2
+
+    ldp lr, x4, [sp, #0] // load back lr and pointer_value
+    add sp, sp, #16
+    adrp x3, _fp_mul_counter@PAGE
+    add x3, x3, _fp_mul_counter@PAGEOFF
+    str x4, [x3] // restore pointer_value
+    ret
 
 /*
 Calculate the inverse of x0 with little fermat
@@ -372,17 +389,34 @@ we want to override a[x0] only at the very end
 */
 .global _fp_inv
 _fp_inv:
+    // load mul count pointer
+    adrp x3, _fp_mul_counter@PAGE
+    add x3, x3, _fp_mul_counter@PAGEOFF
+    ldr x4, [x3] // pointer_value in x4
+    sub sp, sp, #16
+    stp lr, x4, [sp, #0] // store lr and pointer_value on stack
+    str xzr, [x3] // set pointer_value to 0
+
     // add to inv counter
     adrp x3, _fp_inv_counter@PAGE
     add x3, x3, _fp_inv_counter@PAGEOFF
+    ldr x3, [x3]
+    cbz x3, 0f
     ldr x4, [x3]
     add x4, x4, #1
     str x4, [x3]
 
+    0:
     adrp x1, _p_minus_2@PAGE  //get _p_minus_2 address into x1 for the fp_pow function
     add x1, x1, _p_minus_2@PAGEOFF //add offset of _p_minus_2 to x1
-    b _fp_pow //use the power of fermat
-    
+    bl _fp_pow //use the power of fermat
+
+    ldp lr, x4, [sp, #0] // load back lr and pointer_value
+    add sp, sp, #16
+    adrp x3, _fp_mul_counter@PAGE
+    add x3, x3, _fp_mul_counter@PAGEOFF
+    str x4, [x3] // restore pointer_value
+    ret
 
 /*
 c[x0] = a[x0]^b[x1] mod p
@@ -491,11 +525,20 @@ bool fp_issquare(fp *x)
 */
 .global _fp_issquare
 _fp_issquare:
+        // load mul count pointer
+    adrp x3, _fp_mul_counter@PAGE
+    add x3, x3, _fp_mul_counter@PAGEOFF
+    ldr x4, [x3] // pointer_value in x4
+    sub sp, sp, #16
+    stp lr, x4, [sp, #0] // store lr and pointer_value on stack
+    str xzr, [x3] // set pointer_value to 0
+
     // update square counter
     adrp x3, _fp_sqt_counter@PAGE
     add x3, x3, _fp_sqt_counter@PAGEOFF
+    ldr x3, [x3]
+    cbz x3, 0f
     ldr x4, [x3]
-    cbz x4, 0f
     add x4, x4, #1
     str x4, [x3]
     0:
@@ -519,6 +562,13 @@ _not_square:
 _issquare_end:
     ldr lr, [sp, #0]
     add sp, sp, #16
+    
+    ldp lr, x4, [sp, #0] // load back lr and pointer_value
+    add sp, sp, #16
+    adrp x3, _fp_mul_counter@PAGE
+    add x3, x3, _fp_mul_counter@PAGEOFF
+    str x4, [x3] // restore pointer_value
+
     ret
 
 /*
