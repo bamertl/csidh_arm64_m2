@@ -22,6 +22,8 @@ else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_SUB_KARATSUBA"
 	MUL_FILE = fp_mul_big.s
 else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_KARATSUBA"
 	MUL_FILE = fp_mul_big_normal.s
+else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_SCHOOLBOOK"
+	MUL_FILE = fp_mul_big_schoolbook.s
 endif
 
 $(info ARCHITECTURE: $(ARCH))
