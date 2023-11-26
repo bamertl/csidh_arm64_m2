@@ -149,48 +149,75 @@ B --> registers with the old results
  */
 
 .macro  SCHOOLBOOK_STEP_512 C0,M0,M1,M2,M3,M4,M5,M6,M7,A0,A1,A2,A3,A4,A5,A6,A7,A8,B0,B1,B2,B3,B4,B5,B6,B7
-
-
+    // carry from previous step always in B0
     mul     \A0, \M0, \C0 // lower part
     adds    \A0, \A0, \B0 
     umulh   \A1, \M0, \C0 // upper part
     // 2/9 in x12
     mul     \A2, \M1, \C0 // lower part
-    adcs    \A1, \A2, \A1
-    adcs    \A1, \A1, \B1 
+    adcs    \A2, \A2, \B1 //has carry from previous step included
+    adcs    \B0, xzr, xzr // carry for the next step
+    adds    \A1, \A2, \A1 // from previous results
+    adcs    \B0, \B0, xzr // carry for the next step
     umulh   \A2, \M1, \C0 // upper part
     // 3/9in x13
     mul     \A3, \M2, \C0
-    adcs    \A2, \A3, \A2 // lower part
-    adcs    \A2, \A2, \B2 
+    adds    \A3, \A3, \B0 //add carry from previous step
+    adcs    \B0, xzr, xzr // carry for the next step
+    adds    \A3, \A3, \B2
+    adcs    \B0, \B0, xzr // carry for the next step
+    adds    \A2, \A3, \A2 // lower part
+    adcs    \B0, \B0, xzr // carry for the next step
     umulh   \A3, \M2, \C0 // upper part
     // 4/9 in x14
     mul     \A4, \M3, \C0
-    adcs    \A3, \A4, \A3 // lower part
-    adcs    \A3, \A3, \B3 
+    adds    \A4, \A4, \B0 //add carry from previous step
+    adcs    \B0, xzr, xzr // carry for the next step
+    adds    \A4, \A4, \B3
+    adcs    \B0, \B0, xzr // carry for the next step
+    adds    \A3, \A4, \A3 // lower part
+    adcs    \B0, \B0, xzr // carry for the next step
     umulh   \A4, \M3, \C0 // upper part
     // 5/9 in x15
     mul     \A5, \M4, \C0
-    adcs    \A4, \A5, \A4 // lower part
-    adcs    \A4, \A4, \B4 
+    adds    \A5, \A5, \B0 //add carry from previous step
+    adcs    \B0, xzr, xzr // carry for the next step
+    adds    \A5, \A5, \B4
+    adcs    \B0, \B0, xzr // carry for the next step
+    adds    \A4, \A5, \A4 // lower part
+    adcs    \B0, \B0, xzr // carry for the next step
     umulh   \A5, \M4, \C0 // upper part
     // 6/9 in x16
     mul     \A6, \M5, \C0
-    adcs    \A5, \A6, \A5 // lower part
-    adcs    \A5, \A5, \B5
+    adds    \A6, \A6, \B0 //add carry from previous step
+    adcs    \B0, xzr, xzr // carry for the next step
+    adds    \A6, \A6, \B5
+    adcs    \B0, \B0, xzr // carry for the next step
+    adds    \A5, \A6, \A5 // lower part
+    adcs    \B0, \B0, xzr // carry for the next step
     umulh   \A6, \M5, \C0 // upper part
     // 7/9 in x17
     mul     \A7, \M6, \C0
-    adcs    \A6, \A7, \A6 // lower part
-    adcs    \A6, \A6, \B6
+    adds    \A7, \A7, \B0 //add carry from previous step
+    adcs    \B0, xzr, xzr // carry for the next step
+    adds    \A7, \A7, \B6
+    adcs    \B0, \B0, xzr // carry for the next step
+    adds    \A6, \A7, \A6 // lower part
+    adcs    \B0, \B0, xzr // carry for the next step
     umulh   \A7, \M6, \C0 // upper part
     // 8/9 in x19
     mul     \A8, \M7, \C0
-    adcs    \A7, \A8, \A7 // lower part
-    adcs    \A7, \A7, \B7 
+    adds    \A8, \A8, \B0 //add carry from previous step
+    adcs    \B0, xzr, xzr // carry for the next step
+    adds    \A8, \A8, \B7
+    adcs    \B0, \B0, xzr // carry for the next step
+    adds    \A7, \A8, \A7 // lower part
+    adcs    \B0, \B0, xzr // carry for the next step
     umulh   \A8, \M7, \C0 // upper part
     // 9/9 in x20
-    adc    \A8, \A8, xzr // carry of multiplication
+    add    \A8, \A8, xzr // carry of multiplication
+    adds    \A8, \A8, \B0 //add carry from previous step
+
 
 .endm
 
@@ -204,11 +231,13 @@ _uint_mul:
     // x: address of the first 512-bit number
     // y: address of the second 512-bit number
     // result: address of the result buffer
-    sub     sp, sp, #64
+    sub     sp, sp, #96
     stp     lr, x19, [sp,#0]
     stp     x20, x21, [sp,#16]
     stp     x22, x23, [sp,#32]
-    stp     x24, x29, [sp,#48]
+    stp     x25, x26, [sp,#48]
+    stp     x27, x28, [sp,#64]
+    stp     x24, x29, [sp,#80]
 
     // x3-x10 A registers
     ldp     x3, x4, [x0]
@@ -217,7 +246,7 @@ _uint_mul:
     ldp     x9, x10, [x0,#48]
 
     //x11-x17, x19-x20  for the first iteration
-    ldr     x0, [x1]
+    ldr     x0, [x1, #0]
     // 1/9 in x20 --> just that it is nice to continue with the macros later
     mul     x20, x3, x0 // lower part
     umulh   x11, x3, x0 // upper part
@@ -253,7 +282,8 @@ _uint_mul:
     adcs    x19, x19, xzr // carry of multiplication
     //store the first result
     str     x20, [x2,#0]
-    
+   //what if this operation has a carry 
+
     ldr     x0, [x1, #8]
     // remark Jan: I can use x29 here, because the result will always be a valid frame record (The frame pointer register (FP, X29) must always address a valid frame record.
     SCHOOLBOOK_STEP_512 x0, x3, x4, x5, x6, x7, x8, x9, x10, x21, x22, x23, x24, x25, x26, x27, x28, x29, x11, x12, x13, x14, x15, x16, x17, x19
@@ -261,36 +291,38 @@ _uint_mul:
     str     x21, [x2, #8]
     // new base results now in x22-x29, freely available regsiters x11-x20
     ldr     x0, [x1, #16]
-    SCHOOLBOOK_STEP_512 x0,x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17,x19, x20, x22, x23, x24, x25, x27, x27, x28, x29
+    SCHOOLBOOK_STEP_512 x0,x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17,x19, x20, x22, x23, x24, x25, x26, x27, x28, x29
     str     x11, [x2, #16]
     ldr     x0, [x1, #24]
     SCHOOLBOOK_STEP_512 x0,x3, x4, x5, x6, x7, x8, x9, x10, x21, x22, x23, x24, x25, x26, x27, x28, x29, x12, x13, x14, x15, x16, x17, x19, x20
     str     x21, [x2, #24]
     ldr     x0, [x1, #32]
-    SCHOOLBOOK_STEP_512 x0,x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17,x19, x20, x22, x23, x24, x25, x27, x27, x28, x29
+    SCHOOLBOOK_STEP_512 x0,x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17,x19, x20, x22, x23, x24, x25, x26, x27, x28, x29
     str     x11, [x2, #32]
     ldr     x0, [x1, #40]
     SCHOOLBOOK_STEP_512 x0,x3, x4, x5, x6, x7, x8, x9, x10, x21, x22, x23, x24, x25, x26, x27, x28, x29, x12, x13, x14, x15, x16, x17, x19, x20
     str     x21, [x2, #40]
     ldr     x0, [x1, #48]
-    SCHOOLBOOK_STEP_512 x0,x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17,x19, x20, x22, x23, x24, x25, x27, x27, x28, x29
+    SCHOOLBOOK_STEP_512 x0,x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17,x19, x20, x22, x23, x24, x25, x26, x27, x28, x29
     str     x11, [x2, #48]
     ldr     x0, [x1, #56]
     SCHOOLBOOK_STEP_512 x0,x3, x4, x5, x6, x7, x8, x9, x10, x21, x22, x23, x24, x25, x26, x27, x28, x29, x12, x13, x14, x15, x16, x17, x19, x20
     str     x21, [x2, #56]
-    //8 limbs over, now we have the result in x11-x19 which are final, since no multiplication will happen anymore
-    stp     x11, x12, [x2, #64]
-    stp     x13, x14, [x2, #80]
-    stp     x15, x16, [x2, #96]
-    stp     x17, x19, [x2, #112]
-    str     x20, [x2, #128]
+    //8 limbs over, now we have the result in x21-x29 which are final, since no multiplication will happen anymore
+    stp     x22, x23, [x2, #64]
+    stp     x24, x25, [x2, #80]
+    stp     x26, x27, [x2, #96]
+    stp     x28, x29, [x2, #112]
 
 
     ldp     lr, x19, [sp,#0]
     ldp     x20, x21, [sp,#16]
     ldp     x22, x23, [sp,#32]
-    ldp     x24, x29, [sp,#48]
-    add     sp,sp, #64
+    ldp     x25, x26, [sp,#48]
+    ldp     x27, x28, [sp,#64]
+    ldp     x24, x29, [sp,#80]
+
+    add     sp,sp, #96
 
     ret
 
@@ -1268,12 +1300,20 @@ tester for Jan:
     // 2/9 in x12
     mul     x23, x4, x0 // lower part
     adcs    x22, x23, x22
-    adcs    x22, x22, x13 //add the previous result
+    if this gives a carry it needs to be added to the next multiplication
+    adds    x12, xzr, xzr
+    adds    x22, x22, x13 //add the previous result
+    adcs    x12, x12, xzr
+    same here
     umulh   x23, x4, x0 // upper part
     // 3/9in x13
     mul     x24, x5, x0
-    adcs    x23, x24, x23 // lower part
-    adcs    x23, x23, x14 //add the previous result
+    adds    x23, x12, x23 // carry from before
+    adcs    x13, xzr, xzr // carry 
+    adds    x23, x24, x23 // lower part
+    adcs    x13, x13, xzr // carry
+    adds    x23, x23, x14 //add the previous result
+    adcs    x13, x13, xzr // carry
     umulh   x24, x5, x0 // upper part
     // 4/9 in x14
     mul     x25, x6, x0
