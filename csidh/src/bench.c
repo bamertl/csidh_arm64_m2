@@ -5,7 +5,6 @@
 #include <time.h>
 #include <assert.h>
 #include <inttypes.h>
-
 #include "rng.h"
 #include "csidh.h"
 
@@ -21,11 +20,10 @@ static inline uint64_t rdtsc(void) {
     return ticks;
 }
 
-
 /* defaults */
 
 #ifndef BENCH_ITS
-    #define BENCH_ITS 1000
+    #define BENCH_ITS 250
 #endif
 
 const unsigned long its = BENCH_ITS;
@@ -44,6 +42,19 @@ extern uint64_t *fp_inv_counter;
 extern uint64_t *fp_sqt_counter;
 extern uint64_t *xmul_counters;
 extern uint64_t *isog_counters;
+
+
+double ticks_to_milliseconds(uint64_t ticks) {
+    // Each tick represents 41.666664 nanoseconds
+    const double tick_duration_ns = 41.666664;
+
+    // Convert nanoseconds to milliseconds
+    double tick_duration_ms = tick_duration_ns / 1000000.0;
+
+    // Convert ticks to milliseconds
+    return ticks * tick_duration_ms;
+}
+
 
 uint64_t median(uint64_t *vals)
 {
@@ -67,7 +78,7 @@ int main(void)
     size_t bytes = 0;
     unsigned char *stack;
 
-    uint64_t *cycless = calloc(its, sizeof(uint64_t)),
+    uint64_t *ticks = calloc(its, sizeof(uint64_t)),
              *times = calloc(its, sizeof(uint64_t)),
              *mulss = calloc(its, sizeof(uint64_t)),
              *sqss = calloc(its, sizeof(uint64_t)),
@@ -120,7 +131,7 @@ int main(void)
         fp_inv_counter = NULL;
         fp_sqt_counter = NULL;
 
-        cycless[i] = c1 - c0;
+        ticks[i] = c1 - c0;
         times[i] = t1 - t0;
 
         /* check stack */
@@ -133,39 +144,14 @@ int main(void)
                 bytes = stacksz - j;
     }
 
-#ifdef BENCH_VERBOSE
-    printf("\nscalar multiplications (mean #):\n");
-    uint64_t max_xmuls = *xmuls;
-    for (size_t i = 1; i < xmuls_sz; ++i)
-        if (xmuls[i] > max_xmuls) max_xmuls = xmuls[i];
-    for (size_t i = 0; i < xmuls_sz; ++i) {
-        if (!xmuls[i]) continue;
-        printf("  length %4lu:  %6.2lf", i, 1. * xmuls[i] / its);
-        printf("   |");
-        for (size_t j = 48 * xmuls[i] / max_xmuls; j --> 0; ) printf("-");
-        printf("\n");
-    }
+    float freq_ghz_clock = 1 / 41.666664;
+    float freq_ghz_cpu = 2.41;
 
-    printf("\nisogeny computations (mean #):\n");
-    uint64_t max_isogs = *isogs;
-    for (size_t i = 1; i < isogs_sz; ++i)
-        if (isogs[i] > max_isogs) max_isogs = isogs[i];
-    for (size_t i = 0; i < isogs_sz; ++i) {
-        if (!isogs[i]) continue;
-        printf("  degree %4lu:  %6.2lf", i, 1. * isogs[i] / its);
-        printf("   |");
-        for (size_t j = 48 * isogs[i] / max_isogs; j --> 0; ) printf("-");
-        printf("\n");
-    }
-#endif
 
-    printf("\niterations: %lu\n\n", its);
-
-    printf("median clock cycles:    %8" PRIu64 "   (\x1b[36m%.1lf*10^6\x1b[0m)\n", median(cycless), 1e-6 * median(cycless));
-    printf("mean clock cycles:      %10.1lf (%.1lf*10^6)\n\n", mean(cycless), 1e-6 * mean(cycless));
-
-    printf("median wall-clock time: \x1b[34m%6.3lf ms\x1b[0m\n", 1000. * median(times) / CLOCKS_PER_SEC);
-    printf("mean wall-clock time:   %6.3lf ms\n\n", 1000. * mean(times) / CLOCKS_PER_SEC);
+    printf("median clock cycles:  \x1b[34m%10.1lf (%.1lf*10^6)\x1b[0m\n", median(ticks) * freq_ghz_clock / freq_ghz_cpu, 1000. * median(ticks));
+    printf("mean clock cycles:      %10.1lf (%.1lf*10^6)\n\n", mean(ticks) * freq_ghz_clock / freq_ghz_cpu, 1000. * mean(ticks));
+    printf("median wall-clock time: \x1b[34m%6.3lf ms\x1b[0m\n", 41.666664 * median(ticks) / 1000000.0); // apple seems to tick every 41.666664 ns
+    printf("mean wall-clock time:   %6.3lf ms\n\n", 41.666664 * mean(ticks) / 1000000.0);
 
     printf("maximum stack usage:    %6lu b\n\n", bytes);
 
