@@ -52,6 +52,7 @@ constant-time test. To run a constant-time test for all selected sizes:
 
 For benchmarks regarding, e.g., size-511 code tuned for multiplications:
 
+        ./bench512mults 1000 > bench512.mults.out.1000
         ./bench511mults 16383 > bench511mults.out.16383
 
 This runs a million experiments: more precisely, 16383 experiments for
@@ -65,7 +66,8 @@ action also shows "`stattried`" counts showing the number of times each
 batch occurred publicly in an atomic block.
 
 To analyze average costs and standard deviations:
-
+        ./analyze-costs < bench512mults.out.1000 \
+        > bench512mults.out.1000.analyze-costs
         ./analyze-costs < bench511mults.out.16383 \
         > bench511mults.out.16383.analyze-costs
 

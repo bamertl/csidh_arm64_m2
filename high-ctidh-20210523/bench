@@ -1,0 +1,327 @@
+- 0 private cycles 6805
+- 0 private cycles 4899
+- 1 private cycles 1372
+- 1 private cycles 947
+- 2 private cycles 1229
+- 2 private cycles 1829
+- 3 private cycles 1214
+- 3 private cycles 1250
+- 4 private cycles 1465
+- 4 private cycles 811
+- 5 private cycles 794
+- 5 private cycles 1104
+- 6 private cycles 1418
+- 6 private cycles 951
+- 7 private cycles 1079
+- 7 private cycles 2281
+- 8 private cycles 1521
+- 8 private cycles 938
+- 9 private cycles 1120
+- 9 private cycles 1195
+- 10 private cycles 1634
+- 10 private cycles 825
+- 11 private cycles 1565
+- 11 private cycles 818
+- 12 private cycles 1576
+- 12 private cycles 1437
+- 13 private cycles 1158
+- 13 private cycles 1007
+- 14 private cycles 1435
+- 14 private cycles 1080
+- 15 private cycles 989
+- 15 private cycles 1101
+- 16 private cycles 1314
+- 16 private cycles 978
+- 17 private cycles 1159
+- 17 private cycles 1520
+- 18 private cycles 737
+- 18 private cycles 1113
+- 19 private cycles 1261
+- 19 private cycles 957
+- 20 private cycles 1000
+- 20 private cycles 1560
+- 21 private cycles 1653
+- 21 private cycles 1081
+- 22 private cycles 1172
+- 22 private cycles 1214
+- 23 private cycles 1509
+- 23 private cycles 924
+- 24 private cycles 1162
+- 24 private cycles 1715
+- 25 private cycles 1261
+- 25 private cycles 934
+- 26 private cycles 1357
+- 26 private cycles 1103
+- 27 private cycles 1300
+- 27 private cycles 1594
+- 28 private cycles 1385
+- 28 private cycles 913
+- 29 private cycles 1367
+- 29 private cycles 1472
+- 30 private cycles 1306
+- 30 private cycles 835
+- 31 private cycles 718
+- 31 private cycles 980
+- 32 private cycles 1540
+- 32 private cycles 1107
+- 33 private cycles 1525
+- 33 private cycles 1301
+- 34 private cycles 2039
+- 34 private cycles 747
+- 35 private cycles 919
+- 35 private cycles 1617
+- 36 private cycles 716
+- 36 private cycles 839
+- 37 private cycles 1344
+- 37 private cycles 1069
+- 38 private cycles 1340
+- 38 private cycles 672
+- 39 private cycles 1337
+- 39 private cycles 1034
+- 40 private cycles 1589
+- 40 private cycles 1313
+- 41 private cycles 2130
+- 41 private cycles 701
+- 42 private cycles 1742
+- 42 private cycles 1103
+- 43 private cycles 1329
+- 43 private cycles 1164
+- 44 private cycles 1540
+- 44 private cycles 1616
+- 45 private cycles 1146
+- 45 private cycles 2163
+- 46 private cycles 2129
+- 46 private cycles 794
+- 47 private cycles 1064
+- 47 private cycles 1246
+- 48 private cycles 1568
+- 48 private cycles 1816
+- 49 private cycles 1320
+- 49 private cycles 1271
+- 50 private cycles 1564
+- 50 private cycles 1067
+- 51 private cycles 1221
+- 51 private cycles 1128
+- 52 private cycles 1350
+- 52 private cycles 1151
+- 53 private cycles 1052
+- 53 private cycles 1238
+- 54 private cycles 3079
+- 54 private cycles 884
+- 55 private cycles 1518
+- 55 private cycles 1365
+- 56 private cycles 1144
+- 56 private cycles 828
+- 57 private cycles 1225
+- 57 private cycles 1544
+- 58 private cycles 1193
+- 58 private cycles 705
+- 59 private cycles 909
+- 59 private cycles 1295
+- 60 private cycles 1634
+- 60 private cycles 703
+- 61 private cycles 1946
+- 61 private cycles 1046
+- 62 private cycles 1925
+- 62 private cycles 1081
+- 63 private cycles 965
+- 63 private cycles 1722
+- 64 private cycles 720
+- 64 private cycles 1437
+- - action batchbound 10 14 16 17 17 17 18 18 18 18 18 13 13 1
+- - action pp1 1.500000000000 1.166666666667 1.062500000000 1.033333333333 1.021739130435 1.014285714286 1.010416666667 1.007936507937 1.006172839506 1.005102040816 1.004166666667 1.003546099291 1.003030303030 1.001706484642
+0 0 validate mulsq 14680 sq 4966 addsub 22328 cycles 36162
+0 0 action mulsq 447661 sq 120708 addsub 711187 cycles 1140573
+0 0 action stattried 13 16 16 17 20 18 18 18 18 18 18 13 13 1
+0 1 validate mulsq 14680 sq 4966 addsub 22328 cycles 36175
+0 1 action mulsq 478821 sq 133386 addsub 749545 cycles 1209590
+0 1 action stattried 23 16 16 19 19 17 18 18 18 20 18 13 13 1
+0 2 validate mulsq 14680 sq 4966 addsub 22328 cycles 36273
+0 2 action mulsq 438053 sq 116778 addsub 698742 cycles 1116959
+0 2 action stattried 14 16 16 19 17 18 18 18 18 18 18 13 13 1
+0 3 validate mulsq 14680 sq 4966 addsub 22328 cycles 36174
+0 3 action mulsq 437471 sq 116584 addsub 697941 cycles 1107218
+0 3 action stattried 12 15 16 19 18 18 18 18 18 18 18 13 13 1
+0 4 validate mulsq 15283 sq 5170 addsub 23246 cycles 37640
+0 4 action mulsq 437313 sq 116622 addsub 697230 cycles 1109284
+0 4 action stattried 15 15 16 17 18 17 19 18 18 18 18 13 13 1
+0 5 validate mulsq 14680 sq 4966 addsub 22328 cycles 38312
+0 5 action mulsq 437150 sq 116735 addsub 696842 cycles 1110280
+0 5 action stattried 11 17 17 18 19 17 19 19 18 18 18 13 13 1
+0 6 validate mulsq 14680 sq 4966 addsub 22328 cycles 36131
+0 6 action mulsq 438081 sq 116846 addsub 698886 cycles 1111274
+0 6 action stattried 16 15 16 19 19 17 18 18 18 18 18 13 13 1
+0 7 validate mulsq 14680 sq 4966 addsub 22328 cycles 36200
+0 7 action mulsq 480551 sq 133336 addsub 753208 cycles 1249503
+0 7 action stattried 23 17 16 18 17 17 18 18 18 18 18 13 13 1
+0 8 validate mulsq 14680 sq 4966 addsub 22328 cycles 36157
+0 8 action mulsq 428151 sq 112814 addsub 686006 cycles 1097787
+0 8 action stattried 16 14 17 18 18 17 18 18 18 18 18 13 13 1
+0 9 validate mulsq 14680 sq 4966 addsub 22328 cycles 37582
+0 9 action mulsq 438781 sq 117196 addsub 699149 cycles 1127724
+0 9 action stattried 16 16 18 18 18 17 18 18 19 18 18 13 13 1
+0 10 validate mulsq 14680 sq 4966 addsub 22328 cycles 37039
+0 10 action mulsq 437929 sq 116960 addsub 697749 cycles 1108223
+0 10 action stattried 15 18 17 17 17 17 18 18 18 19 18 13 13 1
+0 11 validate mulsq 14680 sq 4966 addsub 22328 cycles 36549
+0 11 action mulsq 427923 sq 112738 addsub 685652 cycles 1094570
+0 11 action stattried 18 15 16 17 17 17 18 18 18 18 18 13 13 1
+0 12 validate mulsq 14680 sq 4966 addsub 22328 cycles 36163
+0 12 action mulsq 438537 sq 117051 addsub 699000 cycles 1110855
+0 12 action stattried 17 17 16 19 17 17 18 18 18 19 18 13 13 1
+0 13 validate mulsq 14680 sq 4966 addsub 22328 cycles 36722
+0 13 action mulsq 450481 sq 121551 addsub 715357 cycles 1149808
+0 13 action stattried 14 17 18 18 20 18 18 18 18 18 18 14 13 1
+0 14 validate mulsq 14680 sq 4966 addsub 22328 cycles 36234
+0 14 action mulsq 438467 sq 116916 addsub 699342 cycles 1112912
+0 14 action stattried 14 16 16 19 18 18 18 18 18 18 18 13 13 1
+0 15 validate mulsq 14680 sq 4966 addsub 22328 cycles 36158
+0 15 action mulsq 448643 sq 121175 addsub 712225 cycles 1144221
+0 15 action stattried 16 17 17 17 17 20 18 18 18 19 18 13 13 1
+0 16 validate mulsq 14680 sq 4966 addsub 22328 cycles 37175
+0 16 action mulsq 436969 sq 116640 addsub 696378 cycles 1103756
+0 16 action stattried 15 15 17 17 17 17 18 18 18 19 18 13 13 1
+0 17 validate mulsq 14680 sq 4966 addsub 22328 cycles 36929
+0 17 action mulsq 427545 sq 112612 addsub 685139 cycles 1085953
+0 17 action stattried 14 16 16 18 17 17 18 18 18 18 18 13 13 1
+0 18 validate mulsq 14680 sq 4966 addsub 22328 cycles 36186
+0 18 action mulsq 428907 sq 112969 addsub 687209 cycles 1093921
+0 18 action stattried 15 16 17 17 17 17 18 18 18 18 18 14 13 1
+0 19 validate mulsq 14680 sq 4966 addsub 22328 cycles 36135
+0 19 action mulsq 480623 sq 133360 addsub 753325 cycles 1217094
+0 19 action stattried 23 15 18 17 18 17 18 18 18 18 18 13 13 1
+0 20 validate mulsq 14680 sq 4966 addsub 22328 cycles 36148
+0 20 action mulsq 437633 sq 116670 addsub 698250 cycles 1115157
+0 20 action stattried 10 18 18 17 19 17 18 18 18 18 18 13 13 1
+0 21 validate mulsq 14680 sq 4966 addsub 22328 cycles 36257
+0 21 action mulsq 437433 sq 116662 addsub 697413 cycles 1108714
+0 21 action stattried 14 16 16 17 17 18 19 18 18 18 18 13 13 1
+0 22 validate mulsq 14680 sq 4966 addsub 22328 cycles 36478
+0 22 action mulsq 439257 sq 117162 addsub 700398 cycles 1122413
+0 22 action stattried 19 16 19 17 17 17 18 18 18 18 18 13 13 1
+0 23 validate mulsq 14680 sq 4966 addsub 22328 cycles 36454
+0 23 action mulsq 427341 sq 112544 addsub 684884 cycles 1080603
+0 23 action stattried 11 17 17 18 17 17 18 18 18 18 18 13 13 1
+0 24 validate mulsq 15283 sq 5170 addsub 23246 cycles 37656
+0 24 action mulsq 437729 sq 116670 addsub 698289 cycles 1118263
+0 24 action stattried 13 15 18 19 17 17 18 18 18 18 18 13 13 1
+0 25 validate mulsq 14680 sq 4966 addsub 22328 cycles 36146
+0 25 action mulsq 449351 sq 121238 addsub 713506 cycles 1136538
+0 25 action stattried 17 16 20 17 19 17 18 18 18 18 18 13 13 1
+0 26 validate mulsq 14680 sq 4966 addsub 22328 cycles 36205
+0 26 action mulsq 438911 sq 117096 addsub 700008 cycles 1122400
+0 26 action stattried 16 17 17 17 19 17 18 18 18 18 18 13 13 1
+0 27 validate mulsq 14680 sq 4966 addsub 22328 cycles 37291
+0 27 action mulsq 427185 sq 112492 addsub 684611 cycles 1082596
+0 27 action stattried 15 15 16 17 17 17 18 18 18 18 18 13 13 1
+0 28 validate mulsq 14680 sq 4966 addsub 22328 cycles 39114
+0 28 action mulsq 439289 sq 116916 addsub 701154 cycles 1121920
+0 28 action stattried 13 15 17 19 18 17 18 18 18 18 18 13 14 1
+0 29 validate mulsq 15348 sq 5192 addsub 23347 cycles 37814
+0 29 action mulsq 440163 sq 117658 addsub 701117 cycles 1122089
+0 29 action stattried 19 18 18 18 17 18 18 18 19 18 18 13 13 1
+0 30 validate mulsq 14680 sq 4966 addsub 22328 cycles 36189
+0 30 action mulsq 457723 sq 124608 addsub 723905 cycles 1161552
+0 30 action stattried 12 16 16 21 18 17 18 18 18 18 18 13 13 1
+0 31 validate mulsq 14680 sq 4966 addsub 22328 cycles 36284
+0 31 action mulsq 437395 sq 116782 addsub 697008 cycles 1112276
+0 31 action stattried 13 17 17 18 17 17 18 18 18 19 18 13 13 1
+0 32 validate mulsq 14680 sq 4966 addsub 22328 cycles 36173
+0 32 action mulsq 445841 sq 120340 addsub 707285 cycles 1128186
+0 32 action stattried 11 17 16 17 17 17 18 20 19 18 18 13 13 1
+0 33 validate mulsq 14680 sq 4966 addsub 22328 cycles 36647
+0 33 action mulsq 438689 sq 117240 addsub 698901 cycles 1119681
+0 33 action stattried 16 17 17 19 17 18 18 18 18 19 18 13 13 1
+0 34 validate mulsq 14680 sq 4966 addsub 22328 cycles 36133
+0 34 action mulsq 428547 sq 112946 addsub 686564 cycles 1084855
+0 34 action stattried 16 16 16 18 17 18 18 18 18 18 18 13 13 1
+0 35 validate mulsq 14680 sq 4966 addsub 22328 cycles 36439
+0 35 action mulsq 438612 sq 117181 addsub 698780 cycles 1122503
+0 35 action stattried 19 16 18 17 17 17 19 19 18 18 18 13 13 1
+0 36 validate mulsq 14680 sq 4966 addsub 22328 cycles 36169
+0 36 action mulsq 439787 sq 117219 addsub 701268 cycles 1113692
+0 36 action stattried 14 19 17 18 17 17 18 18 18 18 18 14 13 1
+0 37 validate mulsq 14680 sq 4966 addsub 22328 cycles 36529
+0 37 action mulsq 437833 sq 116686 addsub 698394 cycles 1117345
+0 37 action stattried 13 16 19 17 17 17 18 18 18 18 18 13 13 1
+0 38 validate mulsq 14680 sq 4966 addsub 22328 cycles 37584
+0 38 action mulsq 449761 sq 121264 addsub 713881 cycles 1134841
+0 38 action stattried 15 20 18 17 18 17 18 18 18 18 18 13 13 1
+0 39 validate mulsq 14680 sq 4966 addsub 22328 cycles 37528
+0 39 action mulsq 428985 sq 113092 addsub 687197 cycles 1086011
+0 39 action stattried 16 16 17 17 18 18 18 18 18 18 18 13 13 1
+0 40 validate mulsq 14680 sq 4966 addsub 22328 cycles 36195
+0 40 action mulsq 426297 sq 112196 addsub 683408 cycles 1087446
+0 40 action stattried 10 15 17 17 18 17 18 18 18 18 18 13 13 1
+0 41 validate mulsq 14680 sq 4966 addsub 22328 cycles 36177
+0 41 action mulsq 438383 sq 116920 addsub 699285 cycles 1109718
+0 41 action stattried 14 16 17 17 19 18 18 18 18 18 18 13 13 1
+0 42 validate mulsq 14680 sq 4966 addsub 22328 cycles 36802
+0 42 action mulsq 427587 sq 112626 addsub 685214 cycles 1091415
+0 42 action stattried 14 14 18 17 18 17 18 18 18 18 18 13 13 1
+0 43 validate mulsq 14680 sq 4966 addsub 22328 cycles 36170
+0 43 action mulsq 427545 sq 112612 addsub 685124 cycles 1082933
+0 43 action stattried 15 16 16 17 17 17 18 18 18 18 18 13 13 1
+0 44 validate mulsq 14680 sq 4966 addsub 22328 cycles 36147
+0 44 action mulsq 438839 sq 117000 addsub 699786 cycles 1119648
+0 44 action stattried 14 19 16 18 17 18 18 18 18 18 18 13 13 1
+0 45 validate mulsq 14680 sq 4966 addsub 22328 cycles 36262
+0 45 action mulsq 459221 sq 125006 addsub 725807 cycles 1161883
+0 45 action stattried 21 14 18 17 17 17 18 18 18 18 18 13 13 1
+0 46 validate mulsq 14680 sq 4966 addsub 22328 cycles 36230
+0 46 action mulsq 428841 sq 112947 addsub 687122 cycles 1095785
+0 46 action stattried 15 15 17 18 17 17 18 18 18 18 18 14 13 1
+0 47 validate mulsq 14680 sq 4966 addsub 22328 cycles 36140
+0 47 action mulsq 438547 sq 117118 addsub 698792 cycles 1110478
+0 47 action stattried 18 16 17 18 17 17 18 18 19 18 18 13 13 1
+0 48 validate mulsq 14680 sq 4966 addsub 22328 cycles 36120
+0 48 action mulsq 438433 sq 116966 addsub 699396 cycles 1115564
+0 48 action stattried 15 18 16 17 17 19 18 18 18 18 18 13 13 1
+0 49 validate mulsq 14680 sq 4966 addsub 22328 cycles 38050
+0 49 action mulsq 428253 sq 112751 addsub 686285 cycles 1085541
+0 49 action stattried 14 15 17 17 17 17 18 18 18 18 18 14 13 1
+0 50 validate mulsq 14680 sq 4966 addsub 22328 cycles 36227
+0 50 action mulsq 438251 sq 116804 addsub 698979 cycles 1111045
+0 50 action stattried 11 19 17 18 18 17 18 18 18 18 18 13 13 1
+0 51 validate mulsq 14680 sq 4966 addsub 22328 cycles 36615
+0 51 action mulsq 428943 sq 113078 addsub 687137 cycles 1095464
+0 51 action stattried 15 17 18 18 17 17 18 18 18 18 18 13 13 1
+0 52 validate mulsq 14680 sq 4966 addsub 22328 cycles 36422
+0 52 action mulsq 436297 sq 116299 addsub 695774 cycles 1102750
+0 52 action stattried 11 16 16 17 18 17 18 18 18 18 19 13 13 1
+0 53 validate mulsq 14680 sq 4966 addsub 22328 cycles 36511
+0 53 action mulsq 447507 sq 120774 addsub 709951 cycles 1139813
+0 53 action stattried 15 14 17 18 18 17 20 18 18 18 18 13 13 1
+0 54 validate mulsq 14680 sq 4966 addsub 22328 cycles 36305
+0 54 action mulsq 427461 sq 112584 addsub 684998 cycles 1079687
+0 54 action stattried 16 15 16 17 17 17 18 18 18 18 18 13 13 1
+0 55 validate mulsq 14680 sq 4966 addsub 22328 cycles 36149
+0 55 action mulsq 438777 sq 116966 addsub 699642 cycles 1120988
+0 55 action stattried 16 16 16 17 18 18 18 18 18 18 19 13 13 1
+0 56 validate mulsq 14680 sq 4966 addsub 22328 cycles 36150
+0 56 action mulsq 448747 sq 120999 addsub 712017 cycles 1134716
+0 56 action stattried 15 16 17 17 17 17 18 20 18 18 18 14 13 1
+0 57 validate mulsq 15283 sq 5170 addsub 23246 cycles 37727
+0 57 action mulsq 439013 sq 117143 addsub 699778 cycles 1120310
+0 57 action stattried 15 16 16 18 17 18 18 19 19 18 19 13 14 1
+0 58 validate mulsq 14680 sq 4966 addsub 22328 cycles 36221
+0 58 action mulsq 437039 sq 116440 addsub 697299 cycles 1104374
+0 58 action stattried 13 14 17 19 17 17 18 18 18 18 18 13 13 1
+0 59 validate mulsq 14680 sq 4966 addsub 22328 cycles 36169
+0 59 action mulsq 426261 sq 112184 addsub 683345 cycles 1080166
+0 59 action stattried 11 14 17 18 17 17 18 18 18 18 18 13 13 1
+0 60 validate mulsq 15283 sq 5170 addsub 23246 cycles 37647
+0 60 action mulsq 460183 sq 125074 addsub 727865 cycles 1169173
+0 60 action stattried 14 21 16 17 17 17 18 18 18 18 18 13 14 1
+0 61 validate mulsq 14680 sq 4966 addsub 22328 cycles 36174
+0 61 action mulsq 439049 sq 117263 addsub 699534 cycles 1112284
+0 61 action stattried 16 18 16 19 17 17 18 18 18 19 18 14 13 1
+0 62 validate mulsq 14680 sq 4966 addsub 22328 cycles 36557
+0 62 action mulsq 440339 sq 117234 addsub 702533 cycles 1131855
+0 62 action stattried 12 17 18 18 17 17 18 18 18 18 19 14 14 1
+0 63 validate mulsq 14680 sq 4966 addsub 22328 cycles 36159
+0 63 action mulsq 439307 sq 117309 addsub 700052 cycles 1111974
+0 63 action stattried 16 19 18 18 17 17 18 18 18 18 19 13 13 1
+0 64 validate mulsq 14680 sq 4966 addsub 22328 cycles 36196
+0 64 action mulsq 437097 sq 116680 addsub 696645 cycles 1116170
+0 64 action stattried 14 15 17 17 17 18 18 18 19 18 19 13 13 1

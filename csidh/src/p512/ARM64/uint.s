@@ -1,4 +1,6 @@
 .text
+
+.align 4
 .global _uint_0
 _uint_0:
     .quad 0x0000000000000000

@@ -3,6 +3,9 @@
 .extern _uint_mul3_64
 .extern _uint_add3
 .extern _fp_mul_counter
+
+.text
+.align 4
 /*
 Montgomery multiplication
 C[x0] = A[x1] * B[x2] % p

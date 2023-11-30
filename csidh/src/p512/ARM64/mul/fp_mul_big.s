@@ -1,4 +1,7 @@
 .extern _fp_mul_counter
+
+.text
+.align 4
 /*
 This file contains the fp_mul3 method for montgomery reduction with first a subtractive karatsuba multiplication
 of 256*256 -> 512 bits and then a reduction
@@ -125,19 +128,21 @@ _monte_reduce:
     and x19, x19, x21
     and x20, x20, x21
 
+     ldr x1, [sp, #8]
     // Add masked p to a + b - p (masked p = p | 0)
     ADDS x3, x3, x12
     ADCS x4, x4, x13
+    stp x3, x4, [x1, #0]
     ADCS x5, x5, x14
     ADCS x6, x6, x15
+    stp x5, x6, [x1, #16]
     ADCS x7, x7, x16
     ADCS x8, x8, x17
+    stp x7, x8, [x1, #32]
     ADCS x9, x9, x19
     ADCS x10, x10, x20
+    stp x9, x10, [x1, #48]
 
-    // load result address
-    ldr x1, [sp, #8]
-    STORE_8_WORD_NUMBER42 x3, x4, x5, x6, x7, x8, x9, x10, x1    
     ldr lr, [sp, #0]
     add sp, sp, #512
     ret
@@ -246,33 +251,33 @@ _add2_16_words:
     STR x6, [x2, #120]
     ret
 
-.macro MUL128x128 A0, A1, B0, B1, C0, C1, C2, C3, T0
+.macro MUL128x128 A0, A1, B0, B1, C0, C1, C2, C3, T0, T1
     ; Multiply the least significant words
     mul     \C0, \A0, \B0       ; C0 = A0 * B0 (low word)
     umulh   \C1, \A0, \B0       ; C1 = A0 * B0 (high word)
 
     ; Add the cross-product of lower A0:B1 
     mul     \T0, \A0, \B1       ; T0 = A0 * B1 (low word)
+    mul     \T1, \A1, \B0       ; T1 = A1 * B0 (low word)
     adds    \C1, \C1, \T0       ; C1 += T1
-    adcs     \C2, xzr, xzr       ; C2 = carry from previous addition
+    adcs    \C2, xzr, xzr       ; C2 = carry from previous addition
     ; Add the cross-prodoct of lower A1:B0
-    mul     \T0, \A1, \B0       ; T1 = A1 * B0 (low word)
-    adds    \C1, \C1, \T0       ; C1 += T1 (with carry)
-    adcs     \C2, \C2, xzr       ; C2 += carry from previous addition    
-    adcs    \C3, xzr, xzr      ; C3 = potential carry prop
+    adds    \C1, \C1, \T1       ; C1 += T1 (with carry)
+    adcs    \C2, \C2, xzr       ; C2 += carry from previous addition    
+    adcs    \C3, xzr, xzr      ; C3 = potential carry prop, actually more just setting c3 to zero 
     ; to the same for the highers into C2
     umulh   \T0, \A0, \B1       ; T0 = A0 * B1 (high word)
+    umulh   \T1, \A1, \B0       ; T0 = A1 * B0 (high word)
     adds    \C2, \T0, \C2       ; C2 = T0 + C2
     adcs     \C3, \C3, xzr       ; C3 = carry from previous addition
-    umulh   \T0, \A1, \B0       ; T0 = A1 * B0 (high word)
-    adds    \C2, \C2, \T0       ; C2 += T0 
+    adds    \C2, \C2, \T1       ; C2 += T0 
     adcs     \C3, \C3, xzr       ; C3 += carry from previous addition
     ; Multiply the most significant words
     mul     \T0, \A1, \B1
+    umulh   \T1, \A1, \B1
     adds    \C2, \C2, \T0
     adcs     \C3, \C3, xzr
-    umulh   \T0, \A1, \B1
-    adcs     \C3, \C3, \T0
+    adcs     \C3, \C3, \T1
 .endm
 
 
@@ -281,9 +286,9 @@ _add2_16_words:
 // needs 21 registers
 .macro MUL256_KARATSUBA A0, A1, A2, A3, B0, B1, B2, B3, C0, C1, C2, C3, C4, C5, C6, C7, T0, T1, T2, T3, T4
     // AL * BL into C0-C3 = L
-    MUL128x128 \A0, \A1, \B0, \B1, \C0, \C1, \C2, \C3, \T0
+    MUL128x128 \A0, \A1, \B0, \B1, \C0, \C1, \C2, \C3, \T0, \T1
     // AH * BH into C4-C7 = H
-    MUL128x128 \A2, \A3, \B2, \B3, \C4, \C5, \C6, \C7, \T0
+    MUL128x128 \A2, \A3, \B2, \B3, \C4, \C5, \C6, \C7, \T0, \T1
 
     // + L*2^128 from (L+H-M)*2^128(2 words) 
     adds \T0, \C2, \C0
@@ -330,7 +335,7 @@ _add2_16_words:
     sub \A2, \A2, #1 // if 0 -> fffffff, if 1 -> 0
     // M = |AH - AL| * |BH - BL| into T0-T3 = M
           
-    MUL128x128 \A0, \A1, \B0, \B1, \T0, \T1, \T2, \T3, \T4
+    MUL128x128 \A0, \A1, \B0, \B1, \T0, \T1, \T2, \T3, \T4, \B2
 
     // 2's complement if sign was 0 
     eor \T0, \T0, \A2
@@ -508,25 +513,23 @@ _uint_mul_512x512:
     
     adds x15, x15, x3
     adcs x16, x16, x4
+    stp x15, x16, [x2, #32]
     adcs x17, x17, x5
     adcs x19, x19, x6
+    stp x17, x19, [x2, #48]
     adcs x20, x20, x7
     adcs x21, x21, x8
+    stp x20, x21, [x2, #64]
     adcs x22, x22, x9
     adcs x23, x23, x10
-
+    stp x22, x23, [x2, #80]
     adcs x24, x24, x30 // carry propagation 
     adcs x25, x25, x30
+    stp x24, x25, [x2, #96]
     adcs x26, x26, x30
     adcs x27, x27, x30
-
-    // store C4-C15
-    stp x15, x16, [x2, #32]
-    stp x17, x19, [x2, #48]
-    stp x20, x21, [x2, #64]
-    stp x22, x23, [x2, #80]
-    stp x24, x25, [x2, #96]
     stp x26, x27, [x2, #112]
+    // store C4-C15
 
     // restore registers
     ldp lr, x0, [sp, #0] 
