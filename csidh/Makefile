@@ -8,6 +8,7 @@ BITS?=512
 $(info CC: $(CC))
 $(info BITS: $(BITS))
 
+
 ifndef ARCH
     ARCH = GENERIC
 endif
@@ -92,23 +93,40 @@ bench: ${includes} ${sources} src/bench.c
 		-DNDEBUG \
 		$(sources) \
 		src/bench.c \
+		-L/Users/jan/Documents/HSG/HS23/IMP/ARM64/benching_tmp/csidh_arm64_m2/csidh/ -lbenchmark_lib_csidh \
 		-o bench
+
+jan: ${includes} ${sources} src/jan.c 
+	@cc \
+		$(if ${BENCH_ITS},-DBENCH_ITS=${BENCH_ITS}) \
+		$(if ${BENCH_VERBOSE},-DBENCH_VERBOSE=${BENCH_VERBOSE}) \
+		-I ./src \
+		-I src/p${BITS}/ \
+		-std=c99 -pedantic \
+		-Wall -Wextra \
+		-march=native -O3 \
+		-DNDEBUG \
+		$(sources) \
+		src/jan.c \
+		-L/Users/jan/Documents/HSG/HS23/IMP/ARM64/benching_tmp/csidh_arm64_m2/csidh/ -ljan_lib \
+		-o jan
+
 
 
 test_uint: src/p${BITS}/params.h ${includes} ${sources} tests/test_uint.c
-	cc -I ./src/ -I ./src/p${BITS}/ -I ./tests/ -std=c99 -pedantic -g $(sources) tests/test_uint.c -o tests/test_uint
+	g++ -I ./src/ -I ./src/p${BITS}/ -I ./tests/ -std=c99 -pedantic -g $(sources) tests/test_uint.c -o tests/test_uint
 	./tests/test_uint
 
 test_fp: src/p${BITS}/params.h ${includes} ${sources} tests/test_fp.c
-	cc -I ./src/ -I ./src/p${BITS}/ -I ./tests/ -std=c99 -pedantic -g $(sources) tests/test_fp.c -o tests/test_fp
+	g++ -I ./src/ -I ./src/p${BITS}/ -I ./tests/ -std=c99 -pedantic -g $(sources) tests/test_fp.c -o tests/test_fp
 	./tests/test_fp
 
 test_bigmul: src/p${BITS}/params.h ${includes} ${sources} tests/test_bigmul.c
-	@cc -I ./src/ -I ./src/p${BITS}/ -I ./tests/ -std=c99 -pedantic -g $(sources) tests/test_bigmul.c -o tests/test_bigmul
+	g++ -I ./src/ -I ./src/p${BITS}/ -I ./tests/ -std=c99 -pedantic -g $(sources) tests/test_bigmul.c -o tests/test_bigmul
 	./tests/test_bigmul
 
 test_reduction: src/p${BITS}/params.h ${includes} ${sources} tests/test_reduction.c
-	@cc -I ./src/ -I ./src/p${BITS}/ -I ./tests/ -std=c99 -pedantic -g $(sources) tests/test_bigmul.c -o tests/test_reduction
+	g++ -I ./src/ -I ./src/p${BITS}/ -I ./tests/ -std=c99 -pedantic -g $(sources) tests/test_bigmul.c -o tests/test_reduction
 	./tests/test_reduction
 
 clean:
