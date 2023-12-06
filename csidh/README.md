@@ -19,10 +19,14 @@ MUL_TYPE = MONTE_MUL | MONTE_REDUCTION_SUB_KARATSUBA | MONTE_REDUCTION_KARATSUBA
 Normal Montgommery Multiplication
 ### MONTE_REDUCTION_SUB_KARATSUBA
 Subtractive Karatsuba Multiplication and after that montgommery reduction
-### 
+### MONTE_REDUCTION_KARATSUBA
+Karatsuba Multiplication followed by montgomery reduction
+### MONTE_REDUCTION_SCHOOLBOOK
+Schoolbook multiplication followed by montgomery reduction 
 
 ## Bench Cycles
 for benching the cycles use:
+hint: you need to make the bench_lib library and add it to sources.
 ```
 make clean; make ARCH=ARM64 MUL_TYPE=MONTE_MUL  bench_cycles; sudo ./bench_cycles
 ```
