@@ -20,6 +20,10 @@ ifeq "$(MUL_TYPE)" "MONTE_MUL"
 	MUL_FILE = fp_mul_small.s
 else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_SUB_KARATSUBA"
 	MUL_FILE = fp_mul_big.s
+else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_KARATSUBA"
+	MUL_FILE = fp_mul_big_normal.s
+else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_SCHOOLBOOK"
+	MUL_FILE = fp_mul_big_schoolbook.s
 endif
 
 $(info ARCHITECTURE: $(ARCH))
@@ -91,6 +95,22 @@ bench: ${includes} ${sources} src/bench.c
 		-o bench
 
 
+bench_cycles: ${includes} ${sources} src/bench_cycles.c
+	@cc \
+		$(if ${BENCH_ITS},-DBENCH_ITS=${BENCH_ITS}) \
+		$(if ${BENCH_VERBOSE},-DBENCH_VERBOSE=${BENCH_VERBOSE}) \
+		-I ./src \
+		-I src/p${BITS}/ \
+		-std=c99 -pedantic \
+		-Wall -Wextra \
+		-march=native -O3 \
+		-DNDEBUG \
+		$(sources) \
+		src/bench_cycles.c \
+		-L. -lbenchmark_lib_csidh \
+		-o bench_cycles
+
+
 test_uint: src/p${BITS}/params.h ${includes} ${sources} tests/test_uint.c
 	cc -I ./src/ -I ./src/p${BITS}/ -I ./tests/ -std=c99 -pedantic -g $(sources) tests/test_uint.c -o tests/test_uint
 	./tests/test_uint
@@ -108,7 +128,7 @@ test_reduction: src/p${BITS}/params.h ${includes} ${sources} tests/test_reductio
 	./tests/test_reduction
 
 clean:
-	@rm -f main debug bench libcsidh.so $(TEST_OUT)
+	@rm -f main debug bench bench_cycles libcsidh.so $(TEST_OUT)
 	@rm -rf ./tests/test_uint.DSYM
 	@rm -rf ./tests/test_fp.DSYM
 	@rm -rf ./tests/test_bigmul.DSYM

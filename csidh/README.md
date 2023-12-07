@@ -8,22 +8,34 @@ make ARCH=GENERIC BITS=512
 make ARCH=x86 BITS=512
 make ARCH=ARM64 MUL_TYPE=MONTE_MUL
 make ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SUB_KARATSUBA
+make ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_KARATSUBA
+make ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SCHOOLBOOK
 
 ./main
 ```
 ## Different Multiplication Variants
-MUL_TYPE = MONTE_MUL | MONTE_REDUCTION_SUB_KARATSUBA
+MUL_TYPE = MONTE_MUL | MONTE_REDUCTION_SUB_KARATSUBA | MONTE_REDUCTION_KARATSUBA | MONTE_REDUCTION_SCHOOLBOOK
 ### Monte_MUL
 Normal Montgommery Multiplication
 ### MONTE_REDUCTION_SUB_KARATSUBA
 Subtractive Karatsuba Multiplication and after that montgommery reduction
+### MONTE_REDUCTION_KARATSUBA
+Karatsuba Multiplication followed by montgomery reduction
+### MONTE_REDUCTION_SCHOOLBOOK
+Schoolbook multiplication followed by montgomery reduction 
 
+## Bench Cycles
+for benching the cycles use:
+hint: you need to make the bench_lib library and add it to sources.
+```
+make clean; make ARCH=ARM64 MUL_TYPE=MONTE_MUL  bench_cycles; sudo ./bench_cycles
+```
 
 ## Test
 ```bash
 make test_uint
 make ARCH=ARM64 MUL_TYPE=MONTE_MUL test_uint
-make ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SUB_KARATSUBA | MONTE_MUL test_fp
+make ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SUB_KARATSUBA | MONTE_MUL | MONTE_REDUCTION_SCHOOLBOOK | MONTE_REDUCTION_KARATSUBA test_fp
 make ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SUB_KARATSUBA test_bigmul
 
 ```
