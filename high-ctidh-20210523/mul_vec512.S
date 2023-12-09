@@ -5,6 +5,9 @@
 
 .global _mul_vec
 _mul_vec: 
-	mov x0, #10
+	ld1 {V0.2D, V1.2D, V2.2D, V3.2D}, [X0] // load a
+	ld1 {V4.2D, V5.2D, V6.2D, V7.2D}, [X1] // load b
+	mul V9.2s, V4.2s, V0.2s // multiply a[0] with b
+	st1 {V9.2D, V10.2D, V11.2D, V12.2D}, [X0] // store c
 	ret
 

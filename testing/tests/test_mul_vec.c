@@ -2,12 +2,12 @@
 #include <assert.h> 
 #include "helper.h"
 
-extern int mul_vec(int a, int b);
+extern void mul_vec(uintbig *a, uintbig *b);
 void test_vec(void){
-    int a = 1;
-    int b = 2;
-    int c = mul_vec(a, b);
-    printf("c = %d\n", c);
+    uintbig a = {{1,2,3,4,5,6,7,8}};
+    uintbig b = {{1, 2, 3, 4, 5, 6, 7, 8}};
+    mul_vec(&a, &b);
+    uintbig_print(&a);
     printf("test_vec entered\n");
 }
 

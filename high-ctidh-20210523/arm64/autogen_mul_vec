@@ -72,6 +72,25 @@ with open(fn+'.tmp','w') as f:
     f.write('.align 4\n\n')
     
     introduce_global_function(f, '_mul_vec')
-    f.write('\tmov x0, #10\n')	
+    addr_a = 'X0'
+    addr_b = 'X1'
+    a = ['V0', 'V1', 'V2', 'V3']
+    b = ['V4', 'V5', 'V6', 'V7']
+    c = ['V9', 'V10', 'V11', 'V12']
+
+    
+    # Load A
+    f.write('\tld1 {%s.2D, %s.2D, %s.2D, %s.2D}, [%s] // load a\n' % (a[0], a[1], a[2], a[3], addr_a))
+
+    # Load B
+    f.write('\tld1 {%s.2D, %s.2D, %s.2D, %s.2D}, [%s] // load b\n' % (b[0], b[1], b[2], b[3], addr_b))
+
+    
+    # Multiply A[0] with B[0]
+    f.write('\tmul %s.2s, %s.2s, %s.2s // multiply a[0] with b\n' % (c[0], b[0], a[0]))
+    
+    # Store C
+    f.write('\tst1 {%s.2D, %s.2D, %s.2D, %s.2D}, [%s] // store c\n' % (c[0], c[1], c[2], c[3], addr_a))
+
     f.write('\tret\n\n')
     maybeupdate(fn)

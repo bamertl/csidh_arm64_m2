@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+import os
+import sys
+
+sys.setrecursionlimit(10000)
+
+def introduce_global_function(f, name):
+    f.write('.global %s\n' % name)
+    f.write('%s: \n' % name)
+
+def maybeupdate(fn):
+  if os.access(fn,os.F_OK):
+    with open(fn) as f:
+      x = f.read()
+    with open(fn+'.tmp') as f:
+      y = f.read()
+    if x == y:
+      os.unlink(fn+'.tmp')
+      return
+  os.rename(fn+'.tmp',fn)
+
+fn = "./src/pipeline/pipeline.s"
+
+def _mul_no_pipeline(f, amount):
+    introduce_global_function(f, '_mul_no_pipeline')
+    f.write('\tmov x0, #1 \n')
+    f.write('\tmov x1, #1 \n')
+    f.write('\tmov x2, #1 \n')
+    f.write('\tmov x3, #1 \n')
+    f.write('\tmov x4, #1 \n')
+    for i in range(amount):
+        f.write('\tmul x0, x0, x1\n')
+    f.write('\tret\n')
+
+def _mul_pipeline(f, amount):
+    introduce_global_function(f, '_mul_pipeline')
+    f.write('\tmov x0, #1 \n')
+    f.write('\tmov x1, #1 \n')
+    f.write('\tmov x2, #1 \n')
+    f.write('\tmov x3, #1 \n')
+    f.write('\tmov x4, #1 \n')
+    amm = int(amount / 4)
+    for i in range(amm):
+        f.write('\tmul x1, x0, x1\n')
+        f.write('\tumulh x2, x0, x2\n')
+        f.write('\tmul x3, x0, x3\n')
+        f.write('\tumulh x4, x0, x4\n')
+    f.write('\tret\n')
+
+with open(fn+'.tmp','w') as f:
+
+    f.write('.text\n')
+    f.write('.align 4\n')
+    amount = 100000
+    _mul_no_pipeline(f, amount)
+    _mul_pipeline(f, amount)
+    maybeupdate(fn)

@@ -108,8 +108,16 @@ bench_cycles: ${includes} ${sources} src/bench_cycles.c
 		$(sources) \
 		src/bench_cycles.c \
 		-L. -lbenchmark_lib_csidh \
-		-o bench_cycles
+		-o bench_cycles \
 
+bench_pipeline: autogen_pipeline.o pipeline.o src/bench_pipeline.c
+	cc -march=native -O3 -mtune=native -pedantic pipeline.o src/bench_pipeline.c -o bench_pipeline
+	./bench_pipeline
+
+autogen_pipeline.o:
+	@echo "Generating pipeline code"
+	./src/pipeline/autogen_pipeline
+	as -o pipeline.o src/pipeline/pipeline.s	
 
 test_uint: src/p${BITS}/params.h ${includes} ${sources} tests/test_uint.c
 	cc -I ./src/ -I ./src/p${BITS}/ -I ./tests/ -std=c99 -pedantic -g $(sources) tests/test_uint.c -o tests/test_uint
@@ -133,6 +141,7 @@ clean:
 	@rm -rf ./tests/test_fp.DSYM
 	@rm -rf ./tests/test_bigmul.DSYM
 	@rm -rf ./tests/test_reduction.DSYM
+	@rm -rf ./bench_pipeline pipeline.o
 
 
 

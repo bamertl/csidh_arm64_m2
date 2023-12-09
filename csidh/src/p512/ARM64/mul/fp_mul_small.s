@@ -71,7 +71,7 @@ _fp_mul_loop:
     ldr x1, [sp, #24] // load address of B 
     add x0, sp, #144 // temp Address
 
-    // a[i] * B
+    // a[i] * B into temp
     bl _uint_mul3_64_full // x0 = x1 * x2 (x2 = uint64_t)
     mov x1, x0 // x1 = a[i] * B
     add x0, sp, #64 // load address of C
@@ -81,6 +81,7 @@ _fp_mul_loop:
 
     add x0, sp, #144 // temp address
     add x1, sp, #64 // C address
+    ldr x1, [x1] // first value of C
     adrp x2, _inv_min_p_mod_r@PAGE
     add x2, x2, _inv_min_p_mod_r@PAGEOFF
     ldr x2, [x2] // x1 = mu (actual value)

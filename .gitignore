@@ -18,6 +18,8 @@ csidh/*.exe
 high-ctidh-20210523/testrandom
 testing/tests/test_mul_vec
 csidh/bench
+csidh/bench_cycles
+csidh/bench_pipeline
 */tests/test_uintbig
 */tests/test_fp
 # Map files

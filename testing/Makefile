@@ -1,5 +1,5 @@
 SCC=gcc
-CC=clang -O3 -Os -g -march=native -mtune=native -std=gnu99 -pedantic -Wall -Wextra -Wno-language-extension-token -fwrapv 
+CC=clang -arch arm64 -O3 -Os -g  -mtune=native -std=gnu99 -pedantic -Wall -Wextra -Wno-language-extension-token -fwrapv 
 
 test: test_mul_vec test_uintbig test_fp
 
