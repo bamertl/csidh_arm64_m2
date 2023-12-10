@@ -14,6 +14,7 @@ void test_fp_cswap(void){
     fp_cswap(&a, &b, 1);
     uintbig_assert_equal(&a_remain, &b.x);
     uintbig_assert_equal(&b_remain, &a.x);
+    printf("test_fp_cswap passed\n");
 }
 
 void test_fp_cmov(void){
@@ -41,6 +42,7 @@ void test_fp_add(void){
     fp_add3(&a, &expected1, &c);
     fp expected2 = {{3, 3, 6, 9, 12, 15, 18, 21}};
     uintbig_assert_equal(&a.x, &expected2.x);
+    printf("test_fp_add passed\n");
 }
 
 void test_fp_add3(void){
@@ -48,6 +50,7 @@ void test_fp_add3(void){
     fp_add3(&a, &a, &fp_p);
     fp expected = {{1,2,3,4,5,6,7,8}};
     uintbig_assert_equal(&a.x, &expected.x);
+    printf("test_fp_add3 passed\n");
 }
 void test_fp_sub(void){
     fp a = {{1,2,3,4,5,6,7,8}};
@@ -65,6 +68,7 @@ void test_fp_sub(void){
     fp_sub3(&c2, &a2, &b2);
     fp expected2 = {{0x1b81b90533b4926b, 0xc2721bf3ff132714,0x516730cc0588dc16, 0xa7aac6aceecfdc7a, 0x5afbfcc4faff3161, 0xb42d083aedb654bf, 0xfc8ab0d15e24c9de, 0x65b48e8e4a8c772f }};
     uintbig_assert_equal(&c2.x, &expected2.x);
+    printf("test_fp_sub passed\n");
 }
 
 void test_fp_mul(void){
@@ -73,7 +77,9 @@ void test_fp_mul(void){
     fp a = {{1,2,3,4,5,6,7,8}};
     fp b = {{1, 0, 0, 0, 0, 0, 0, 0}};
     fp c = {{0}};
+    printf("Entering fp_mul\n");
     fp_mul3(&a, &b, &c);
+    printf("Exiting fp_mul\n");
     fp expected = {{0}};
     uintbig_assert_equal(&a.x, &expected.x);
     c = r_squared_mod_p;
@@ -82,6 +88,7 @@ void test_fp_mul(void){
     // assert secondcount == firstcount + 2;
     assert(secondcount == firstcount + 2);
     uintbig_assert_equal(&a.x, &fp_1.x);
+    printf("test_fp_mul passed\n");
 }
 
 void test_mul_more(void){
@@ -94,6 +101,7 @@ void test_mul_more(void){
     fp_mul2(&a, &one);
     fp expected = {{30,0,0,0,0,0,0,0}};
     uintbig_assert_equal(&a.x, &expected.x);
+    printf("test_mul_more passed\n");
 }
 
 void test_square(void){
@@ -107,6 +115,7 @@ void test_square(void){
 
     
     uintbig_assert_equal(&aa.x, &b.x);
+    printf("test_square passed\n");
 }
 
 void test_sqrt(void)
@@ -131,6 +140,7 @@ void test_sqrt(void)
     assert(resultx2);
     assert(!resultx2neg);
   }
+  printf("test_sqrt passed\n");
 }
 
 void test_sqrt1(void){
@@ -145,6 +155,7 @@ void test_sqrt1(void){
     fp_mul2(&a, &one);
     uintbig_assert_equal(&a.x, &expected.x);
     assert(is_sqrt == 1);
+    printf("test_sqrt1 passed\n");
 }
 
 int main(void){

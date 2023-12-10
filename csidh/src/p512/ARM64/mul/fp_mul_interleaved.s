@@ -81,20 +81,19 @@ _fp_mul_loop:
 
     add x0, sp, #144 // temp address
     add x1, sp, #64 // C address
+    ldr x1, [x1] // x1 = C (actual value)
     adrp x2, _inv_min_p_mod_r@PAGE
     add x2, x2, _inv_min_p_mod_r@PAGEOFF
     ldr x2, [x2] // x1 = mu (actual value)
 
-    bl _uint_mul3_64_full // x0 = C * mu
     // mod r = 2^64 (Automatic as we will only load the lsb word value for the next step)
-
+    mul x2, x1, x2
     // 3. C ← (C + p*q) /r
 
     // p * q
     add x0, sp, #144 // temp address
     adrp x1, _p@PAGE
     add x1, x1, _p@PAGEOFF
-    ldr x2, [sp, #144] // load lsb word of temp (q)
     bl _uint_mul3_64_full // temp = p*q
 
     add x0, sp, #144 // temp addr
@@ -201,7 +200,6 @@ x1 = A (8 Words) address
 x2 = B uint64_t
  */
 _uint_mul3_64_full:
-
     // First limb
     ldr x4, [x1, #0]   // load limb
     umulh x5, x4, x2   // high 

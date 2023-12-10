@@ -3,10 +3,8 @@
 BITS?=512
 
 .PHONY: main bench clean tests
+ CC = clang -O3 -Os -march=native 
 
-
-$(info CC: $(CC))
-$(info BITS: $(BITS))
 
 ifndef ARCH
     ARCH = GENERIC
@@ -17,16 +15,15 @@ ifndef MUL_TYPE
 endif
 
 ifeq "$(MUL_TYPE)" "MONTE_MUL"
-	MUL_FILE = fp_mul_small.s
+	MUL_FILE = fp_mul_interleaved.s
 else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_SUB_KARATSUBA"
-	MUL_FILE = fp_mul_big.s
+	MUL_FILE = fp_mul_karatsuba_subtractive.s
 else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_KARATSUBA"
-	MUL_FILE = fp_mul_big_normal.s
+	MUL_FILE = fp_mul_karatsuba_normal.s
 else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_SCHOOLBOOK"
-	MUL_FILE = fp_mul_big_schoolbook.s
+	MUL_FILE = fp_mul_schoolbook.s
 endif
 
-$(info ARCHITECTURE: $(ARCH))
 
 ifeq "$(ARCH)" "GENERIC"
     UINT_IMPL=src/uint.c
@@ -94,6 +91,19 @@ bench: ${includes} ${sources} src/bench.c
 		src/bench.c \
 		-o bench
 
+bench_muls: ${includes} ${sources} src/bench_muls.c
+	@CC \
+		$(if ${BENCH_ITS},-DBENCH_ITS=${BENCH_ITS}) \
+		$(if ${BENCH_VERBOSE},-DBENCH_VERBOSE=${BENCH_VERBOSE}) \
+		-I ./src \
+		-I src/p${BITS}/ \
+		-std=c99 -pedantic \
+		-Wall -Wextra \
+		-march=native -O3 \
+		-DNDEBUG \
+		$(sources) \
+		src/bench_muls.c \
+		-o bench_muls
 
 bench_cycles: ${includes} ${sources} src/bench_cycles.c
 	@cc \
@@ -108,8 +118,16 @@ bench_cycles: ${includes} ${sources} src/bench_cycles.c
 		$(sources) \
 		src/bench_cycles.c \
 		-L. -lbenchmark_lib_csidh \
-		-o bench_cycles
+		-o bench_cycles \
 
+bench_pipeline: autogen_pipeline.o pipeline.o src/bench_pipeline.c
+	cc -march=native -O3 -mtune=native -pedantic pipeline.o src/bench_pipeline.c -o bench_pipeline
+	./bench_pipeline
+
+autogen_pipeline.o:
+	@echo "Generating pipeline code"
+	./src/pipeline/autogen_pipeline
+	as -o pipeline.o src/pipeline/pipeline.s	
 
 test_uint: src/p${BITS}/params.h ${includes} ${sources} tests/test_uint.c
 	cc -I ./src/ -I ./src/p${BITS}/ -I ./tests/ -std=c99 -pedantic -g $(sources) tests/test_uint.c -o tests/test_uint
@@ -133,6 +151,8 @@ clean:
 	@rm -rf ./tests/test_fp.DSYM
 	@rm -rf ./tests/test_bigmul.DSYM
 	@rm -rf ./tests/test_reduction.DSYM
+	@rm -rf ./bench_pipeline pipeline.o
+	@rm -rf ./bench_muls
 
 
 

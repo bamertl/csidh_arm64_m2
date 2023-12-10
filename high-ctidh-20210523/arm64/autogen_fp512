@@ -10,7 +10,6 @@ EXTERN_LABELS = {
     'uintbig_p': 'uintbig_p',
     'uintbig_mul3_64': 'uintbig_mul3_64',
     'uintbig_mul3_64_full': 'uintbig_mul3_64_full',
-    'inv_min_p_mod_r': 'inv_min_p_mod_r'
 }
 
 globals = {
@@ -198,7 +197,7 @@ def write_radix_monte_mul(f):
     comment(f, 'q = C * mu mod r')
     load_label_address_into_register(f, EXTERN_LABELS['inv_min_p_mod_r'], 'x1')
     f.write('\tldr x0, [x0] // load first value of c \n')
-    f.write('\tldr x1, [x1] // load first value of mu \n')
+    f.write('\tldr x1, [x1] // load firsinv_min_p_mod_t value of mu \n')
     f.write('\tmul x2, x0, x1 // q = c * mu % r // mod r means we only care about the first word \n\n')
 
     comment(f, '3. C ← (C + p*q) /r')
@@ -277,8 +276,8 @@ with open(fn+'.tmp','w') as f:
     f.write('.set plimbs,8 \n')
     f.write('\n')
 
-    f.write('inv_min_p_mod_r: \n')
-    f.write('\t.quad 0x66c1301f632e294d\n')
+    #f.write('inv_min_p_mod_r: \n')
+    #f.write('\t.quad 0x66c1301f632e294d\n')
     f.write('\n')
 
     introduce_global_function(f, globals['fp_0'])
@@ -508,10 +507,10 @@ with open(fn+'.tmp','w') as f:
     add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, 0)
     f.write('\tret\n\n') 
 
-    #UINT_ADD_2_9_WORDS
+    #UINT_ADD_2_9_WORDS this is added from csidh
     write_uintbig_add2_9_words(f)
     #MONTE MULTIPLICATION fp_mul2, fp_mul3 _____________________________________________________________________
-    write_radix_monte_mul(f)
+    #write_radix_monte_mul(f)
 
     #FP_SQ1 _____________________________________________________________________________________
     comment(f, 'x0 = x0^2, straight to fp_sq2')

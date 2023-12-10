@@ -5,15 +5,12 @@
 .extern uintbig_p
 .extern uintbig_mul3_64
 .extern uintbig_mul3_64_full
-.extern inv_min_p_mod_r
 
 
 .set pbits,511 
 .set pbytes,64 
 .set plimbs,8 
 
-inv_min_p_mod_r: 
-	.quad 0x66c1301f632e294d
 
 .global fp_0
 fp_0: 
@@ -394,150 +391,6 @@ _uintbig_add2_9_words:
 	ldp x21, x22, [sp, #16]
 	add sp, sp, #32
 	ret 
-
-/* A[x0] = A[x0] * B[x1] mod P 
- directly into fp_mul3 */
-.global fp_mul2
-fp_mul2: 
-	mov x2, x0
-/* Montgomery multiplication
- C[x0] = A[x1] * B[x2] mod P */
-.global fp_mul3
-fp_mul3: 
-/* Increment mul/sq counter */
-	adrp x3, fp_mulsq_count @PAGE
-	add x3, x3, fp_mulsq_count@PAGEOFF
-	ldr x4, [x3]
-	add x4, x4, #1
-	str x4, [x3]
-
-	sub sp, sp, #240
-	stp lr, x0, [sp, #0]
-	stp x1, x2, [sp, #16]
-	stp x19, x20, [sp, #32]
-	str x21, [sp, #48]
-/* Init C and Temp with 0 */
-	stp xzr, xzr, [sp, #64]
-	stp xzr, xzr, [sp, #80]
-	stp xzr, xzr, [sp, #96]
-	stp xzr, xzr, [sp, #112]
-	stp xzr, xzr, [sp, #128]
-	stp xzr, xzr, [sp, #144]
-	stp xzr, xzr, [sp, #160]
-	stp xzr, xzr, [sp, #176]
-	stp xzr, xzr, [sp, #192]
-	stp xzr, xzr, [sp, #208]
-
-/* Counter = x5, Offset = x6 */
-	mov x5, #0
-	mov x6, #0
-	str x5, [sp, #224]
-	str x6, [sp, #232]
-
-_fp_mul_loop:
-/* C <- C + a[i] * B */
-	ldr x2, [sp, #16] // load a_adr 
-	add x2, x2, x6 // add offset to a_adr
-	ldr x2, [x2] // load actual value of a[i]
-	ldr x1, [sp, #24] // load b_adr 
-	add x0, sp, #144 // load temp_addr 
-/* temp = A[i] * B */
-	bl uintbig_mul3_64_full 
-/* C = C + temp */
-	mov x1, x0 // move temp_addr into x1 
-	add x0, sp, #64 // load c_addr 
-	bl _uintbig_add2_9_words // c = c + temp 
-
-/* q = C * mu mod r */
-	adrp x1, inv_min_p_mod_r @PAGE
-	add x1, x1, inv_min_p_mod_r@PAGEOFF
-	ldr x0, [x0] // load first value of c 
-	ldr x1, [x1] // load first value of mu 
-	mul x2, x0, x1 // q = c * mu % r // mod r means we only care about the first word 
-
-/* 3. C ← (C + p*q) /r */
-	add x0, sp, #144 // load temp_addr 
-	adrp x1, uintbig_p @PAGE
-	add x1, x1, uintbig_p@PAGEOFF
-	bl uintbig_mul3_64_full // temp = q*p 
-
-/* temp <- C + temp /r */
-	add x0, sp, #144 // load temp_addr 
-	add x1, sp, #64 // load c_addr 
-/* add together */
-	bl _uintbig_add2_9_words // c = c + q*p 
-/* 4. C ← C/r */
-	ldp x0, x1, [sp, #152] // load temp_addr 
-	stp x0, x1, [sp, #64] // store into c_addr 
-	ldp x0, x1, [sp, #168] // load temp_addr 
-	stp x0, x1, [sp, #80] // store into c_addr 
-	ldp x0, x1, [sp, #184] // load temp_addr 
-	stp x0, x1, [sp, #96] // store into c_addr 
-	ldp x0, x1, [sp, #200] // load temp_addr 
-	stp x0, x1, [sp, #112] // store into c_addr 
-	str xzr, [sp, #128] // store into c_addr 
-/* 5. i ← i + 1 */
-	ldr x5, [sp, #224] // load counter 
-	ldr x6, [sp, #232] // load offset 
-	add x5, x5, #1 // increment counter 
-	add x6, x6, #8 // increment offset 
-	stp x5, x6, [sp, #224] // store counter 
-/* 6. if i < 8 goto loop again */
-	cmp x5, #8
-	b.lt _fp_mul_loop
-/* if C >= p then C = C - p */
-	ldp x3, x4, [sp, #64]
-	ldp x5, x6, [sp, #80]
-	ldp x7, x8, [sp, #96]
-	ldp x9, x10, [sp, #112]
-	ldr x11, [sp, #128]
-	adrp x0, uintbig_p @PAGE
-	add x0, x0, uintbig_p@PAGEOFF
-/* load p */
-	ldp x12, x13, [x0, #0]
-	ldp x14, x15, [x0, #16]
-	ldp x16, x17, [x0, #32]
-	ldp x19, x20, [x0, #48]
-/* C - P */
-	subs x3, x3, x12
-	sbcs x4, x4, x13
-	sbcs x5, x5, x14
-	sbcs x6, x6, x15
-	sbcs x7, x7, x16
-	sbcs x8, x8, x17
-	sbcs x9, x9, x19
-	sbcs x10, x10, x20
-	sbc x21, xzr, xzr
-/* and with carry */
-	and x12, x12, x21
-	and x13, x13, x21
-	and x14, x14, x21
-	and x15, x15, x21
-	and x16, x16, x21
-	and x17, x17, x21
-	and x19, x19, x21
-	and x20, x20, x21
-/* C + P */
-	adds x3, x3, x12
-	adcs x4, x4, x13
-	adcs x5, x5, x14
-	adcs x6, x6, x15
-	adcs x7, x7, x16
-	adcs x8, x8, x17
-	adcs x9, x9, x19
-	adcs x10, x10, x20
-/* store C into result address */
-	ldr x0, [sp, #8]
-	stp x3, x4, [x0, #0]
-	stp x5, x6, [x0, #16]
-	stp x7, x8, [x0, #32]
-	stp x9, x10, [x0, #48]
-	ldp lr, x0, [sp, #0]
-	ldp x1, x2, [sp, #16]
-	ldp x19, x20, [sp, #32]
-	ldr x21, [sp, #48]
-	add sp, sp, #240
-	ret
 
 /* x0 = x0^2, straight to fp_sq2 */
 .global fp_sq1

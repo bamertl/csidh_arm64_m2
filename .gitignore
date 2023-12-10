@@ -6,6 +6,10 @@
 tests/*.bin
 csidh/*.bin
 csidh/*.exe
+csidh/bench_muls
+high-ctidh-20210523/bench512custom
+high-ctidh-20210523/costpoly512
+csidh/main
 # Object files
 *.o
 *.obj
@@ -16,7 +20,10 @@ csidh/*.exe
 # Assembly listing files
 *.lst
 high-ctidh-20210523/testrandom
+testing/tests/test_mul_vec
 csidh/bench
+csidh/bench_cycles
+csidh/bench_pipeline
 */tests/test_uintbig
 */tests/test_fp
 # Map files
