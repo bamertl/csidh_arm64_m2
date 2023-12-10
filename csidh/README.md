@@ -40,6 +40,16 @@ make ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SUB_KARATSUBA test_bigmul
 
 ```
 
+## Bench muls
+```bash
+make bench_muls ARCH=ARM64 MUL_TYPE=MONTE_MUL
+make bench_muls ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SUB_KARATSUBA
+make bench_muls ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_KARATSUBA
+make bench_muls ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SCHOOLBOOK
+./bench_muls
+```
+
+
 ## Important Information for Apple M2
     Do not use x18 and x29 registers. 
 [ARM64 Apple](https://developer.apple.com/documentation/xcode/writing-arm64-code-for-apple-platforms)

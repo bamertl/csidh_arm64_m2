@@ -4,8 +4,10 @@
 #include <time.h>
 #include <assert.h>
 #include <inttypes.h>
+#include "csidh.h"
 
 int cmp_uint64_t(const void *x, const void *y) { return *(uint64_t *)x - *(uint64_t *)y; }
+void fp_mul3(fp *x, fp const *y, fp const *z);
 
 uint64_t median(uint64_t *vals, int its)
 {
@@ -16,15 +18,9 @@ uint64_t median(uint64_t *vals, int its)
 double mean(uint64_t *vals, int its)
 {
     uint64_t sum = 0;
-    for (size_t i = 0; i < its; ++i)
+    for (int i = 0; i < its; ++i)
         sum += vals[i];
     return sum / (double)its;
-}
-
-static inline uint64_t rdtsc(void) {
-    uint64_t tickse;
-    __asm__ __volatile__("mrs %0,CNTPCT_EL0" : "=r" (tickse));
-    return tickse;
 }
 
 // Clock frequency. Indicates the system counter clock frequency, in Hz
@@ -39,7 +35,6 @@ static inline unsigned long long cpucycles(void) {
     clock_gettime(CLOCK_REALTIME, &time);
     return (int64_t)(time.tv_sec*1e9 + time.tv_nsec);
 }
-
 
 float freq_ghz_clock = 0; 
 float freq_ghz_cpu = 2.41;
@@ -58,48 +53,50 @@ double ticks_to_milliseconds(uint64_t ticks) {
     return tick_duration_s;
 }
 
-extern int mul_no_pipeline(int);
-
-extern int mul_pipeline(int);
-
-typedef int (*Operation)(int);
+typedef void (*Operation)(fp *x, fp const *y, fp const *z);
 
 void benchmark_operation(Operation op, int total_instruction, int num_experiments){
 
+    int num_ops_per_experiment = 50000;
+
+
+    fp a = {{1,2,3,4,5,6,7,8}};
+    // Generate random fp b
+    fp b = {{1,2,3,4,5,6,7,8}};
+    
+    fp c = {{0}};
     // allocate uint64_t array for num experiments
     uint64_t *cycless = calloc(num_experiments, sizeof(uint64_t));
 
     for (int i = 0; i < num_experiments; i++){
         uint64_t c0 = cpucycles();
-        int result = op(2);
-        result +=2;
+        
+        for (int j = 0; j < num_ops_per_experiment; j++){
+            op(&c, &a, &b);
+        }
+
         uint64_t c1 = cpucycles();
 
         uint64_t cycles = c1 - c0;
-        cycless[i] = cycles;
+        cycless[i] = cycles / num_ops_per_experiment ;
     }
+
     // calculate mean and median
     double mean_cycles = mean(cycless, num_experiments);
     uint64_t median_cycles = median(cycless, num_experiments);
     printf("Mean cycles: %f\n", mean_cycles);
     printf("Median cycles: %llu\n", median_cycles);
-    // cycles to milliseconds
-    double mean_milliseconds = ticks_to_milliseconds(mean_cycles);
-    printf("Mean milliseconds: %f\n", mean_milliseconds);
+    printf("total instructions in this mul: %d\n", total_instruction);
     // calculate instructions per cycle
-    float ipc = total_instruction / mean_cycles; 
-    printf("Instructions per cycle: %f\n", ipc);
+    //printf("Instructions per cycle: %f\n", ipc);
 
 }
-
 
 int main(void)
 { 
-    int amount = 100000;
-    int num_experiments = 2000;
+    int instructions_for_mul = 100000; // we actually need to count them
+    int num_experiments = 1000;
 
-    benchmark_operation(mul_no_pipeline, amount, num_experiments); 
-    benchmark_operation(mul_pipeline, amount, num_experiments);
+    benchmark_operation(fp_mul3, instructions_for_mul, num_experiments); 
     return 0;
 }
-

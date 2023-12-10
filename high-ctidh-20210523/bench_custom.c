@@ -62,19 +62,13 @@ int main(int argc,char **argv)
   unsigned long its = KEYS*target;
 
   printf("its %lu\n",its);
-      uint64_t *cycless = calloc(its, sizeof(uint64_t)),
-             *times = calloc(its, sizeof(uint64_t));
+  uint64_t *times = calloc(its, sizeof(uint64_t));
      
-
    __asm__ __volatile__ ("mov %0, sp" : "=r"(stack));
   stack -= stacksz;
   for (long long key = 0;key < KEYS;++key) {
-    long long cycles0 = cpucycles();
     csidh_private(&priv_alice[key]);
-    long long cycles1 = cpucycles();
     csidh_private(&priv_bob[key]);
-    long long cycles2 = cpucycles();
-
     action(&pub_bob[key],&base,&priv_bob[key]);
   }
 
@@ -107,7 +101,6 @@ int main(int argc,char **argv)
         }
       
       fp_mulsq_count = fp_sq_count = fp_addsub_count = 0;
-      t0 = clock();   /* uses stack, but not too much */
       long long cycles = cpucycles();
       bool ok = validate(&pub_bob[key]);
       //cycles = cpucycles()-cycles;
@@ -116,9 +109,8 @@ int main(int argc,char **argv)
       for (long long b = 0;b < primes_batches;++b)
         csidh_statsucceeded[b] = csidh_stattried[b] = 0;
       fp_mulsq_count = fp_sq_count = fp_addsub_count = 0;
-      cycles = cpucycles();
+      t0 = clock();   /* uses stack, but not too much */
       action(&action_output[key],&pub_bob[key],&priv_alice[key]);
-      cycles = cpucycles()-cycles;
       t1 = clock();
       times[i] = t1-t0;
       //set loop*key element of timing to cycles
@@ -128,6 +120,7 @@ int main(int argc,char **argv)
     }
     fflush(stdout);
   }
+  printf("mean wall-clock time: \x1b[34m%6.3lf ms\x1b[0m\n", 1000. * mean(times, its)  / CLOCKS_PER_SEC);
   printf("median wall-clock time: \x1b[34m%6.3lf ms\x1b[0m\n", 1000. * median(times, its)  / CLOCKS_PER_SEC);
 
   fflush(stdout);

@@ -1,6 +1,7 @@
 #include "../../../fp_namespace.h"
 #include "../../../uintbig_namespace.h"
 .extern uintbig_p
+.extern fp_mulsq_count
 
 inv_min_p_mod_r: 
 	.quad 0x66c1301f632e294d
@@ -79,11 +80,10 @@ _fp_mul_loop:
 
     // 2. q ← C*mu mod r
 
-    add x0, sp, #144 // temp address
     add x1, sp, #64 // C address
     ldr x1, [x1] // x1 = C (actual value)
-    adrp x2, _inv_min_p_mod_r@PAGE
-    add x2, x2, _inv_min_p_mod_r@PAGEOFF
+    adrp x2, inv_min_p_mod_r@PAGE
+    add x2, x2, inv_min_p_mod_r@PAGEOFF
     ldr x2, [x2] // x1 = mu (actual value)
 
     // mod r = 2^64 (Automatic as we will only load the lsb word value for the next step)

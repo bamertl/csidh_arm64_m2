@@ -6,6 +6,10 @@
 tests/*.bin
 csidh/*.bin
 csidh/*.exe
+csidh/bench_muls
+high-ctidh-20210523/bench512custom
+high-ctidh-20210523/costpoly512
+csidh/main
 # Object files
 *.o
 *.obj

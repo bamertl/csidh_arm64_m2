@@ -688,7 +688,3 @@ _uint_mul_512x512:
 
     add sp, sp, #320
     ret
-
-
-
-   

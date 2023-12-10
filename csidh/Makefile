@@ -3,10 +3,8 @@
 BITS?=512
 
 .PHONY: main bench clean tests
+ CC = clang -O3 -Os -march=native 
 
-
-$(info CC: $(CC))
-$(info BITS: $(BITS))
 
 ifndef ARCH
     ARCH = GENERIC
@@ -26,7 +24,6 @@ else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_SCHOOLBOOK"
 	MUL_FILE = fp_mul_schoolbook.s
 endif
 
-$(info ARCHITECTURE: $(ARCH))
 
 ifeq "$(ARCH)" "GENERIC"
     UINT_IMPL=src/uint.c
@@ -94,6 +91,19 @@ bench: ${includes} ${sources} src/bench.c
 		src/bench.c \
 		-o bench
 
+bench_muls: ${includes} ${sources} src/bench_muls.c
+	@CC \
+		$(if ${BENCH_ITS},-DBENCH_ITS=${BENCH_ITS}) \
+		$(if ${BENCH_VERBOSE},-DBENCH_VERBOSE=${BENCH_VERBOSE}) \
+		-I ./src \
+		-I src/p${BITS}/ \
+		-std=c99 -pedantic \
+		-Wall -Wextra \
+		-march=native -O3 \
+		-DNDEBUG \
+		$(sources) \
+		src/bench_muls.c \
+		-o bench_muls
 
 bench_cycles: ${includes} ${sources} src/bench_cycles.c
 	@cc \
@@ -142,6 +152,7 @@ clean:
 	@rm -rf ./tests/test_bigmul.DSYM
 	@rm -rf ./tests/test_reduction.DSYM
 	@rm -rf ./bench_pipeline pipeline.o
+	@rm -rf ./bench_muls
 
 
 

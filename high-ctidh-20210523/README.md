@@ -10,6 +10,11 @@ make 512 MUL_TYPE=MONTE_REDUCTION_KARATSUBA
 make 512 MUL_TYPE=MONTE_REDUCTION_SCHOOLBOOK
 ```
 
+## Bench Custom:
+```bash
+make bench512custom
+./bench512custom 10
+```
 
 ## Unchanged README
 
