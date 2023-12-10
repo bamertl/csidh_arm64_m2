@@ -17,13 +17,13 @@ ifndef MUL_TYPE
 endif
 
 ifeq "$(MUL_TYPE)" "MONTE_MUL"
-	MUL_FILE = fp_mul_small.s
+	MUL_FILE = fp_mul_interleaved.s
 else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_SUB_KARATSUBA"
-	MUL_FILE = fp_mul_big.s
+	MUL_FILE = fp_mul_karatsuba_subtractive.s
 else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_KARATSUBA"
-	MUL_FILE = fp_mul_big_normal.s
+	MUL_FILE = fp_mul_karatsuba_normal.s
 else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_SCHOOLBOOK"
-	MUL_FILE = fp_mul_big_schoolbook.s
+	MUL_FILE = fp_mul_schoolbook.s
 endif
 
 $(info ARCHITECTURE: $(ARCH))

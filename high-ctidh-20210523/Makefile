@@ -3,6 +3,27 @@
 SCC=gcc
 CC=clang -O3 -Os -march=native -mtune=native -std=gnu99 -pedantic -Wall -Wextra -Wno-language-extension-token -fwrapv 
 
+BITS?=512
+
+
+ifndef MUL_TYPE
+	MUL_TYPE = MONTE_MUL
+endif
+
+MUL_FOLDER = ./arm64/p${BITS}/mul/
+ifeq "$(MUL_TYPE)" "MONTE_MUL"
+	MUL_FILE =$(MUL_FOLDER)fp_mul_interleaved.s
+else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_SUB_KARATSUBA"
+	MUL_FILE =$(MUL_FOLDER)fp_mul_karatsuba_subtractive.s
+else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_KARATSUBA"
+	MUL_FILE =$(MUL_FOLDER)fp_mul_karatsuba_normal.s
+else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_SCHOOLBOOK"
+	MUL_FILE =$(MUL_FOLDER)fp_mul_schoolbook.s
+endif
+
+$(info Taking MUL: $(MUL_FILE))
+
+
 default: generic 511 512 1024 2048
 
 all: default timecop
@@ -529,8 +550,8 @@ libhighctidh_511.a: uintbig511.o fp511.o fp_inv511.o fp_sqrt511.o primes511.o po
 	ar cr libhighctidh_511.a uintbig511.o fp511.o fp_inv511.o fp_sqrt511.o primes511.o poly511.o mont511.o elligator511.o skgen511.o validate511.o csidh511.o
 	ranlib libhighctidh_511.a
 
-libhighctidh_512.a: uintbig512_arm64.o fp512_arm64.o fp_inv512.o fp_sqrt512.o primes512.o poly512.o mont512.o elligator512.o skgen512.o validate512.o csidh512.o Makefile
-	ar cr libhighctidh_512.a uintbig512_arm64.o fp512_arm64.o fp_inv512.o fp_sqrt512.o primes512.o poly512.o mont512.o elligator512.o skgen512.o validate512.o csidh512.o
+libhighctidh_512.a: uintbig512_arm64.o fp512_mul_file.o fp512_arm64.o fp_inv512.o fp_sqrt512.o primes512.o poly512.o mont512.o elligator512.o skgen512.o validate512.o csidh512.o Makefile
+	ar cr libhighctidh_512.a uintbig512_arm64.o fp512_mul_file.o fp512_arm64.o fp_inv512.o fp_sqrt512.o primes512.o poly512.o mont512.o elligator512.o skgen512.o validate512.o csidh512.o
 	ranlib libhighctidh_512.a
 
 libhighctidh_1024.a: uintbig1024.o fp1024.o fp_inv1024.o fp_sqrt1024.o primes1024.o poly1024.o mont1024.o elligator1024.o skgen1024.o validate1024.o csidh1024.o Makefile
@@ -691,7 +712,11 @@ fp511.o: fp511.S fp.h fp_namespace.h uintbig.h uintbig_namespace.h Makefile
 
 fp512_arm64.o: fp512_arm64.S fp.h fp_namespace.h uintbig.h uintbig_namespace.h Makefile
 	$(SCC) -DBITS=512 -D'NAMESPACEBITS(x)=_highctidh_512_##x' -D'NAMESPACEGENERIC(x)=_highctidh_##x' \
-		-c fp512_arm64.S
+		-c fp512_arm64.S -o fp512_arm64.o
+
+fp512_mul_file.o: ${MUL_FILE} fp.h fp_namespace.h uintbig.h uintbig_namespace.h Makefile
+	$(SCC) -DBITS=512 -D'NAMESPACEBITS(x)=_highctidh_512_##x' -D'NAMESPACEGENERIC(x)=_highctidh_##x' \
+		-c ${MUL_FILE} -o fp512_mul_file.o
 
 fp1024.o: fp1024.S fp.h fp_namespace.h uintbig.h uintbig_namespace.h Makefile
 	$(SCC) -DBITS=1024 -D'NAMESPACEBITS(x)=highctidh_1024_##x' -D'NAMESPACEGENERIC(x)=highctidh_##x' \

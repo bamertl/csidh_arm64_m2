@@ -1,10 +1,29 @@
 SCC=gcc
 CC=clang -arch arm64 -O3 -Os -g  -mtune=native -std=gnu99 -pedantic -Wall -Wextra -Wno-language-extension-token -fwrapv 
+BITS?=512
+ifndef MUL_TYPE
+	MUL_TYPE = MONTE_MUL
+endif
+
+MUL_FOLDER = ../high-ctidh-20210523/arm64/p${BITS}/mul/
+ifeq "$(MUL_TYPE)" "MONTE_MUL"
+	MUL_FILE =$(MUL_FOLDER)fp_mul_interleaved.s
+else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_SUB_KARATSUBA"
+	MUL_FILE =$(MUL_FOLDER)fp_mul_karatsuba_subtractive.s
+else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_KARATSUBA"
+	MUL_FILE =$(MUL_FOLDER)fp_mul_karatsuba_normal.s
+else ifeq "$(MUL_TYPE)" "MONTE_REDUCTION_SCHOOLBOOK"
+	MUL_FILE =$(MUL_FOLDER)fp_mul_schoolbook.s
+endif
+
+$(info Taking MUL: $(MUL_FILE))
 
 test: test_mul_vec test_uintbig test_fp
 
-libhighctidh_512.a: uintbig512_arm64.o fp_sqrt512.o fp512_arm64.o mul_vec512.o Makefile
-	@ar cr libhighctidh_512.a uintbig512_arm64.o fp512_arm64.o fp_sqrt512.o mul_vec512.o
+
+
+libhighctidh_512.a: uintbig512_arm64.o fp512_mul_file.o fp_sqrt512.o fp512_arm64.o mul_vec512.o Makefile
+	@ar cr libhighctidh_512.a fp512_mul_file.o uintbig512_arm64.o fp512_arm64.o fp_sqrt512.o mul_vec512.o
 	@ranlib libhighctidh_512.a
 
 uintbig512_arm64.o: pre_uintbig512 ../high-ctidh-20210523/uintbig512_arm64.S ../high-ctidh-20210523/uintbig.h ../high-ctidh-20210523/uintbig_namespace.h Makefile
@@ -16,6 +35,11 @@ fp512_arm64.o: pre_fp512_arm64 ../high-ctidh-20210523/fp512_arm64.S ../high-ctid
 	@$(SCC) -DBITS=512 -D'NAMESPACEBITS(x)=_highctidh_512_##x' -D'NAMESPACEGENERIC(x)=_highctidh_##x' \
 		-I ../high-ctidh-20210523/ \
 		-c ../high-ctidh-20210523/fp512_arm64.S
+
+fp512_mul_file.o: ${MUL_FILE} ../high-ctidh-20210523/fp512_arm64.S ../high-ctidh-20210523/fp.h ../high-ctidh-20210523/fp_namespace.h ../high-ctidh-20210523/uintbig.h ../high-ctidh-20210523/uintbig_namespace.h Makefile
+	$(SCC) -DBITS=512 -D'NAMESPACEBITS(x)=_highctidh_512_##x' -D'NAMESPACEGENERIC(x)=_highctidh_##x' \
+		-I ../high-ctidh-20210523/ \
+		-c ${MUL_FILE} -o fp512_mul_file.o
 
 fp_sqrt512.o: ../high-ctidh-20210523/fp_sqrt512.c ../high-ctidh-20210523/fp.h ../high-ctidh-20210523/uintbig.h ../high-ctidh-20210523/uintbig_namespace.h ../high-ctidh-20210523/fp_namespace.h ../high-ctidh-20210523/randombytes.h ../high-ctidh-20210523/crypto_declassify.h Makefile
 	$(CC) -DBITS=512 -D'NAMESPACEBITS(x)=highctidh_512_##x' -D'NAMESPACEGENERIC(x)=highctidh_##x' \

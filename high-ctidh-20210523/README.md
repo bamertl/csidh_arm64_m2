@@ -2,9 +2,13 @@
 [Sort](/high-ctidh-20210523/int32_sort.c) uses Intel Optimizations (#include <immintrin.h>) <br>
 [autogen](/high-ctidh-20210523/autogen) This generates everything.
 
-
-
-
+## Build:
+```bash
+make 512 MUL_TYPE=MONTE_MUL
+make 512 MUL_TYPE=MONTE_REDUCTION_SUB_KARATSUBA
+make 512 MUL_TYPE=MONTE_REDUCTION_KARATSUBA
+make 512 MUL_TYPE=MONTE_REDUCTION_SCHOOLBOOK
+```
 
 
 ## Unchanged README
