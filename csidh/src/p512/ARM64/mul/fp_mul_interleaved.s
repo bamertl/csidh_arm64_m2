@@ -55,12 +55,12 @@ big_p:
 	adcs \CARRY_REG, \CARRY_REG, xzr  
 
 	/* Mul seconds half of B with ai add to c ['\\B5', '\\B6', '\\B7'] */
-	mul \T0, x8, \B5  
-	umulh \T1, x8, \B5  
-	mul \T2, x8, \B6  
-	umulh \T3, x8, \B6  
-	mul \T4, x8, \B7  
-	umulh \T5, x8, \B7  
+	mul \T0, \AI, \B5  
+	umulh \T1, \AI, \B5  
+	mul \T2, \AI, \B6  
+	umulh \T3, \AI, \B6  
+	mul \T4, \AI, \B7  
+	umulh \T5, \AI, \B7  
 	/* Again add to C ['\\C5', '\\C6', '\\C7', '\\C8'] with carry reg \CARRY_REG */
 
 	adcs \C5, \T0, \C5  // mul C5 
