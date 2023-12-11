@@ -1,0 +1,398 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+limbs = 8
+
+fn = './src/p512/ARM64/mul/fp_mul_interleaved.s'
+
+locals = {
+   'big_p': 'big_p'
+} 
+
+
+sys.setrecursionlimit(10000)
+
+print("Generating interleaved mul p512...")
+
+stack_offset_a = 8
+stack_offset_b = 16    
+stack_offest_dest = 0
+
+def maybeupdate(fn):
+  if os.access(fn,os.F_OK):
+    with open(fn) as f:
+      x = f.read()
+    with open(fn+'.tmp') as f:
+      y = f.read()
+    if x == y:
+      os.unlink(fn+'.tmp')
+      return
+  os.rename(fn+'.tmp',fn)
+
+  def comment(f, comment):
+    f.write('/* %s */\n' % comment)
+
+def init_data_var(f, name):
+    f.write('.global %s\n' % name)
+    f.write('%s: \n' % name)
+    f.write('\t.quad 0\n')
+
+def introduce_global_function(f, name):
+    f.write('.global %s\n' % name)
+    f.write('%s: \n' % name)
+
+
+def sub_stack_and_store_on_stack(f, regs, additional_offset):
+    total_offset = len(regs)*8 + additional_offset 
+    if total_offset % 16 != 0:
+        total_offset = ((total_offset // 16) + 1) * 16
+    f.write('\tsub sp, sp, #%d\n' % total_offset)
+    offset = 0
+    i = 0
+    while i < len(regs):
+        # Check if there's at least one more register after the current one
+        if i + 1 < len(regs):
+            # If yes, store the pair of registers
+            f.write('\tstp %s, %s, [sp, #%d]\n' % (regs[i], regs[i+1], offset))
+            i += 2
+        else:
+            # If no, store the single register
+            f.write('\tstr %s, [sp, #%d]\n' % (regs[i],offset))
+            i += 1
+        offset += 16
+
+def add_stack_and_restore_regs_from_stack(f, regs, additional_offset):
+    total_offset = len(regs)*8 + additional_offset 
+    if total_offset % 16 != 0:
+        total_offset = ((total_offset // 16) + 1) * 16
+    offset = 0
+    i = 0
+    while i < len(regs):
+        # Check if there's at least one more register after the current one
+        if i + 1 < len(regs):
+            # If yes, store the pair of registers
+            f.write('\tldp %s, %s, [sp, #%d]\n' % (regs[i], regs[i+1], offset))
+            i += 2
+        else:
+            # If no, store the single register
+            f.write('\tldr %s, [sp, #%d]\n' % (regs[i],offset))
+            i += 1
+        offset += 16
+    f.write('\tadd sp, sp, #%d\n' % total_offset)
+
+def load_label_address_into_register(f, label, register):
+    f.write('\tadrp %s, %s\n' % (register, label+ '@PAGE'))
+    f.write('\tadd %s, %s, %s\n' % (register, register, label+'@PAGEOFF'))
+
+
+def mov(f, dst, src, comment=''):
+    if comment:
+        comment = ' // ' + comment
+
+    f.write('\tmov %s, %s %s \n' % (dst, src, comment))
+
+def comment(f, comment):
+    f.write('\t/* %s */\n' % comment)
+
+def eor(f, dst, who, who2):
+    f.write('\teor %s, %s, %s\n' % (dst, who, who2))
+    
+def newlines(f, n=1):
+    for i in range(n):
+        f.write('\n')
+
+def ldr(f, dst, src, offset, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tldr %s, [%s, #%d] %s \n' % (dst, src, offset, comment))
+
+def ldp(f, dst, dst2, src, offset, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tldp %s, %s, [%s, #%d] %s \n' % (dst, dst2, src, offset, comment))
+def mul(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tmul %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def umulh(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tumulh %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def adds(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tadds %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def adcs(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tadcs %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def subs(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tsubs %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def sbcs(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tsbcs %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def andd(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tand %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def stp(f, src, src2, dst, offset, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tstp %s, %s, [%s, #%d] %s \n' % (src, src2, dst, offset, comment))
+
+
+stack_offset_a = 8
+
+def call_mul_8x1_macro(f, REGS_FOR_AI, REGS_FOR_RESULT, REGS_FOR_B, REGS_FOR_TEMP, CARRY_REG):
+    # check REGS_FOR_RESULT is 9 registers
+    assert len(REGS_FOR_RESULT) == 9
+    # check REGS_FOR_B is 8 registers
+    assert len(REGS_FOR_B) == 8
+    # check REGS_FOR_TEMP is 10 registers
+    assert len(REGS_FOR_TEMP) == 10
+    # check REGS_FOR_AI is 1 register
+    assert len(REGS_FOR_AI) == 1
+    # check CARRY_REG is 1 register
+    assert len(CARRY_REG) == 1
+
+    # REGS FOR AI to string
+    REGS_FOR_AI_JOINED = ', '.join(REGS_FOR_AI)
+    REGS_FOR_RESULT_JOINED = ', '.join(REGS_FOR_RESULT)
+    REGS_FOR_B_JOINED = ', '.join(REGS_FOR_B)
+    REGS_FOR_TEMP_JOINED = ', '.join(REGS_FOR_TEMP)
+    REGS_FOR_CARRY_JOINED = ', '.join(CARRY_REG)
+    f.write('\tmul_8x1 %s, %s, %s, %s, %s\n' % (REGS_FOR_AI_JOINED, REGS_FOR_RESULT_JOINED, REGS_FOR_B_JOINED, REGS_FOR_TEMP_JOINED, REGS_FOR_CARRY_JOINED))
+
+
+
+def write_mul_8x1_macro(f):
+    B = ['\B0', '\B1', '\B2', '\B3', '\B4', '\B5', '\B6', '\B7']
+    RESULT = ['\C0', '\C1', '\C2', '\C3', '\C4', '\C5', '\C6', '\C7', '\C8']
+    AI = '\AI'
+    TEMP = ['\T0', '\T1', '\T2', '\T3', '\T4', '\T5', '\T6', '\T7', '\T8', '\T9']
+    carry_reg = '\CARRY_REG'
+    # Results comma separated
+    RESULT_COMMA_SEPARATED = ', '.join(RESULT).replace('\\', '')
+
+    B_JOINED = ', '.join(B).replace('\\', '')
+    TEMP_JOINED = ', '.join(TEMP).replace('\\', '')
+    f.write('.macro mul_8x1, %s, %s, %s, %s, %s \n' % (AI.replace('\\', ''), RESULT_COMMA_SEPARATED, B_JOINED, TEMP_JOINED, carry_reg.replace('\\', ''))) 
+    comment(f, "ai * B first 5 limbs" )
+
+    # mul half of B with ai
+    for i in range(5):
+        mul(f, TEMP[2*i], AI, B[i])
+        umulh(f, TEMP[2*i + 1], AI, B[i])
+
+    newlines(f)
+
+    adds(f, RESULT[0], RESULT[0], TEMP[0], 'mul C0')
+    adcs(f, RESULT[1], RESULT[1], TEMP[1], 'umul C1')
+    adcs(f, carry_reg, 'xzr', 'xzr')
+    adcs(f, RESULT[1], RESULT[1], TEMP[2], 'mul C1')
+    adcs(f, RESULT[2], RESULT[2], carry_reg, 'add carry to next limb C2')
+
+    for i in range(3):
+        newlines(f)
+        adcs(f, carry_reg, 'xzr', 'xzr', 'init new carry leg for C%s' % str(i+3))
+        adcs(f, RESULT[i+2], RESULT[i+2], TEMP[2*i + 3], 'umul C' + str(i+2) )
+        adcs(f, carry_reg, carry_reg, 'xzr')
+        adcs(f, RESULT[i+2], RESULT[i+2], TEMP[2*i + 4], 'mul C' + str(i+2))
+        adcs(f, RESULT[i+3], RESULT[i+3], carry_reg, 'add carry to next limb C' + str(i+3))
+    newlines(f)
+    adcs(f, carry_reg, 'xzr', 'xzr', 'init carry reg for C6') 
+    adcs(f, RESULT[5], RESULT[5], TEMP[9], 'umul C5')
+    adcs(f, carry_reg, carry_reg, 'xzr')
+    newlines(f)
+    comment(f,"Mul seconds half of B with ai add to c %s" % B[5:])
+
+    for i in range(3):
+        current_B_limb = B[i + 5]
+        mul(f, TEMP[2*i] , AI, current_B_limb)
+        umulh(f, TEMP[2*i + 1], AI, current_B_limb)
+    comment(f, "Again add to C %s with carry reg %s" % (RESULT[5:], carry_reg))
+
+    for i in range(3):
+        newlines(f)
+        current_c_limb = RESULT[i + 5]
+        next_c_limb = RESULT[i + 6]
+        adcs(f, current_c_limb, TEMP[2*i], current_c_limb, 'mul C' + str(i+5))
+        adcs(f, carry_reg, carry_reg, 'xzr')
+        adcs(f, next_c_limb, next_c_limb, carry_reg, 'add carry to next limb C' + str(i+6))
+        adcs(f, carry_reg, 'xzr', 'xzr', 'init carry reg for C' + str(i+7))
+        adcs(f, next_c_limb, next_c_limb, TEMP[2*i + 1], 'umul C' + str(i+6))
+        adcs(f, carry_reg, carry_reg, 'xzr')
+    newlines(f)
+    f.write('.endm \n')
+
+
+def call_mul_step_macro(f, K, C_REGS, B_REGS, TEMP):
+    # check das K is a number
+    assert isinstance(K, int)
+    # check C_REGS is 9 registers
+    assert len(C_REGS) == 9
+    # check B_REGS is 8 registers
+    assert len(B_REGS) == 8
+    # check TEMP is 12 registers
+
+    C_JOINED = ', '.join(C_REGS).replace('\\', '')
+    B_REGS_JOINED = ', '.join(B_REGS).replace('\\', '')
+    TEMP_REGS_JOINED = ', '.join(TEMP).replace('\\', '')
+    f.write('\tmul_step %d, %s, %s, %s \n' % (K, C_JOINED, B_REGS_JOINED, TEMP_REGS_JOINED))
+
+def write_mul_step_macro(f):
+    comment(f, "mul step")
+    K = '\K'
+    
+    C_REGS = ['\C0', '\C1', '\C2', '\C3', '\C4', '\C5', '\C6', '\C7', '\C8']
+    B_REGS = ['\B0', '\B1', '\B2', '\B3', '\B4', '\B5', '\B6', '\B7']
+    TEMP = ['\T0', '\T1', '\T2', '\T3', '\T4', '\T5', '\T6', '\T7', '\T8', '\T9', '\T10', '\T11']
+    AI = TEMP[11]
+    C_JOINED = ', '.join(C_REGS).replace('\\', '')
+    B_REGS_JOINED = ', '.join(B_REGS).replace('\\', '')
+    TEMP_REGS_JOINED = ', '.join(TEMP).replace('\\', '')
+    f.write('.macro mul_step, %s, %s, %s, %s \n' % (K.replace('\\', ''), C_JOINED, B_REGS_JOINED, TEMP_REGS_JOINED))
+    newlines(f)
+    # load B
+    ldr(f, TEMP[0], 'sp', stack_offset_b, 'load B addr pointer')
+    for i in range(4):
+        ldp(f, B_REGS[2*i], B_REGS[2*i + 1], TEMP[0], i*16, 'load B')
+    newlines(f) 
+    ldr(f, TEMP[1], 'sp', stack_offset_a, 'load A addr pointer')    
+    f.write('\tldr %s, [%s , 8*\K] // load AI \n' % (AI, TEMP[1]))
+    TEMP_FOR_MUL = ['\T0', '\T1', '\T2', '\T3', '\T4', '\T5', '\T6', '\T7', '\T8', '\T9']
+    newlines(f)
+    comment(f, "C ← C + ai B")
+    call_mul_8x1_macro(f, [AI], C_REGS, B_REGS, TEMP_FOR_MUL, [TEMP[10]])    
+
+    comment(f,"q ← mu * C mod r")
+    load_label_address_into_register(f, 'inv_min_p_mod_r', AI)
+    ldr(f, AI, AI, 0, 'load inv_min_p_mod_r')
+    mul(f, AI, AI, C_REGS[0], 'mul C0 with inv_min_p_mod_r = q')
+    newlines(f)
+
+    comment(f, "C ← C + q p")
+    load_label_address_into_register(f, 'big_p', TEMP[0])
+    for i in range(4):
+        ldp(f, B_REGS[2*i], B_REGS[2*i + 1], TEMP[0], i*16, 'load B')
+    newlines(f)
+    call_mul_8x1_macro(f, [AI], C_REGS, B_REGS, TEMP_FOR_MUL, [TEMP[10]])
+
+    comment(f, "C <- C / r")
+    mov(f, C_REGS[0], C_REGS[1], 'move C1 to C0')
+    mov(f, C_REGS[1], C_REGS[2], 'move C2 to C1')
+    mov(f, C_REGS[2], C_REGS[3], 'move C3 to C2')
+    mov(f, C_REGS[3], C_REGS[4], 'move C4 to C3')
+    mov(f, C_REGS[4], C_REGS[5], 'move C5 to C4')
+    mov(f, C_REGS[5], C_REGS[6], 'move C6 to C5')
+    mov(f, C_REGS[6], C_REGS[7], 'move C7 to C6')
+    mov(f, C_REGS[7], C_REGS[8], 'move C8 to C7')
+    eor(f, C_REGS[8], C_REGS[8], C_REGS[8])
+    newlines(f)
+    f.write('.endm \n')
+
+
+def reduce_once(f, C_REGS, B_REGS, TEMP):
+    newlines(f)
+    load_label_address_into_register(f, locals['big_p'], TEMP[0])
+    for i in range(4):
+        ldp(f, B_REGS[2*i], B_REGS[2*i + 1], TEMP[0], i*16, 'load P')
+    newlines(f)
+    subs(f, C_REGS[0], C_REGS[0], B_REGS[0], 'sub C0 with P0')
+    sbcs(f, C_REGS[1], C_REGS[1], B_REGS[1], 'sub C1 with P1')
+    sbcs(f, C_REGS[2], C_REGS[2], B_REGS[2], 'sub C2 with P2')
+    sbcs(f, C_REGS[3], C_REGS[3], B_REGS[3], 'sub C3 with P3')
+    sbcs(f, C_REGS[4], C_REGS[4], B_REGS[4], 'sub C4 with P4')
+    sbcs(f, C_REGS[5], C_REGS[5], B_REGS[5], 'sub C5 with P5')
+    sbcs(f, C_REGS[6], C_REGS[6], B_REGS[6], 'sub C6 with P6')
+    sbcs(f, C_REGS[7], C_REGS[7], B_REGS[7], 'sub C7 with P7')
+    sbcs(f, TEMP[0], 'xzr', 'xzr', 'carry into temp0')
+    newlines(f)
+    andd(f, B_REGS[0], B_REGS[0], TEMP[0], 'and P0 with temp0')
+    andd(f, B_REGS[1], B_REGS[1], TEMP[0], 'and P1 with temp0')
+    andd(f, B_REGS[2], B_REGS[2], TEMP[0], 'and P2 with temp0')
+    andd(f, B_REGS[3], B_REGS[3], TEMP[0], 'and P3 with temp0')
+    andd(f, B_REGS[4], B_REGS[4], TEMP[0], 'and P4 with temp0')
+    andd(f, B_REGS[5], B_REGS[5], TEMP[0], 'and P5 with temp0')
+    andd(f, B_REGS[6], B_REGS[6], TEMP[0], 'and P6 with temp0')
+    andd(f, B_REGS[7], B_REGS[7], TEMP[0], 'and P7 with temp0')
+
+    ldr(f, TEMP[1], 'sp', stack_offest_dest, 'load dest addr pointer')
+    newlines(f) 
+    adds(f, C_REGS[0], C_REGS[0], B_REGS[0], 'add C0 with P0')
+    adcs(f, C_REGS[1], C_REGS[1], B_REGS[1], 'add C1 with P1')
+    stp(f, C_REGS[0], C_REGS[1], TEMP[1], 0, 'store C0 and C1')
+    adcs(f, C_REGS[2], C_REGS[2], B_REGS[2], 'add C2 with P2')
+    adcs(f, C_REGS[3], C_REGS[3], B_REGS[3], 'add C3 with P3')
+    stp(f, C_REGS[2], C_REGS[3], TEMP[1], 16, 'store C2 and C3')
+    adcs(f, C_REGS[4], C_REGS[4], B_REGS[4], 'add C4 with P4')
+    adcs(f, C_REGS[5], C_REGS[5], B_REGS[5], 'add C5 with P5')
+    stp(f, C_REGS[4], C_REGS[5], TEMP[1], 32, 'store C4 and C5')
+    adcs(f, C_REGS[6], C_REGS[6], B_REGS[6], 'add C6 with P6')
+    adcs(f, C_REGS[7], C_REGS[7], B_REGS[7], 'add C7 with P7')
+    stp(f, C_REGS[6], C_REGS[7], TEMP[1], 48, 'store C6 and C7')
+
+
+with open(fn+'.tmp','w') as f:
+    f.write('/* DO EDIT, ADD CUSTOM MUL COUNTER! generated by autogen */\n\n')
+
+    f.write('.align 4\n\n')
+
+    f.write('.data\n\n')
+    f.write('inv_min_p_mod_r: \n')
+    f.write('\t.quad 0x66c1301f632e294d\n')
+    f.write('%s: \n' % 'big_p')
+    f.write('\t.quad 0x1b81b90533c6c87b, 0xc2721bf457aca835, 0x516730cc1f0b4f25, 0xa7aac6c567f35507\n')
+    f.write('\t.quad 0x5afbfcc69322c9cd, 0xb42d083aedc88c42, 0xfc8ab0d15e3e4c4a, 0x65b48e8f740f89bf\n\n')
+
+    f.write('.text\n')
+    f.write('.align 4\n\n')
+
+    write_mul_8x1_macro(f)
+    write_mul_step_macro(f)
+
+    #introduce_global_function(f, '_fp_mul2')
+    #mov(f, 'x2', 'x0') 
+    introduce_global_function(f, '_fp_mul3')
+    comment(f, "todo add your custom mul counter here")
+    REGS_TO_SAVE = ['x0', 'x1', 'x2', 'x19', 'x20', 'x21', 'x22', 'x23', 'x24', 'x25', 'x26', 'x27', 'x28', 'x30']
+    C_REGS = ['x21', 'x22', 'x23', 'x24', 'x25', 'x26', 'x27', 'x28', 'x30']
+    B_REGS = ['x0', 'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7']
+
+    comment(f, "save variables on stack")
+    sub_stack_and_store_on_stack(f, REGS_TO_SAVE, 0)
+    newlines(f)
+    # Set C to 0
+    comment(f, "set C to 0")
+    for i in range(len(C_REGS)):
+        eor(f, C_REGS[i], C_REGS[i], C_REGS[i])
+    newlines(f)
+    FREE_REGS = ['x8','x9', 'x10', 'x11', 'x12', 'x13', 'x14', 'x15', 'x16', 'x17', 'x19', 'x20']
+
+    call_mul_step_macro(f, 0, C_REGS, B_REGS, FREE_REGS)
+    call_mul_step_macro(f, 1, C_REGS, B_REGS, FREE_REGS)
+    call_mul_step_macro(f, 2, C_REGS, B_REGS, FREE_REGS)
+    call_mul_step_macro(f, 3, C_REGS, B_REGS, FREE_REGS)
+    call_mul_step_macro(f, 4, C_REGS, B_REGS, FREE_REGS)
+    call_mul_step_macro(f, 5, C_REGS, B_REGS, FREE_REGS)
+    call_mul_step_macro(f, 6, C_REGS, B_REGS, FREE_REGS)
+    call_mul_step_macro(f, 7, C_REGS, B_REGS, FREE_REGS)
+
+    
+    reduce_once(f, C_REGS, B_REGS, FREE_REGS)
+
+    comment(f, "restore stack")
+    add_stack_and_restore_regs_from_stack(f, REGS_TO_SAVE, 0)
+    f.write('\tret\n\n')
+    maybeupdate(fn)
