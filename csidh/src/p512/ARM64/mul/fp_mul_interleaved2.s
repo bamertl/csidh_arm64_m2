@@ -84,7 +84,6 @@ big_p:
 	adcs \C8, \C8, \T5  // umul C8 
 	adcs \CARRY_REG, \CARRY_REG, xzr  
 
-.endm 
 	/* mul step */
 .macro mul_step, K, C0, C1, C2, C3, C4, C5, C6, C7, C8, B0, B1, B2, B3, B4, B5, B6, B7, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11 
 
@@ -95,10 +94,10 @@ big_p:
 	ldp \B6, \B7, [\T0, #48]  // load B 
 
 	ldr \T1, [sp, #8]  // load A addr pointer 
-	ldr \T11, [\T1 , 8*\K] // load AI 
+	ldr \T11, [\T1 + 8*\K] // load AI 
 
 	/* C ← C + ai B */
-	mul_8x1 \T11, \C0, \C1, \C2, \C3, \C4, \C5, \C6, \C7, \C8, \B0, \B1, \B2, \B3, \B4, \B5, \B6, \B7, \T0, \T1, \T2, \T3, \T4, \T5, \T6, \T7, \T8, \T9, \T10
+	mul_8x1 T11, C0, C1, C2, C3, C4, C5, C6, C7, C8, B0, B1, B2, B3, B4, B5, B6, B7, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10
 	/* q ← mu * C mod r */
 	adrp \T11, inv_min_p_mod_r@PAGE
 	add \T11, \T11, inv_min_p_mod_r@PAGEOFF
@@ -113,7 +112,7 @@ big_p:
 	ldp \B4, \B5, [\T0, #32]  // load B 
 	ldp \B6, \B7, [\T0, #48]  // load B 
 
-	mul_8x1 \T11, \C0, \C1, \C2, \C3, \C4, \C5, \C6, \C7, \C8, \B0, \B1, \B2, \B3, \B4, \B5, \B6, \B7, \T0, \T1, \T2, \T3, \T4, \T5, \T6, \T7, \T8, \T9, \T10
+	mul_8x1 T11, C0, C1, C2, C3, C4, C5, C6, C7, C8, B0, B1, B2, B3, B4, B5, B6, B7, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10
 	/* C <- C / r */
 	mov \C0, \C1  // move C1 to C0 
 	mov \C1, \C2  // move C2 to C1 
@@ -125,9 +124,11 @@ big_p:
 	mov \C7, \C8  // move C8 to C7 
 	eor \C8, \C8, \C8
 
-.endm 
-.global _fp_mul3
-_fp_mul3: 
+.global fp_mul_2
+fp_mul_2: 
+	mov x2, x0  
+.global fp_mul_3
+fp_mul_3: 
 	/* todo add your custom mul counter here */
 	/* save variables on stack */
 	sub sp, sp, #112

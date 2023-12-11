@@ -1,4 +1,5 @@
-.extern _fp_mul_counter
+.extern fp_mulsq_count
+
 /*
 This file contains the fp_mul3 method for montgomery reduction with first a subtractive karatsuba multiplication
 of 256*256 -> 512 bits and then a reduction
