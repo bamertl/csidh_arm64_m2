@@ -128,7 +128,17 @@ big_p:
 .endm 
 .global _fp_mul3
 _fp_mul3: 
-	/* todo add your custom mul counter here */
+
+	/* Increment mulcounter */
+	adrp x3, _fp_mul_counter@PAGE
+	add x3, x3, _fp_mul_counter@PAGEOFF
+	ldr x3, [x3]
+	cbz x3, 0f
+	ldr x4, [x3]
+	add x4, x4, #1
+	str x4, [x3]
+	0:
+
 	/* save variables on stack */
 	sub sp, sp, #112
 	stp x0, x1, [sp, #0]
