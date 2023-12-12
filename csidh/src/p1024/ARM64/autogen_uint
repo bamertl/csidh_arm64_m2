@@ -1,0 +1,270 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+limbs = 16
+
+fn = './src/p1024/ARM64/uint.s'
+
+global_variables = {
+    '_uint_0': '_uint_0',
+    '_uint_1': '_uint_1',
+} 
+
+global_functions = {
+    '_uint_eq': '_uint_eq',
+    '_uint_set': '_uint_set',
+    '_uint_len': '_uint_len',
+    '_uint_bit': '_uint_bit',
+    '_uint_add3': '_uint_add3',
+    '_uint_sub3': '_uint_sub3',
+    '_uint_mul3_64': '_uint_mul3_64',
+    '_uint_random': '_uint_random'
+}
+
+
+sys.setrecursionlimit(10000)
+
+print("Generating %s..." % fn)
+
+def maybeupdate(fn):
+  if os.access(fn,os.F_OK):
+    with open(fn) as f:
+      x = f.read()
+    with open(fn+'.tmp') as f:
+      y = f.read()
+    if x == y:
+      os.unlink(fn+'.tmp')
+      return
+  os.rename(fn+'.tmp',fn)
+
+  def comment(f, comment):
+    f.write('/* %s */\n' % comment)
+
+def init_data_var(f, name):
+    f.write('.global %s\n' % name)
+    f.write('%s: \n' % name)
+    f.write('\t.quad 0\n')
+
+def introduce_global_function(f, name):
+    f.write('.global %s\n' % name)
+    f.write('%s: \n' % name)
+
+
+def sub_stack_and_store_on_stack(f, regs, additional_offset):
+    total_offset = len(regs)*8 + additional_offset 
+    if total_offset % 16 != 0:
+        total_offset = ((total_offset // 16) + 1) * 16
+    f.write('\tsub sp, sp, #%d\n' % total_offset)
+    offset = 0
+    i = 0
+    while i < len(regs):
+        # Check if there's at least one more register after the current one
+        if i + 1 < len(regs):
+            # If yes, store the pair of registers
+            f.write('\tstp %s, %s, [sp, #%d]\n' % (regs[i], regs[i+1], offset))
+            i += 2
+        else:
+            # If no, store the single register
+            f.write('\tstr %s, [sp, #%d]\n' % (regs[i],offset))
+            i += 1
+        offset += 16
+
+def add_stack_and_restore_regs_from_stack(f, regs, additional_offset):
+    total_offset = len(regs)*8 + additional_offset 
+    if total_offset % 16 != 0:
+        total_offset = ((total_offset // 16) + 1) * 16
+    offset = 0
+    i = 0
+    while i < len(regs):
+        # Check if there's at least one more register after the current one
+        if i + 1 < len(regs):
+            # If yes, store the pair of registers
+            f.write('\tldp %s, %s, [sp, #%d]\n' % (regs[i], regs[i+1], offset))
+            i += 2
+        else:
+            # If no, store the single register
+            f.write('\tldr %s, [sp, #%d]\n' % (regs[i],offset))
+            i += 1
+        offset += 16
+    f.write('\tadd sp, sp, #%d\n' % total_offset)
+
+def load_label_address_into_register(f, label, register):
+    f.write('\tadrp %s, %s\n' % (register, label+ '@PAGE'))
+    f.write('\tadd %s, %s, %s\n' % (register, register, label+'@PAGEOFF'))
+
+
+def mov(f, dst, src, comment=''):
+    if comment:
+        comment = ' // ' + comment
+
+    f.write('\tmov %s, %s %s \n' % (dst, src, comment))
+
+def comment(f, comment):
+    f.write('\t/* %s */\n' % comment)
+
+def eor(f, dst, who, who2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\teor %s, %s, %s %s \n' % (dst, who, who2, comment)) 
+
+def orr(f, dst, who, who2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\torr %s, %s, %s %s \n' % (dst, who, who2, comment))
+    
+def newlines(f, n=1):
+    for i in range(n):
+        f.write('\n')
+
+def ldr(f, dst, src, offset, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tldr %s, [%s, #%d] %s \n' % (dst, src, offset, comment))
+
+def ldp(f, dst, dst2, src, offset, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tldp %s, %s, [%s, #%d] %s \n' % (dst, dst2, src, offset, comment))
+def mul(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tmul %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def umulh(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tumulh %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def adds(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tadds %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def adcs(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tadcs %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def subs(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tsubs %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def sbcs(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tsbcs %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def andd(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tand %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def stp(f, src, src2, dst, offset, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tstp %s, %s, [%s, #%d] %s \n' % (src, src2, dst, offset, comment))
+
+
+def write_locals(f):
+    global_0 = global_variables['_uint_0']
+    global_1 = global_variables['_uint_1']
+    f.write('.global %s \n' % global_0)
+    f.write('%s: \n' % global_0)            
+    for i in range(limbs):
+        f.write('\t.quad 0x0000000000000000\n')
+    f.write('.global %s \n' % global_1)
+    f.write('%s: \n' % global_1)
+    f.write('\t.quad 0x0000000000000001\n')
+    for i in range(limbs -1):
+        f.write('\t.quad 0x0000000000000000\n') 
+    newlines(f, 2)
+# x0 = x0 == x1
+def write_uint_eq(f):
+    introduce_global_function(f, global_functions['_uint_eq']) 
+    A_REGS = ['x2', 'x3', 'x4', 'x5']
+    B_REGS = ['x6', 'x7', 'x8', 'x9']
+    RESULT_REG = 'x17'
+
+    TEMP_REGS = ['x10', 'x11', 'x12', 'x13']
+    INTERMEDIATE_REGS = ['x14', 'x15', 'x16']
+    A_ADR = 'x0'
+    B_ADR = 'x1'
+
+    orr(f, RESULT_REG, RESULT_REG, RESULT_REG, 'clear result')
+    for i in range(int(limbs/2)):
+        comment(f, 'iteration %d' % i)
+        start_memory_offset = i*16*2 #32 steps
+        ldp(f, A_REGS[0], A_REGS[1], A_ADR, start_memory_offset, 'load A')
+        ldp(f, A_REGS[2], A_REGS[3], A_ADR, start_memory_offset + 16, 'load A')
+        ldp(f, B_REGS[0], B_REGS[1], B_ADR, start_memory_offset, 'load B')
+        ldp(f, B_REGS[2], B_REGS[3], B_ADR, start_memory_offset + 16, 'load B')
+
+        eor(f, TEMP_REGS[0], A_REGS[0], B_REGS[0], "0 if equal")
+        eor(f, TEMP_REGS[1], A_REGS[1], B_REGS[1], "0 if equal")
+        orr(f, INTERMEDIATE_REGS[0], TEMP_REGS[0], TEMP_REGS[1], "accumulate")
+        eor(f, TEMP_REGS[2], A_REGS[2], B_REGS[2], "0 if equal")
+        eor(f, TEMP_REGS[3], A_REGS[3], B_REGS[3], "0 if equal")
+        orr(f, INTERMEDIATE_REGS[1], TEMP_REGS[2], TEMP_REGS[3], "accumulate")
+        orr(f, INTERMEDIATE_REGS[2], INTERMEDIATE_REGS[0], INTERMEDIATE_REGS[1], "accumulate intermediate together")
+        orr(f, RESULT_REG, RESULT_REG, INTERMEDIATE_REGS[2], "accumulate in result")
+
+
+    f.write('\tcmp %s, #0 // local not of acc result \n' % RESULT_REG)
+    f.write('\tcset w0, eq // set result to 1 if equal \n')
+    f.write('\tret \n\n')
+
+def write_uint_set(f):
+    introduce_global_function(f, global_functions['_uint_set']) 
+    DEST_REG = 'x0'
+    COPY_REG = 'x1'
+    zero = 'xzr'
+    for i in range(int(limbs/2)):
+        offset = i*16
+        if i == 0:
+            stp(f, COPY_REG, zero, DEST_REG, offset, 'store x1 and zero')
+        else:
+            stp(f, zero, zero, DEST_REG, offset)
+    f.write('\tret \n\n')
+
+def write_uint_len(f):
+    comment(f, "get position most significant non-zero bit")
+    introduce_global_function(f, global_functions['_uint_len'])
+
+    num = ['x2', 'x3']
+    zero_counts = ['x4', 'x5']
+
+
+
+    final_offset = 'x7'
+    mov(f, final_offset, '#0', 'initialize final result')
+
+    for i in range(int(limbs/2)):
+        comment(f,"iteration %d" % i)
+        ldp(f, num[0], num[1], 'x0', i*16, 'load two limbs to %s' % num)
+        f.write('\tclz %s, %s // count leading zeros in first limb\n' % (zero_counts[0], num[0]))
+        f.write('\tclz %s, %s // count leading zeros in second limb\n' % (zero_counts[1], num[1]))
+        f.write('\tsub %s, #64, %s // subtract from 64 for position of first bit that is 1 or 0\n' % (zero_counts[0], zero_counts[0]))
+        f.write('\tsub %s, #64, %s // subtract from 64 for position of first bit that is 1 or 0\n' % (zero_counts[1], zero_counts[1]))
+        f.write('\tadd %s, %s, #%d // add limb offsets\n' % (zero_counts[0], zero_counts[0], i*16))
+        f.write('\tadd %s, %s, #%d \n' % (zero_counts[1], zero_counts[1], i*16 + 8))
+        f.write('\tcmp %s, %s // Now we compare if the limb offset equals the current offset (if this is the case there is no 0)\n' % (zero_counts[0], i*16))
+        f.write('\tcsel %s, %s, %s, ne // if equal keep, else new result\n' % (final_offset, zero_counts[0], final_offset))
+        f.write('\tcmp %s, #%s \n' % (zero_counts[1], i*16 + 8))
+        f.write('\tcsel %s, %s, %s, ne // if equal keep, else new result\n' % (final_offset, zero_counts[1], final_offset))
+        newlines(f, 1)
+    mov(f, 'x0', final_offset, 'return final offset')
+    f.write('\tret \n\n')
+
+with open(fn+'.tmp','w') as f:
+    f.write('/* DO EDIT! generated by autogen */\n\n')
+
+    f.write('.align 4\n')
+    f.write('.text\n')
+    write_locals(f)
+    write_uint_eq(f)
+    write_uint_set(f)
+    write_uint_len(f)
+    maybeupdate(fn)
+

@@ -53,6 +53,14 @@ make bench_muls ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SCHOOLBOOK
 ./bench_muls
 ```
 
+# 1024 Bit
+
+## Autogens
+```bash
+./src/p1024/ARM64/autogen_uint
+```
+
+
 
 ## Important Information for Apple M2
     Do not use x18 and x29 registers. 
