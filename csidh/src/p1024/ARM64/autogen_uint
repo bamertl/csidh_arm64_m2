@@ -161,6 +161,16 @@ def andd(f, dst, src, src2, comment=''):
         comment = ' // ' + comment
     f.write('\tand %s, %s, %s %s \n' % (dst, src, src2, comment))
 
+def lsr(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tlsr %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def lsl(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tlsl %s, %s, %s %s \n' % (dst, src, src2, comment))
+
 def stp(f, src, src2, dst, offset, comment=''):
     if comment:
         comment = ' // ' + comment
@@ -193,7 +203,7 @@ def write_uint_eq(f):
     B_ADR = 'x1'
 
     orr(f, RESULT_REG, RESULT_REG, RESULT_REG, 'clear result')
-    for i in range(int(limbs/2)):
+    for i in range(int(limbs/4)):
         comment(f, 'iteration %d' % i)
         start_memory_offset = i*16*2 #32 steps
         ldp(f, A_REGS[0], A_REGS[1], A_ADR, start_memory_offset, 'load A')
@@ -234,9 +244,6 @@ def write_uint_len(f):
 
     num = ['x2', 'x3']
     zero_counts = ['x4', 'x5']
-
-
-
     final_offset = 'x7'
     mov(f, final_offset, '#0', 'initialize final result')
 
@@ -257,6 +264,142 @@ def write_uint_len(f):
     mov(f, 'x0', final_offset, 'return final offset')
     f.write('\tret \n\n')
 
+def write_uint_bit(f):
+    comment(f, "\n x1 = position of bit 0 -1022 \n x0 = number array")
+    introduce_global_function(f, global_functions['_uint_bit'])
+
+    temp = 'x5'
+    limb_position = 'x3'
+
+    lsr(f, limb_position, 'x1', '#6', 'divide by 64 to get the index of the limb of the position')
+    lsl(f, limb_position, limb_position, '#3', '*8 for actuall offset')
+    newlines(f, 1)
+    andd(f, temp, 'x1', '#63', '63 = 0b0000000000...111111 so it does modulo 64')
+    f.write('\tldr %s, [%s, %s] // load the limb\n' % (limb_position, 'x0', limb_position))
+    lsr(f, limb_position, limb_position, temp, "Right shift by x0%64 to bring the bit of interest to the least significant position")
+    andd(f, 'x0', limb_position, '#1', 'and with 1 to get bit result')
+    f.write('\tret \n\n')
+
+def write_uint_add3(f):
+    introduce_global_function(f, global_functions['_uint_add3'])
+    result_adr = 'x0'   
+    a_adr = 'x1'
+    b_adr = 'x2'
+
+    A_REGS = ['x3', 'x4', 'x5', 'x6']
+    B_REGS = ['x7', 'x8', 'x9', 'x10']
+    RESULT_REGS = ['x11', 'x12', 'x13', 'x14']
+
+    for i in range(int(limbs/4)):
+        comment(f, "Iteration %d" % i)
+        offset = i*32
+        ldp(f, A_REGS[0], A_REGS[1], a_adr, offset, 'load A')
+        ldp(f, A_REGS[2], A_REGS[3], a_adr, offset + 16, 'load A')
+        ldp(f, B_REGS[0], B_REGS[1], b_adr, offset, 'load B')
+        ldp(f, B_REGS[2], B_REGS[3], b_adr, offset + 16, 'load B')
+        if i == 0:
+            adds(f, RESULT_REGS[0], A_REGS[0], B_REGS[0], 'First time without carry')
+        else:
+            adcs(f, RESULT_REGS[0], A_REGS[0], B_REGS[0], 'adcs first limb')
+        adcs(f, RESULT_REGS[1], A_REGS[1], B_REGS[1], 'adcs second limb')
+        adcs(f, RESULT_REGS[2], A_REGS[2], B_REGS[2], 'adcs third limb')
+        adcs(f, RESULT_REGS[3], A_REGS[3], B_REGS[3], 'adcs fourth limb')
+        stp(f, RESULT_REGS[0], RESULT_REGS[1], result_adr, offset, 'store result')
+        stp(f, RESULT_REGS[2], RESULT_REGS[3], result_adr, offset + 16, 'store result')
+        newlines(f, 1)
+    f.write('\tret \n\n')
+
+def write_uint_sub3(f):
+    comment(f, "x0 = x1 - x2, x0 = carry")
+    introduce_global_function(f, global_functions['_uint_sub3'])
+    result_adr = 'x0'   
+    a_adr = 'x1'
+    b_adr = 'x2'
+
+    A_REGS = ['x3', 'x4', 'x5', 'x6']
+    B_REGS = ['x7', 'x8', 'x9', 'x10']
+    RESULT_REGS = ['x11', 'x12', 'x13', 'x14']
+
+    for i in range(int(limbs/4)):
+        comment(f, "Iteration %d" % i)
+        offset = i*32
+        ldp(f, A_REGS[0], A_REGS[1], a_adr, offset, 'load A')
+        ldp(f, A_REGS[2], A_REGS[3], a_adr, offset + 16, 'load A')
+        ldp(f, B_REGS[0], B_REGS[1], b_adr, offset, 'load B')
+        ldp(f, B_REGS[2], B_REGS[3], b_adr, offset + 16, 'load B')
+        if i == 0:
+            subs(f, RESULT_REGS[0], A_REGS[0], B_REGS[0], 'First time without carry')
+        else:
+            sbcs(f, RESULT_REGS[0], A_REGS[0], B_REGS[0], 'sbcs first limb')
+        sbcs(f, RESULT_REGS[1], A_REGS[1], B_REGS[1], 'sbcs second limb')
+        sbcs(f, RESULT_REGS[2], A_REGS[2], B_REGS[2], 'sbcs third limb')
+        sbcs(f, RESULT_REGS[3], A_REGS[3], B_REGS[3], 'sbcs fourth limb')
+        stp(f, RESULT_REGS[0], RESULT_REGS[1], result_adr, offset, 'store result')
+        stp(f, RESULT_REGS[2], RESULT_REGS[3], result_adr, offset + 16, 'store result')
+        newlines(f, 1)
+    f.write('\tsbcs %s, %s, %s // returing final carry \n' % (result_adr,'xzr', 'xzr'))
+    
+    f.write('\tret \n\n')
+
+def write_uint_mul3_64(f):
+    comment(f, "[x0] = [x1] * x2 , x2 = direct value, we ignore last carry")
+    introduce_global_function(f, global_functions['_uint_mul3_64'])
+    result_adr = 'x0'
+    a_adr = 'x1'
+    b = 'x2'
+    A_REGS = ['x3', 'x4', 'x5', 'x6']
+    RESULT_REGS = ['x7', 'x8', 'x9', 'x10', 'x11', 'x12', 'x13', 'x14']
+    CARRY_REG = 'x15'
+    adds(f, CARRY_REG, 'xzr', 'xzr', 'initialize carry and set flags')
+    for i in range(int(limbs/4)):
+        comment(f, "Iteration %d" % i)
+        offset = i*32
+        ldp(f, A_REGS[0], A_REGS[1], a_adr, offset, 'load A')
+        ldp(f, A_REGS[2], A_REGS[3], a_adr, offset + 16, 'load A')
+
+        for j in range(4):
+            mul(f, RESULT_REGS[j*2], A_REGS[j], b, 'C%s'% str(i*4+j))
+            umulh(f, RESULT_REGS[j*2+1], A_REGS[j], b, 'C%s'% str(i*4 + j+1))
+        
+        adcs(f, RESULT_REGS[0], RESULT_REGS[0], CARRY_REG, 'add carry from previous')
+        adcs(f, RESULT_REGS[1], RESULT_REGS[1], RESULT_REGS[2], 'C%s'% str(i*4 + 1))
+        adcs(f, RESULT_REGS[3], RESULT_REGS[3], RESULT_REGS[4], 'C%s'% str(i*4 + 2))
+        adcs(f, RESULT_REGS[5], RESULT_REGS[5], RESULT_REGS[6], 'C%s'% str(i*4 + 3))
+        adcs(f, CARRY_REG, 'xzr', RESULT_REGS[7], 'last umul into carry reg')
+        newlines(f, 1)
+        stp(f, RESULT_REGS[0], RESULT_REGS[1], result_adr, offset, 'store C%s and C%s' % (str(i*4), str(i*4 + 1)))
+        stp(f, RESULT_REGS[3], RESULT_REGS[5], result_adr, offset + 16, 'store C%s and C%s' % (str(i*4 + 2), str(i*4 + 3)))
+
+        newlines(f, 1)
+    f.write('\tret \n\n')
+    newlines(f, 1)
+
+
+def write_uint_random(f):
+    comment(f, "x0 = x0: place to store random number x1: uniformly distributed in (0,x1")
+    introduce_global_function(f, global_functions['_uint_random'])
+    REGS_TO_STORE = ['x0', 'x1', 'lr']
+    x1 = 'x1'
+    x0 = 'x0'
+
+    complete_bytes = 'x3'
+    remainder_bits = 'x4'
+    x0_offset = 0
+
+    sub_stack_and_store_on_stack(f, REGS_TO_STORE, 0)
+    mov(f, x0, x1, 'copy x0 to x1')
+    f.write('\tbl _uint_len\n')
+    mov(f, x1, x0, 'copy x0 to x1')
+    lsr(f, complete_bytes, x1, '#3', 'divide by 8 to get number of complete bytes')
+    andd(f, remainder_bits, x1, '#63', 'get remainder bits')
+    mov(f, x1, complete_bytes, 'copy complete bytes to x1')
+
+    f.write('\tldr %s, [sp, #%d] // load resulta addr \n' % (x0, x0_offset))
+    f.write('\tbl _randombytes\n')
+    
+    add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, 0)
+    f.write('\tret \n\n')
+
 with open(fn+'.tmp','w') as f:
     f.write('/* DO EDIT! generated by autogen */\n\n')
 
@@ -266,5 +409,10 @@ with open(fn+'.tmp','w') as f:
     write_uint_eq(f)
     write_uint_set(f)
     write_uint_len(f)
+    write_uint_bit(f)
+    write_uint_add3(f)
+    write_uint_sub3(f)
+    write_uint_mul3_64(f)
+    write_uint_random(f)
     maybeupdate(fn)
 
