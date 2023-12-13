@@ -24,7 +24,8 @@ extern_variables = {
     '_uint_eq':'_uint_eq',
     '_uint_set':'_uint_set',
     '_uint_add3':'_uint_add3',
-    '_uint_sub3':'_uint_sub3'
+    '_uint_sub3':'_uint_sub3',
+    '_uint_len':'_uint_len',
 }
 
 global_functions = {
@@ -166,6 +167,11 @@ def adds(f, dst, src, src2, comment=''):
     if comment:
         comment = ' // ' + comment
     f.write('\tadds %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def add(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tadd %s, %s, %s %s \n' % (dst, src, src2, comment))
 
 def adcs(f, dst, src, src2, comment=''):
     if comment:
@@ -351,7 +357,7 @@ but better safe then sorry')
     adds(f, 'x2', 'sp', temp_addr_stack_offset)
     f.write('\tbl %s\n' % global_functions['_reduce_once'])
     add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, limbs*8)
-    f.write('\tretn\n\n')
+    f.write('\tret\n\n')
     newlines(f,1)
 
 
@@ -382,9 +388,7 @@ def write_fp_sq1(f):
     mov(f, 'x1', 'x0', 'move x0 to x1')
     newlines(f,1)
 
-def write_fp_sq2(f):
-    introduce_global_function(f, global_functions['_fp_sq2'],
-                                '[x0] = [x1] * [x1] mod [p]')
+def presave_mul_counter(f):
     comment(f,"First we set the mul counter pointer to 0, so it doesnt get updated, later we restore it")
     x3 = 'x3'
     x4 = 'x4'
@@ -394,16 +398,148 @@ def write_fp_sq2(f):
     sub_stack_and_store_on_stack(f, REGS_TO_STORE, 0)
     f.write('\tstr xzr, [x3, #0]\n')
     newlines(f,1)
+
+def restore_mul_counter(f):
+    comment(f, "Restore Mul Counter")
+    newlines(f,1)
+    x3 = 'x3'
+    x4 = 'x4'
+    REGS_TO_STORE = ['lr', x3, x4]
+    add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, 0)
+    f.write('\tstr x4, [x3, #0]\n')
+
+def write_fp_sq2(f):
+    introduce_global_function(f, global_functions['_fp_sq2'],
+                                '[x0] = [x1] * [x1] mod [p]')
+    presave_mul_counter(f)
     comment(f,"Now count up sq_counter")
     increase_counter(f, counter_variables['_fp_sq_counter'])
 
     mov(f, 'x2', 'x1', 'move x1 to x2 for mul')
     f.write('\tbl %s\n' % extern_variables['_fp_mul3'])
-
-    add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, 0)
-    f.write('\tstr x4, [x3, #0]\n')
+    restore_mul_counter(f)
     f.write('\tret\n\n')
     newlines(f,1)
+
+def write_fp_inv(f):
+    introduce_global_function(f, global_functions['_fp_inv'],
+                              '[x0] = [x0] ^ [p] - 2 mod [p] = [x1] ^ -1 mod [p] ')
+    presave_mul_counter(f)
+    comment(f,"Count up inv_counter")
+    increase_counter(f, counter_variables['_fp_inv_counter'])
+    p_minus_2 = 'x1'
+    load_label_address_into_register(f, extern_variables['_p_minus_2'], p_minus_2)
+    f.write('\tbl %s\n' % global_functions['_fp_pow'])
+    restore_mul_counter(f)
+    f.write('\tret\n\n')
+
+
+_fp_pow_word_loop = '_fp_pow_word_loop'
+_fp_pow_bit_loop = '_fp_pow_bit_loop'
+_fp_pow_bit_is_zero = '_fp_pow_bit_is_zero'
+_fp_pow_bit_is_one = '_fp_pow_bit_is_one'
+_fp_pow_bit_finish = '_fp_pow_bit_finish'
+_fp_pow_end = '_fp_pow_end'
+
+def write_fp_pow(f):
+    introduce_global_function(
+        f, 
+        global_functions['_fp_pow'],
+'[x0] = [x1] ^ [x2] mod [p] \n\
+ a ← 1 ; m ← a \n\
+ for i = 0 to k − 1: \n\
+    if di = 1 then a ← a · m mod n \n\
+    m ← m · m mod n \n\
+We add a dummy to make it time-constant'
+    )
+    sp = 'sp'
+    REGS_TO_STORE = ['lr', 'x0', 'x1', 'x2', 'x19', 'x20', 'x21', 'x22', 'x23']
+    x1_adr = 'x19'
+    x2_adr = 'x20'
+    current_word_offset = 'x21'
+    bit_counter = 'x22'
+    current_word = 'x23'
+    word_counter = 'x24'
+    result_adr = 'x25'
+
+    x2 = 'x3'
+    space_per_number = limbs * 8
+    offset_a = len(REGS_TO_STORE) * 8
+    offset_m = len(REGS_TO_STORE) * 8 + space_per_number
+    offset_dummy = len(REGS_TO_STORE) * 8 + space_per_number * 2
+    sub_stack_and_store_on_stack(f, REGS_TO_STORE, space_per_number * 3)
+    newlines(f,1)
+
+    mov(f, x1_adr, 'x1', 'move x1 to x1_adr')
+    mov(f, x2_adr, 'x2', 'move x2 to x2_adr')
+    mov(f, result_adr, 'x0', 'move x0 to result_adr')
+
+    load_label_address_into_register(f, extern_variables['_fp_1'], x2)
+    comment(f, "m = x1 and a = fp1")
+    FP_1_REGS = ['x4', 'x5', 'x6', 'x7', 'x8', 'x9', 'x10', 'x11', '']
+    for i in range(int(limbs/4)):
+        offset = i*8*4
+        ldp(f, FP_1_REGS[0], FP_1_REGS[1], x1_adr, offset, 'load x1')
+        ldp(f, FP_1_REGS[2], FP_1_REGS[3], x1_adr, offset + 16)
+        ldp(f, FP_1_REGS[4], FP_1_REGS[5], x2, offset, 'load fp1')
+        ldp(f, FP_1_REGS[6], FP_1_REGS[7], x2, offset + 16)
+        stp(f, FP_1_REGS[0], FP_1_REGS[1], sp, offset_m + offset, 'store x1 into m, offset m: %d, offset: %d' % (offset_m, offset))
+        stp(f, FP_1_REGS[2], FP_1_REGS[3], sp, offset_m + offset + 16)
+        stp(f, FP_1_REGS[4], FP_1_REGS[5], sp, offset_a + offset, 'store fp_1 into a, offset a: %d, offset: %d' % (offset_a, offset))
+        stp(f, FP_1_REGS[6], FP_1_REGS[7], sp, offset_a + offset + 16)
+      
+    newlines(f,1)
+    ### WORD LOOOOP ###
+    mov(f, current_word_offset, '#0', 'init current word offset to 0 (limbs* 8)')
+    mov(f, word_counter, '#%d' % limbs, 'init word counter to %d' % limbs)
+    f.write('%s:\n' % _fp_pow_word_loop) 
+    mov(f, bit_counter, '#64', 'init bit counter')
+    ## load current word of x2
+    f.write('\tldr %s, [%s, %s] // load current word of x2\n' % (current_word, x2_adr, current_word_offset))
+    newlines(f,1)
+
+    ### BIT LOOP ###
+    f.write('%s:\n' % _fp_pow_bit_loop)
+    f.write('\ttst %s, #1 // check if least significant bit is 1\n' % current_word)
+    f.write('\tbeq %s // branch if 0 \n' % _fp_pow_bit_is_zero)
+    f.write('%s:\n' % _fp_pow_bit_is_one)
+    add(f, 'x0', sp, offset_a, '= a')
+    add(f, 'x1', sp, offset_m, '= m')
+    f.write('\tbl %s // a = a * m \n' % global_functions['_fp_mul2'])
+    f.write('\tb %s\n' % _fp_pow_bit_finish)
+    f.write('%s:\n' % _fp_pow_bit_is_zero)
+    add(f, 'x0', sp, offset_dummy, '= dummy')
+    add(f, 'x1', sp, offset_m, '= m')
+    f.write('\tbl %s // dummy = dummy * m \n' % global_functions['_fp_mul2'])
+    newlines(f,1)
+    f.write('%s:\n' % _fp_pow_bit_finish)
+    add(f, 'x0', sp, offset_m, '= m')
+    f.write('\tbl fp_sq1 // m = m * m \n')
+    lsr(f, current_word, current_word, '#1', 'shift current word right by 1')
+    subs(f, bit_counter, bit_counter, '#1', 'decrease bit counter')
+    f.write('\tb.ne %s // branch if bit counter != 0 \n' % _fp_pow_bit_loop)
+    add(f,current_word_offset, current_word_offset, '#8', 'increase current word offset by 8')
+    subs(f, word_counter, word_counter, '#1', 'decrease word counter')
+    f.write('\tb.ne %s // branch if word counter != 0 \n' % _fp_pow_word_loop)
+    newlines(f,1)
+    f.write('%s:\n' % _fp_pow_end)
+    mov(f, 'x0', result_adr, 'move result_adr to x0')
+    comment(f,"Store a into result")
+    for i in range(int(limbs/8)):
+        offset = i*8*8
+        ldp(f, FP_1_REGS[0], FP_1_REGS[1], sp, offset_a + offset, 'load a')
+        ldp(f, FP_1_REGS[2], FP_1_REGS[3], sp, offset_a + offset + 16)
+        ldp(f, FP_1_REGS[4], FP_1_REGS[5], sp, offset_a + offset + 32)
+        ldp(f, FP_1_REGS[6], FP_1_REGS[7], sp, offset_a + offset + 48)
+        stp(f, FP_1_REGS[0], FP_1_REGS[1], 'x0', offset, 'store a')
+        stp(f, FP_1_REGS[2], FP_1_REGS[3], 'x0', offset + 16)
+        stp(f, FP_1_REGS[4], FP_1_REGS[5], 'x0', offset + 32)
+        stp(f, FP_1_REGS[6], FP_1_REGS[7], 'x0', offset + 48)
+    newlines(f,1)
+    comment(f, "Restore Stack")
+    add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, space_per_number * 3)
+    f.write('\tret\n\n')
+
 
 
 with open(fn+'.tmp','w') as f:
@@ -426,4 +562,6 @@ with open(fn+'.tmp','w') as f:
     write_fp_sub3(f)
     write_fp_sq1(f)
     write_fp_sq2(f)
+    write_fp_inv(f)
+    write_fp_pow(f)
     maybeupdate(fn)

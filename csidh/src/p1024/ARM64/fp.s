@@ -10,6 +10,7 @@
 .extern _uint_set
 .extern _uint_add3
 .extern _uint_sub3
+.extern _uint_len
 
 .align 4
 .data
@@ -243,7 +244,7 @@ _fp_sub3:
 	ldp x0, x1, [sp, #0]
 	ldr lr, [sp, #16]
 	add sp, sp, #160
-	retn
+	ret
 
 
 /*
@@ -280,10 +281,161 @@ _fp_sq2:
 	0: // skip label
 	mov x2, x1  // move x1 to x2 for mul 
 	bl _fp_mul3
+	/* Restore Mul Counter */
+
 	ldp lr, x3, [sp, #0]
 	ldr x4, [sp, #16]
 	add sp, sp, #32
 	str x4, [x3, #0]
 	ret
 
+
+/*
+ [x0] = [x0] ^ [p] - 2 mod [p] = [x1] ^ -1 mod [p]   
+*/
+.global _fp_inv
+_fp_inv: 
+	/* First we set the mul counter pointer to 0, so it doesnt get updated, later we restore it */
+	adrp x3, _fp_mul_counter@PAGE
+	add x3, x3, _fp_mul_counter@PAGEOFF
+	ldr x4, [x3, #0]  // load counter pointer 
+	sub sp, sp, #32
+	stp lr, x3, [sp, #0]
+	str x4, [sp, #16]
+	str xzr, [x3, #0]
+
+	/* Count up inv_counter */
+	adrp x3, _fp_inv_counter@PAGE
+	add x3, x3, _fp_inv_counter@PAGEOFF
+	ldr x3, [x3, #0]  // load counter pointer 
+	cbz x3, 0f // skip to 0f if pointer to mul_counter is 0 
+	ldr x4, [x3, #0]  // load counter value 
+	adds x4, x4, #1  // increase counter value 
+	str x4, [x3, #0]
+
+	0: // skip label
+	adrp x1, _p_minus_2@PAGE
+	add x1, x1, _p_minus_2@PAGEOFF
+	bl _fp_pow
+	/* Restore Mul Counter */
+
+	ldp lr, x3, [sp, #0]
+	ldr x4, [sp, #16]
+	add sp, sp, #32
+	str x4, [x3, #0]
+	ret
+
+/*
+ [x0] = [x1] ^ [x2] mod [p] 
+ a ← 1 ; m ← a 
+ for i = 0 to k − 1: 
+    if di = 1 then a ← a · m mod n 
+    m ← m · m mod n 
+We add a dummy to make it time-constant  
+*/
+.global _fp_pow
+_fp_pow: 
+	sub sp, sp, #464
+	stp lr, x0, [sp, #0]
+	stp x1, x2, [sp, #16]
+	stp x19, x20, [sp, #32]
+	stp x21, x22, [sp, #48]
+	str x23, [sp, #64]
+
+	mov x19, x1  // move x1 to x1_adr 
+	mov x20, x2  // move x2 to x2_adr 
+	mov x25, x0  // move x0 to result_adr 
+	adrp x3, _fp_1@PAGE
+	add x3, x3, _fp_1@PAGEOFF
+	/* m = x1 and a = fp1 */
+	ldp x4, x5, [x19, #0]  // load x1 
+	ldp x6, x7, [x19, #16]  
+	ldp x8, x9, [x3, #0]  // load fp1 
+	ldp x10, x11, [x3, #16]  
+	stp x4, x5, [sp, #200]  // store x1 into m, offset m: 200, offset: 0 
+	stp x6, x7, [sp, #216]  
+	stp x8, x9, [sp, #72]  // store fp_1 into a, offset a: 72, offset: 0 
+	stp x10, x11, [sp, #88]  
+	ldp x4, x5, [x19, #32]  // load x1 
+	ldp x6, x7, [x19, #48]  
+	ldp x8, x9, [x3, #32]  // load fp1 
+	ldp x10, x11, [x3, #48]  
+	stp x4, x5, [sp, #232]  // store x1 into m, offset m: 200, offset: 32 
+	stp x6, x7, [sp, #248]  
+	stp x8, x9, [sp, #104]  // store fp_1 into a, offset a: 72, offset: 32 
+	stp x10, x11, [sp, #120]  
+	ldp x4, x5, [x19, #64]  // load x1 
+	ldp x6, x7, [x19, #80]  
+	ldp x8, x9, [x3, #64]  // load fp1 
+	ldp x10, x11, [x3, #80]  
+	stp x4, x5, [sp, #264]  // store x1 into m, offset m: 200, offset: 64 
+	stp x6, x7, [sp, #280]  
+	stp x8, x9, [sp, #136]  // store fp_1 into a, offset a: 72, offset: 64 
+	stp x10, x11, [sp, #152]  
+	ldp x4, x5, [x19, #96]  // load x1 
+	ldp x6, x7, [x19, #112]  
+	ldp x8, x9, [x3, #96]  // load fp1 
+	ldp x10, x11, [x3, #112]  
+	stp x4, x5, [sp, #296]  // store x1 into m, offset m: 200, offset: 96 
+	stp x6, x7, [sp, #312]  
+	stp x8, x9, [sp, #168]  // store fp_1 into a, offset a: 72, offset: 96 
+	stp x10, x11, [sp, #184]  
+
+	mov x21, #0  // init current word offset to 0 (limbs* 8) 
+	mov x24, #16  // init word counter to 16 
+_fp_pow_word_loop:
+	mov x22, #64  // init bit counter 
+	ldr x23, [x20, x21] // load current word of x2
+
+_fp_pow_bit_loop:
+	tst x23, #1 // check if least significant bit is 1
+	beq _fp_pow_bit_is_zero // branch if 0 
+_fp_pow_bit_is_one:
+	add x0, sp, 72  // = a 
+	add x1, sp, 200  // = m 
+	bl _fp_mul2 // a = a * m 
+	b _fp_pow_bit_finish
+_fp_pow_bit_is_zero:
+	add x0, sp, 328  // = dummy 
+	add x1, sp, 200  // = m 
+	bl _fp_mul2 // dummy = dummy * m 
+
+_fp_pow_bit_finish:
+	add x0, sp, 200  // = m 
+	bl fp_sq1 // m = m * m 
+	lsr x23, x23, #1  // shift current word right by 1 
+	subs x22, x22, #1  // decrease bit counter 
+	b.ne _fp_pow_bit_loop // branch if bit counter != 0 
+	add x21, x21, #8  // increase current word offset by 8 
+	subs x24, x24, #1  // decrease word counter 
+	b.ne _fp_pow_word_loop // branch if word counter != 0 
+
+_fp_pow_end:
+	mov x0, x25  // move result_adr to x0 
+	/* Store a into result */
+	ldp x4, x5, [sp, #72]  // load a 
+	ldp x6, x7, [sp, #88]  
+	ldp x8, x9, [sp, #104]  
+	ldp x10, x11, [sp, #120]  
+	stp x4, x5, [x0, #0]  // store a 
+	stp x6, x7, [x0, #16]  
+	stp x8, x9, [x0, #32]  
+	stp x10, x11, [x0, #48]  
+	ldp x4, x5, [sp, #136]  // load a 
+	ldp x6, x7, [sp, #152]  
+	ldp x8, x9, [sp, #168]  
+	ldp x10, x11, [sp, #184]  
+	stp x4, x5, [x0, #64]  // store a 
+	stp x6, x7, [x0, #80]  
+	stp x8, x9, [x0, #96]  
+	stp x10, x11, [x0, #112]  
+
+	/* Restore Stack */
+	ldp lr, x0, [sp, #0]
+	ldp x1, x2, [sp, #16]
+	ldp x19, x20, [sp, #32]
+	ldp x21, x22, [sp, #48]
+	ldr x23, [sp, #64]
+	add sp, sp, #464
+	ret
 
