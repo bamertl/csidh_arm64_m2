@@ -1,0 +1,360 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+limbs = 16
+
+fn = './src/p1024/ARM64/mul/fp_mul_interleaved.s'
+
+extern_variables = {'_inv_min_p_mod_r': '_inv_min_p_mod_r',
+                     '_p': '_p',
+                     '_reduce_once': '_reduce_once'
+                    }
+
+
+sys.setrecursionlimit(10000)
+
+print("Generating %s..." % fn)
+
+def maybeupdate(fn):
+  if os.access(fn,os.F_OK):
+    with open(fn) as f:
+      x = f.read()
+    with open(fn+'.tmp') as f:
+      y = f.read()
+    if x == y:
+      os.unlink(fn+'.tmp')
+      return
+  os.rename(fn+'.tmp',fn)
+
+def comment(f, comment):
+    f.write('/* %s */\n' % comment)
+
+def init_data_var(f, name):
+    f.write('.global %s\n' % name)
+    f.write('%s: \n' % name)
+    f.write('\t.quad 0\n')
+
+def introduce_global_function(f, name, comment=''):
+    if comment:
+        f.write('/*\n %s  \n*/\n' % comment)
+    f.write('.global %s\n' % name)
+    f.write('%s: \n' % name)
+
+
+def sub_stack_and_store_on_stack(f, regs, additional_offset):
+    total_offset = len(regs)*8 + additional_offset 
+    if total_offset % 16 != 0:
+        total_offset = ((total_offset // 16) + 1) * 16
+    f.write('\tsub sp, sp, #%d\n' % total_offset)
+    offset = 0
+    i = 0
+    while i < len(regs):
+        # Check if there's at least one more register after the current one
+        if i + 1 < len(regs):
+            # If yes, store the pair of registers
+            f.write('\tstp %s, %s, [sp, #%d]\n' % (regs[i], regs[i+1], offset))
+            i += 2
+        else:
+            # If no, store the single register
+            f.write('\tstr %s, [sp, #%d]\n' % (regs[i],offset))
+            i += 1
+        offset += 16
+
+def add_stack_and_restore_regs_from_stack(f, regs, additional_offset):
+    total_offset = len(regs)*8 + additional_offset 
+    if total_offset % 16 != 0:
+        total_offset = ((total_offset // 16) + 1) * 16
+    offset = 0
+    i = 0
+    while i < len(regs):
+        # Check if there's at least one more register after the current one
+        if i + 1 < len(regs):
+            # If yes, store the pair of registers
+            f.write('\tldp %s, %s, [sp, #%d]\n' % (regs[i], regs[i+1], offset))
+            i += 2
+        else:
+            # If no, store the single register
+            f.write('\tldr %s, [sp, #%d]\n' % (regs[i],offset))
+            i += 1
+        offset += 16
+    f.write('\tadd sp, sp, #%d\n' % total_offset)
+
+def load_label_address_into_register(f, label, register):
+    f.write('\tadrp %s, %s\n' % (register, label+ '@PAGE'))
+    f.write('\tadd %s, %s, %s\n' % (register, register, label+'@PAGEOFF'))
+
+
+def mov(f, dst, src, comment=''):
+    if comment:
+        comment = ' // ' + comment
+
+    f.write('\tmov %s, %s %s \n' % (dst, src, comment))
+
+def comment(f, comment):
+    f.write('\t/* %s */\n' % comment)
+
+def eor(f, dst, who, who2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\teor %s, %s, %s %s \n' % (dst, who, who2, comment)) 
+
+def orr(f, dst, who, who2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\torr %s, %s, %s %s \n' % (dst, who, who2, comment))
+    
+def newlines(f, n=1):
+    for i in range(n):
+        f.write('\n')
+
+def ldr(f, dst, src, offset, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tldr %s, [%s, #%d] %s \n' % (dst, src, offset, comment))
+
+def ldp(f, dst, dst2, src, offset, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tldp %s, %s, [%s, #%d] %s \n' % (dst, dst2, src, offset, comment))
+def mul(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tmul %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def umulh(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tumulh %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def adds(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tadds %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def add(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tadd %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def adcs(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tadcs %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def subs(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tsubs %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def sbcs(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tsbcs %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def andd(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tand %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def lsr(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tlsr %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def lsl(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tlsl %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def stp(f, src, src2, dst, offset, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tstp %s, %s, [%s, #%d] %s \n' % (src, src2, dst, offset, comment))
+
+def import_extern_variables(f):
+    for var in extern_variables:
+        f.write('.extern %s\n' % var)
+    newlines(f,1)
+
+MUL16x1 = 'MUL_16x1'
+
+# 17 Regs for C
+
+C_ADR_REAL = "x3"
+AI_REAL = "x4"
+A_ADR_REAL = "x1"
+B_ADR_REAL = "x2"
+P_ADR_REAL = "x6"
+C_REAL = ["x7", "x8", "x9", "x10"]
+T_REAL = ["x12","x13","x14", "x15", "x16", "x17", "x19", "x20", "x21", "x22", "x23", "x24", "x25", "x26", "x27", "x28"]
+CARRY_REG_REAL = "x11"
+
+C_REGS = ['\C'+str(i) for i in range(len(C_REAL))]
+C_ADR = '\\C_ADR'
+T_REGS = ['\T'+str(i) for i in range(len(T_REAL))]
+P_ADR = '\\P_ADR'
+B_ADR = '\\B_ADR' 
+AI = '\\AI'
+CARRY_REG = '\\CARRY_REG'
+
+def WRITE_MUL_16x1(f):
+    f.write('/*\n [C_ADR]+1 = [C_ADR] + [B_ADR] * AI   \n*/ \n')
+    f.write('.macro %s, %s, %s, %s, %s, %s, %s \n' % (
+                                        MUL16x1, 
+                                        AI.replace('\\',''),
+                                        B_ADR.replace('\\',''),
+                                        C_ADR.replace('\\',''),
+                                        CARRY_REG.replace('\\',''), 
+                                        ', '.join(C_REGS).replace('\\',''),
+                                        ', '.join(T_REGS).replace('\\','')
+                                        ))
+    adds(f, CARRY_REG, 'xzr', 'xzr', 'CARRY_REG = 0')   
+    for i in range(int(limbs/4)):
+        newlines(f,1)
+        comment(f, "LIMBS C%d-C%d" % (i*4, i*4+3))
+        offset = i*16*2
+        for j in range(2):
+            ldp(f, T_REGS[j], T_REGS[j+1], B_ADR, offset + j*16, 'Load B')
+            ldp(f, C_REGS[j], C_REGS[j+1], C_ADR, offset + j*16, 'Load C')
+        newlines(f,1)
+        for j in range(4):
+            mul(f, T_REGS[8 + 2*j], T_REGS[j], AI)
+            umulh(f, T_REGS[8 + 2*j + 1], T_REGS[j], AI)
+        newlines(f,1)
+        # The thing below should be packed into a loop 
+        for j in range(4):
+            if j == 0:
+                adcs(f, T_REGS[j+8], CARRY_REG, T_REGS[8], 'add carry')
+                adcs(f, CARRY_REG, 'xzr', 'xzr')            
+                adcs(f, T_REGS[j+8], T_REGS[j+8], C_REGS[0], 'add C%d' % (i*4+j))
+            else:
+                adcs(f, T_REGS[j+8], CARRY_REG, T_REGS[8+2*j-1], 'add carry')
+                adcs(f, CARRY_REG, 'xzr', 'xzr')
+                adcs(f, T_REGS[j+8], T_REGS[j+8], C_REGS[j], 'add C%d' % (i*4+j))
+                adcs(f, CARRY_REG, CARRY_REG, 'xzr')
+                adcs(f, T_REGS[j+8], T_REGS[j+8], T_REGS[8+2*j], 'add T')
+        stp(f, T_REGS[8], T_REGS[9], C_ADR, offset, 'Store C')
+        stp(f, T_REGS[10], T_REGS[11], C_ADR, offset+16)
+        adcs(f, CARRY_REG, CARRY_REG, T_REGS[15])
+    comment(f,"Store last C at [C_ADR]+1, which means offset: %d" % (limbs*8))
+    f.write('\tstr %s, [%s, #%d] \n' % (CARRY_REG, C_ADR, limbs*8))
+    newlines(f,1)
+    f.write('.endm \n\n')
+
+
+def call_mul_8x1_macro(f, b_addr):
+    f.write('\t%s %s, %s, %s, %s, %s, %s \n' % (MUL16x1, 
+                                                AI, 
+                                                b_addr, 
+                                                C_ADR, 
+                                                CARRY_REG, 
+                                                ', '.join(C_REGS), 
+                                                ', '.join(T_REGS))
+                                                )
+
+MUL_STEP_MACRO = "MUL_STEP"
+K = "\\K"
+A_ADR = "\\A_ADR"
+def WRITE_MUL_STEP(f):
+    f.write("/*\n C ← C + ai B \n q ← μC mod r\n C ← (C + Nq)/r  \n*/ \n")
+    f.write('.macro %s, %s, %s, %s, %s, %s, %s, %s, %s, %s \n' % (
+                                        MUL_STEP_MACRO, 
+                                        K.replace('\\',''),
+                                        A_ADR.replace('\\',''),
+                                        B_ADR.replace('\\',''),
+                                        C_ADR.replace('\\',''),
+                                        P_ADR.replace('\\',''),
+                                        AI.replace('\\',''),
+                                        CARRY_REG.replace('\\',''), 
+                                        ', '.join(C_REGS).replace('\\',''),
+                                        ', '.join(T_REGS).replace('\\','')
+                                        ))
+    # LOAD AI from offset \\K
+    f.write('\tldr %s, [%s , 8*%s] // load AI \n' % (AI, A_ADR, K))
+    comment(f, "C ← C + ai B")
+    call_mul_8x1_macro(f, B_ADR)
+    comment(f, "q ← μC mod r , we just need to multiply C[0] with inv_min_p_mod_r")
+    load_label_address_into_register(f, '_inv_min_p_mod_r', T_REGS[0])
+    f.write('\tldr %s, [%s] // load inv_min_p_mod_r \n' % (T_REGS[0], T_REGS[0]))
+    f.write('\tldr %s, [%s] // load C[0] \n' % (T_REGS[1], C_ADR))
+    mul(f, AI, T_REGS[0], T_REGS[1], 'q ← μC mod r')
+    comment(f, "C ← (C + Nq)/r")
+    call_mul_8x1_macro(f, P_ADR)
+
+    comment(f, "We shift C ")
+    ldr(f, C_REGS[0], C_ADR, 128)
+    # make a loop that counts backwards from 8 to 0 
+    for i in range(int(limbs/2)):
+        ldp(f, T_REGS[i*2], T_REGS[i*2+1], C_ADR, i*16)
+
+    for i in range(0, int(limbs/2) -1 ):
+        stp(f, T_REGS[i*2 + 1], T_REGS[i*2+2], C_ADR, (i)*16) 
+    stp(f, T_REGS[15], C_REGS[0], C_ADR, (limbs-2)*8)
+    f.write('\tstr xzr, [%s, #%d] // set C[0] to 0 \n' % (C_ADR, (limbs)*8))
+    newlines(f,1)
+    f.write('.endm \n\n')
+
+def call_mul_step_macro(f, number_k):
+    f.write('\t%s %s, %s, %s, %s, %s, %s, %s, %s, %s \n' % (MUL_STEP_MACRO, 
+                                                            number_k, 
+                                                            A_ADR_REAL, 
+                                                            B_ADR_REAL, 
+                                                            C_ADR_REAL, 
+                                                            P_ADR_REAL, 
+                                                            AI_REAL, 
+                                                            CARRY_REG_REAL, 
+                                                            ', '.join(C_REAL), 
+                                                            ', '.join(T_REAL))
+                                                            )
+
+
+
+with open(fn+'.tmp','w') as f:
+    f.write('/* DO EDIT! generated by autogen */\n')
+    import_extern_variables(f)
+    f.write('.text\n')
+    f.write('.align 4\n')
+
+    WRITE_MUL_16x1(f)
+    WRITE_MUL_STEP(f)
+    introduce_global_function(f, '_fp_mul3', '[x0] = [x1] * [x2] mod [p] Interleaved Montgomery multiplication')
+    REGS_TO_STORE = ['x19', 'x20', 'x21', 'x22', 'x23', 'x24', 'x25', 'x26', 'x27', 'x28', 'x30']
+    PLACE_FOR_C = limbs * 8 + 8
+    C_OFFSET = len(REGS_TO_STORE)*8 
+
+    sub_stack_and_store_on_stack(f, REGS_TO_STORE, PLACE_FOR_C) 
+    newlines(f,1)
+
+    comment(f, "Load adress of P, A and B and C into respective registers")
+    load_label_address_into_register(f, '_p', P_ADR_REAL)
+    add(f, C_ADR_REAL, 'sp', '#%d' % C_OFFSET)
+    mov(f, A_ADR_REAL, 'x1')
+    mov(f, B_ADR_REAL, 'x2')
+    comment(f, "Init C to 0")
+    for i in range(8):
+        offset = i*16
+        stp(f, 'xzr', 'xzr', C_ADR_REAL, offset)
+    f.write('\tstr xzr, [%s, #%d] // set C[17] to 0 \n' % (C_ADR_REAL, limbs*8)) 
+
+    newlines(f,1)
+    for i in range(limbs):
+        call_mul_step_macro(f, i)
+    newlines(f,1)
+
+    comment(f, "Store Result C to [x0] and the overflow into x1")
+    for i in range(2):
+        offset = i * 16 * 4
+        for j in range(4):
+            ldp(f, T_REAL[j*2], T_REAL[j*2+1], C_ADR_REAL, offset + j*16)
+        newlines(f,1)
+        for j in range(4):
+            stp(f, T_REAL[j*2], T_REAL[j*2+1], 'x0', offset + j*16)
+        newlines(f,1)
+    f.write('\tldr x1, [%s, #%d] // load the overflow limb into x1, reduce_once wants it that way \n' % (C_ADR_REAL, limbs*8))
+
+    f.write('\tbl %s \n' % extern_variables['_reduce_once'])
+    comment(f, "Restore Stack")
+    add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, PLACE_FOR_C)
+    f.write('\tret \n')
+    maybeupdate(fn)

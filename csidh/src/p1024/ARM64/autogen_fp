@@ -1,0 +1,588 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+limbs = 16
+
+fn = './src/p1024/ARM64/fp.s'
+
+counter_variables = {
+    '_fp_sq_counter':'_fp_sq_counter',
+    '_fp_mul_counter':'_fp_mul_counter',
+    '_fp_inv_counter':'_fp_inv_counter',
+    '_fp_sqt_counter':'_fp_sqt_counter',
+}
+
+extern_variables = {
+    '_r_squared_mod_p':'_r_squared_mod_p',
+    '_p_minus_2':'_p_minus_2',
+    '_uint_1':'_uint_1',
+    '_p_minus_1_halves':'_p_minus_1_halves',
+    '_p':'_p',
+    '_fp_1':'_fp_1',
+    '_fp_mul3':'_fp_mul3',
+    '_uint_eq':'_uint_eq',
+    '_uint_set':'_uint_set',
+    '_uint_add3':'_uint_add3',
+    '_uint_sub3':'_uint_sub3',
+    '_uint_len':'_uint_len',
+    '_uint_random':'_uint_random'
+}
+
+global_functions = {
+    '_fp_eq':'_fp_eq',
+    '_fp_set':'_fp_set',
+    '_fp_enc':'_fp_enc',
+    '_fp_dec':'_fp_dec',
+    '_fp_add2':'_fp_add2',
+    '_fp_sub2':'_fp_sub2',
+    '_fp_mul2':'_fp_mul2',
+    '_fp_add3':'_fp_add3',
+    '_fp_sub3':'_fp_sub3',
+    '_fp_sq1':'_fp_sq1',
+    '_fp_sq2':'_fp_sq2',
+    '_fp_inv':'_fp_inv',
+    '_fp_issquare':'_fp_issquare',
+    '_fp_pow':'_fp_pow',
+    '_fp_random':'_fp_random',
+    '_reduce_once':'_reduce_once'
+}
+
+
+sys.setrecursionlimit(10000)
+
+print("Generating %s..." % fn)
+
+def maybeupdate(fn):
+  if os.access(fn,os.F_OK):
+    with open(fn) as f:
+      x = f.read()
+    with open(fn+'.tmp') as f:
+      y = f.read()
+    if x == y:
+      os.unlink(fn+'.tmp')
+      return
+  os.rename(fn+'.tmp',fn)
+
+  def comment(f, comment):
+    f.write('/* %s */\n' % comment)
+
+def init_data_var(f, name):
+    f.write('.global %s\n' % name)
+    f.write('%s: \n' % name)
+    f.write('\t.quad 0\n')
+
+def introduce_global_function(f, name, comment=''):
+    if comment:
+        f.write('/*\n %s  \n*/\n' % comment)
+    f.write('.global %s\n' % name)
+    f.write('%s: \n' % name)
+
+
+def sub_stack_and_store_on_stack(f, regs, additional_offset):
+    total_offset = len(regs)*8 + additional_offset 
+    if total_offset % 16 != 0:
+        total_offset = ((total_offset // 16) + 1) * 16
+    f.write('\tsub sp, sp, #%d\n' % total_offset)
+    offset = 0
+    i = 0
+    while i < len(regs):
+        # Check if there's at least one more register after the current one
+        if i + 1 < len(regs):
+            # If yes, store the pair of registers
+            f.write('\tstp %s, %s, [sp, #%d]\n' % (regs[i], regs[i+1], offset))
+            i += 2
+        else:
+            # If no, store the single register
+            f.write('\tstr %s, [sp, #%d]\n' % (regs[i],offset))
+            i += 1
+        offset += 16
+
+def add_stack_and_restore_regs_from_stack(f, regs, additional_offset):
+    total_offset = len(regs)*8 + additional_offset 
+    if total_offset % 16 != 0:
+        total_offset = ((total_offset // 16) + 1) * 16
+    offset = 0
+    i = 0
+    while i < len(regs):
+        # Check if there's at least one more register after the current one
+        if i + 1 < len(regs):
+            # If yes, store the pair of registers
+            f.write('\tldp %s, %s, [sp, #%d]\n' % (regs[i], regs[i+1], offset))
+            i += 2
+        else:
+            # If no, store the single register
+            f.write('\tldr %s, [sp, #%d]\n' % (regs[i],offset))
+            i += 1
+        offset += 16
+    f.write('\tadd sp, sp, #%d\n' % total_offset)
+
+def load_label_address_into_register(f, label, register):
+    f.write('\tadrp %s, %s\n' % (register, label+ '@PAGE'))
+    f.write('\tadd %s, %s, %s\n' % (register, register, label+'@PAGEOFF'))
+
+
+def mov(f, dst, src, comment=''):
+    if comment:
+        comment = ' // ' + comment
+
+    f.write('\tmov %s, %s %s \n' % (dst, src, comment))
+
+def comment(f, comment):
+    f.write('\t/* %s */\n' % comment)
+
+def eor(f, dst, who, who2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\teor %s, %s, %s %s \n' % (dst, who, who2, comment)) 
+
+def orr(f, dst, who, who2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\torr %s, %s, %s %s \n' % (dst, who, who2, comment))
+    
+def newlines(f, n=1):
+    for i in range(n):
+        f.write('\n')
+
+def ldr(f, dst, src, offset, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tldr %s, [%s, #%d] %s \n' % (dst, src, offset, comment))
+
+def ldp(f, dst, dst2, src, offset, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tldp %s, %s, [%s, #%d] %s \n' % (dst, dst2, src, offset, comment))
+def mul(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tmul %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def umulh(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tumulh %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def adds(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tadds %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def add(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tadd %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def adcs(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tadcs %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def subs(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tsubs %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def sbcs(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tsbcs %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def andd(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tand %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def lsr(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tlsr %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def lsl(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tlsl %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def stp(f, src, src2, dst, offset, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tstp %s, %s, [%s, #%d] %s \n' % (src, src2, dst, offset, comment))
+
+def import_extern_variables(f):
+    for var in extern_variables:
+        f.write('.extern %s\n' % var)
+    newlines(f,1)
+
+def init_counter_variables(f):
+    for var in counter_variables:
+        f.write('.global %s\n' % var)
+        f.write('%s: .quad 0\n' % var)
+    newlines(f,1)
+
+def write_fp_eq(f):
+    introduce_global_function(f, global_functions['_fp_eq'],'x0 = [x0] == [x1]')
+    f.write('\tb %s\n' % extern_variables['_uint_eq'])
+    newlines(f,1)
+
+def write_fp_set(f):
+    introduce_global_function(f, global_functions['_fp_set'],'[x0] = [x1,0,0,0,0] and encode to montgomery space')
+    REGS_TO_STORE = ['lr']
+    sub_stack_and_store_on_stack(f, REGS_TO_STORE, 0)
+    f.write('\tbl %s\n' % extern_variables['_uint_set'])
+    mov(f, 'x1', 'x0', "move result to x1 (input for fp_enc)")
+    add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, 0)
+    f.write('\tb %s\n' % global_functions['_fp_enc'])
+    newlines(f,1)
+
+def write_fp_enc(f):
+    introduce_global_function(f, global_functions['_fp_enc'],
+                              '[x0] = [x1] * [r_squared_mod_p] mod [p]')
+    x2 = 'x2'
+    load_label_address_into_register(f, extern_variables['_r_squared_mod_p'], x2)
+    f.write('\tb %s\n' % extern_variables['_fp_mul3'])
+    newlines(f,1)
+
+def write_fp_mul2(f):
+    introduce_global_function(f, global_functions['_fp_mul2'],
+                              '[x0] = [x0] * [x1] mod [p]')
+    x2 = 'x2'
+    mov(f, x2, 'x0', 'move x0 to x2')
+    f.write('\tb %s\n' % extern_variables['_fp_mul3'])
+    newlines(f,1)
+
+def write_fp_add2(f):
+    introduce_global_function(f, global_functions['_fp_add2'],
+                              '[x0] = [x0] + [x1] mod [p]')
+    x2 = 'x2'
+    mov(f, x2, 'x0', 'move x0 to x2')
+    comment(f, "straight into fp_add3")
+    newlines(f,1)
+
+def write_fp_add3(f):
+    introduce_global_function(f, global_functions['_fp_add3'],
+                              '[x0] = [x1] + [x2] mod [p]')
+    REGS_TO_STORE = ['x0', 'lr']
+    sub_stack_and_store_on_stack(f, REGS_TO_STORE, 0)
+    
+    x1 = 'x1'
+    x0 = 'x0'
+    f.write('\tbl %s // this returns the carry in x0\n' % extern_variables['_uint_add3'])
+    mov(f, x1, x0, 'move the carry of a + b to x1')
+    add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, 0)
+    f.write('\tb %s\n' % global_functions['_reduce_once'])
+    newlines(f,1)
+
+def write_reduce_once(f):
+    introduce_global_function(f, global_functions['_reduce_once'],
+                              '[x0] = [x0]x1 - [p] mod [p] \n x1 = potential overflow')
+    result_adr = 'x0'
+    A_REGS = ['x3', 'x4', 'x5', 'x6']
+    P_REGS = ['x7', 'x8', 'x9', 'x10']
+    RESULT_REGS = ['x11', 'x12', 'x13', 'x14']
+    P_ADR = 'x15'
+    CARRY_REG = 'x1'
+    xzr = 'xzr'
+    load_label_address_into_register(f, extern_variables['_p'], P_ADR)
+
+    for i in range(int(limbs/4)):
+        offset = i*32
+        comment(f, "Limbs %s - %s" % (i*4, i*4+3))
+        ldp(f, A_REGS[0], A_REGS[1], result_adr, offset, 'load A')
+        ldp(f, A_REGS[2], A_REGS[3], result_adr, offset + 16, 'load A')
+        ldp(f, P_REGS[0], P_REGS[1], P_ADR, offset, 'load P')
+        ldp(f, P_REGS[2], P_REGS[3], P_ADR, offset + 16, 'load P')
+
+        if i==0:
+            subs(f, RESULT_REGS[0], A_REGS[0], P_REGS[0])
+        else:
+            sbcs(f, RESULT_REGS[0], A_REGS[0], P_REGS[0]) 
+        
+        sbcs(f, RESULT_REGS[1], A_REGS[1], P_REGS[1])
+        sbcs(f, RESULT_REGS[2], A_REGS[2], P_REGS[2])
+        sbcs(f, RESULT_REGS[3], A_REGS[3], P_REGS[3])
+        stp(f, RESULT_REGS[0], RESULT_REGS[1], result_adr, offset, 'store result')
+        stp(f, RESULT_REGS[2], RESULT_REGS[3], result_adr, offset + 16, 'store result')
+    comment(f, "Final carry of a+b-p")
+    sbcs(f, CARRY_REG, CARRY_REG, xzr, 'potential overflow of a+b')
+    sbcs(f, CARRY_REG, xzr, xzr, 'if a-p negative, carry is 1')
+    comment(f, "AND P and a + p")
+    for i in range(int(limbs/4)):
+        offset = i*32
+        comment(f, 'Limbs %s - %s' % (i*4, i*4+3))
+        ldp(f, A_REGS[0], A_REGS[1], result_adr, i*32, 'load A')
+        ldp(f, A_REGS[2], A_REGS[3], result_adr, i*32 + 16, 'load A')
+        ldp(f, P_REGS[0], P_REGS[1], P_ADR, i*32, 'load P')
+        ldp(f, P_REGS[2], P_REGS[3], P_ADR, i*32 + 16, 'load P')
+        for j in range(4):
+            andd(f, P_REGS[j], P_REGS[j], CARRY_REG)
+        newlines(f,1)
+        if i==0:
+            adds(f, RESULT_REGS[0], A_REGS[0], P_REGS[0])
+        else:
+            adcs(f, RESULT_REGS[0], A_REGS[0], P_REGS[0])
+        adcs(f, RESULT_REGS[1], A_REGS[1], P_REGS[1])
+        adcs(f, RESULT_REGS[2], A_REGS[2], P_REGS[2])
+        adcs(f, RESULT_REGS[3], A_REGS[3], P_REGS[3])
+        stp(f, RESULT_REGS[0], RESULT_REGS[1], result_adr, offset, 'store result')
+        stp(f, RESULT_REGS[2], RESULT_REGS[3], result_adr, offset + 16, 'store result')
+    f.write('\tret \n\n') 
+    newlines(f,1)
+
+def write_fp_sub2(f):
+    introduce_global_function(f, global_functions['_fp_sub2'],
+                              '[x0] = [x0] - [x1] mod [p]')
+    mov(f, 'x2', 'x1', 'move x1 to x2')
+    mov(f, 'x1', 'x0', 'move x0 to x1')
+    comment(f, "straight into fp_sub3")
+    newlines(f,1)
+
+def write_fp_sub3(f):
+    introduce_global_function(f, global_functions['_fp_sub3'],
+                                '[x0] = [x1] - [x2] mod [p] \n saving temp of x2 in the stack might not be necessary \
+but better safe then sorry')
+    comment(f, "we add -[x2] by first calculating [p] - [x2]")
+
+    REGS_TO_STORE = ['x0','x1', 'lr']
+    temp_addr_stack_offset = '#' + str(len(REGS_TO_STORE)*8) # right after the stored registers
+    sub_stack_and_store_on_stack(f, REGS_TO_STORE, limbs*8)
+
+    comment(f, "[temp] = [p] - [x2]")
+
+    adds(f, 'x0', 'sp', temp_addr_stack_offset)
+    P_ADR = 'x1'
+    load_label_address_into_register(f, extern_variables['_p'], P_ADR) 
+    f.write('\tbl %s \n' % extern_variables['_uint_sub3'])
+    ldp(f, 'x0', 'x1', 'sp', 0)
+    adds(f, 'x2', 'sp', temp_addr_stack_offset)
+    comment(f, "[x0] = [x1] + [temp] mod [p]")
+    f.write('\tbl %s\n' % global_functions['_fp_add3'])
+    add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, limbs*8)
+    f.write('\tret\n\n')
+    newlines(f,1)
+
+
+def write_fp_dec(f):
+    introduce_global_function(f, global_functions['_fp_dec'],
+                              '[x0] = [x1] * [_uint_1] mod [p] = decoded [x1] out of montgomery space')
+    x2 = 'x2'
+    load_label_address_into_register(f, extern_variables['_uint_1'], x2)
+    f.write('\tb %s\n' % extern_variables['_fp_mul3'])
+
+def increase_counter(f, countername):
+    skip_label = '0f'
+    x3 = 'x3'
+    x4 = 'x4'
+    load_label_address_into_register(f, countername, x3)
+    ldr(f, x3, x3, 0, 'load counter pointer')
+    f.write('\tcbz x3, %s // skip to 0f if pointer to mul_counter is 0 \n' % skip_label)
+    ldr(f, x4, x3, 0, 'load counter value')
+    adds(f, x4, x4, '#1', 'increase counter value')
+    f.write('\tstr %s, [%s, #0]\n' % (x4, x3))
+    newlines(f,1)
+    f.write('\t0: // skip label\n')
+
+def write_fp_sq1(f):
+    introduce_global_function(f, global_functions['_fp_sq1'],
+                              '[x0] = [x0] * [x0] mod [p]')
+    comment(f, "straight into fp_sq2")
+    mov(f, 'x1', 'x0', 'move x0 to x1')
+    newlines(f,1)
+
+def presave_mul_counter(f):
+    comment(f,"First we set the mul counter pointer to 0, so it doesnt get updated, later we restore it")
+    x3 = 'x3'
+    x4 = 'x4'
+    load_label_address_into_register(f, counter_variables['_fp_mul_counter'], x3)
+    ldr(f, x4, x3, 0, 'load counter pointer')
+    REGS_TO_STORE = ['lr', x3, x4]
+    sub_stack_and_store_on_stack(f, REGS_TO_STORE, 0)
+    f.write('\tstr xzr, [x3, #0]\n')
+    newlines(f,1)
+
+def restore_mul_counter(f):
+    comment(f, "Restore Mul Counter")
+    x3 = 'x3'
+    x4 = 'x4'
+    REGS_TO_STORE = ['lr', x3, x4]
+    add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, 0)
+    f.write('\tstr x4, [x3, #0]\n')
+
+def write_fp_sq2(f):
+    introduce_global_function(f, global_functions['_fp_sq2'],
+                                '[x0] = [x1] * [x1] mod [p]')
+    presave_mul_counter(f)
+    comment(f,"Now count up sq_counter")
+    increase_counter(f, counter_variables['_fp_sq_counter'])
+
+    mov(f, 'x2', 'x1', 'move x1 to x2 for mul')
+    f.write('\tbl %s\n' % extern_variables['_fp_mul3'])
+    restore_mul_counter(f)
+    f.write('\tret\n\n')
+    newlines(f,1)
+
+def write_fp_inv(f):
+    introduce_global_function(f, global_functions['_fp_inv'],
+                              '[x0] = [x0] ^ [p] - 2 mod [p] = [x1] ^ -1 mod [p] ')
+    presave_mul_counter(f)
+    comment(f,"Count up inv_counter")
+    increase_counter(f, counter_variables['_fp_inv_counter'])
+    p_minus_2 = 'x1'
+    load_label_address_into_register(f, extern_variables['_p_minus_2'], p_minus_2)
+    f.write('\tbl %s\n' % global_functions['_fp_pow'])
+    restore_mul_counter(f)
+    f.write('\tret\n\n')
+
+
+_fp_pow_word_loop = '_fp_pow_word_loop'
+_fp_pow_bit_loop = '_fp_pow_bit_loop'
+_fp_pow_bit_is_zero = '_fp_pow_bit_is_zero'
+_fp_pow_bit_is_one = '_fp_pow_bit_is_one'
+_fp_pow_bit_finish = '_fp_pow_bit_finish'
+_fp_pow_end = '_fp_pow_end'
+
+def write_fp_pow(f):
+    introduce_global_function(
+        f, 
+        global_functions['_fp_pow'],
+'[x0] = [x0] ^ [x1] mod [p] \n\
+ a ← 1 ; m ← a \n\
+ for i = 0 to k − 1: \n\
+    if di = 1 then a ← a · m mod n \n\
+    m ← m · m mod n \n\
+We add a dummy to make it time-constant'
+    )
+    sp = 'sp'
+    REGS_TO_STORE = ['lr', 'x0', 'x1', 'x2', 'x19', 'x20', 'x21', 'x22', 'x23']
+    x1_adr = 'x19'
+    x2_adr = 'x20'
+    current_word_offset = 'x21'
+    bit_counter = 'x22'
+    current_word = 'x23'
+    word_counter = 'x24'
+    result_adr = 'x25'
+
+    x2 = 'x3'
+    space_per_number = limbs * 8
+    offset_a = len(REGS_TO_STORE) * 8
+    offset_m = len(REGS_TO_STORE) * 8 + space_per_number
+    offset_dummy = len(REGS_TO_STORE) * 8 + space_per_number * 2
+    sub_stack_and_store_on_stack(f, REGS_TO_STORE, space_per_number * 3)
+    newlines(f,1)
+
+    mov(f, x1_adr, 'x0', 'move x1 to x1_adr')
+    mov(f, x2_adr, 'x1', 'move x2 to x2_adr')
+    mov(f, result_adr, 'x0', 'move x0 to result_adr')
+
+    load_label_address_into_register(f, extern_variables['_fp_1'], x2)
+    comment(f, "m = x1 and a = fp1")
+    FP_1_REGS = ['x4', 'x5', 'x6', 'x7', 'x8', 'x9', 'x10', 'x11', '']
+    for i in range(int(limbs/4)):
+        offset = i*8*4
+        ldp(f, FP_1_REGS[0], FP_1_REGS[1], x1_adr, offset, 'load x1')
+        ldp(f, FP_1_REGS[2], FP_1_REGS[3], x1_adr, offset + 16)
+        ldp(f, FP_1_REGS[4], FP_1_REGS[5], x2, offset, 'load fp1')
+        ldp(f, FP_1_REGS[6], FP_1_REGS[7], x2, offset + 16)
+        stp(f, FP_1_REGS[0], FP_1_REGS[1], sp, offset_m + offset, 'store x1 into m, offset m: %d, offset: %d' % (offset_m, offset))
+        stp(f, FP_1_REGS[2], FP_1_REGS[3], sp, offset_m + offset + 16)
+        stp(f, FP_1_REGS[4], FP_1_REGS[5], sp, offset_a + offset, 'store fp_1 into a, offset a: %d, offset: %d' % (offset_a, offset))
+        stp(f, FP_1_REGS[6], FP_1_REGS[7], sp, offset_a + offset + 16)
+      
+    newlines(f,1)
+    ### WORD LOOOOP ###
+    mov(f, current_word_offset, '#0', 'init current word offset to 0 (limbs* 8)')
+    mov(f, word_counter, '#%d' % limbs, 'init word counter to %d' % limbs)
+    f.write('%s:\n' % _fp_pow_word_loop) 
+    mov(f, bit_counter, '#64', 'init bit counter')
+    ## load current word of x2
+    f.write('\tldr %s, [%s, %s] // load current word of x2\n' % (current_word, x2_adr, current_word_offset))
+    newlines(f,1)
+
+    ### BIT LOOP ###
+    f.write('%s:\n' % _fp_pow_bit_loop)
+    f.write('\ttst %s, #1 // check if least significant bit is 1\n' % current_word)
+    f.write('\tbeq %s // branch if 0 \n' % _fp_pow_bit_is_zero)
+    f.write('%s:\n' % _fp_pow_bit_is_one)
+    add(f, 'x0', sp, offset_a, '= a')
+    add(f, 'x1', sp, offset_m, '= m')
+    f.write('\tbl %s // a = a * m \n' % global_functions['_fp_mul2'])
+    f.write('\tb %s\n' % _fp_pow_bit_finish)
+    f.write('%s:\n' % _fp_pow_bit_is_zero)
+    add(f, 'x0', sp, offset_dummy, '= dummy')
+    add(f, 'x1', sp, offset_m, '= m')
+    f.write('\tbl %s // dummy = dummy * m \n' % global_functions['_fp_mul2'])
+    newlines(f,1)
+    f.write('%s:\n' % _fp_pow_bit_finish)
+    add(f, 'x0', sp, offset_m, '= m')
+    f.write('\tbl _fp_sq1 // m = m * m \n')
+    lsr(f, current_word, current_word, '#1', 'shift current word right by 1')
+    subs(f, bit_counter, bit_counter, '#1', 'decrease bit counter')
+    f.write('\tb.ne %s // branch if bit counter != 0 \n' % _fp_pow_bit_loop)
+    add(f,current_word_offset, current_word_offset, '#8', 'increase current word offset by 8')
+    subs(f, word_counter, word_counter, '#1', 'decrease word counter')
+    f.write('\tb.ne %s // branch if word counter != 0 \n' % _fp_pow_word_loop)
+    newlines(f,1)
+    f.write('%s:\n' % _fp_pow_end)
+    mov(f, 'x0', result_adr, 'move result_adr to x0')
+    comment(f,"Store a into result")
+    for i in range(int(limbs/8)):
+        offset = i*8*8
+        ldp(f, FP_1_REGS[0], FP_1_REGS[1], sp, offset_a + offset, 'load a')
+        ldp(f, FP_1_REGS[2], FP_1_REGS[3], sp, offset_a + offset + 16)
+        ldp(f, FP_1_REGS[4], FP_1_REGS[5], sp, offset_a + offset + 32)
+        ldp(f, FP_1_REGS[6], FP_1_REGS[7], sp, offset_a + offset + 48)
+        stp(f, FP_1_REGS[0], FP_1_REGS[1], 'x0', offset, 'store a')
+        stp(f, FP_1_REGS[2], FP_1_REGS[3], 'x0', offset + 16)
+        stp(f, FP_1_REGS[4], FP_1_REGS[5], 'x0', offset + 32)
+        stp(f, FP_1_REGS[6], FP_1_REGS[7], 'x0', offset + 48)
+    newlines(f,1)
+    comment(f, "Restore Stack")
+    add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, space_per_number * 3)
+    f.write('\tret\n\n')
+
+def write_fp_issquare(f):
+    introduce_global_function(f, global_functions['_fp_issquare'],
+                              'return 1 if [x0] is a square, 0 otherwise')
+    presave_mul_counter(f)
+    increase_counter(f, counter_variables['_fp_sqt_counter']) 
+    p_minus1_halves = 'x1'
+    load_label_address_into_register(f, extern_variables['_p_minus_1_halves'], p_minus1_halves)
+    f.write('\tbl %s // [x0] = [x0] ^ [p_minus1_halves] mod [p] \n\n' % global_functions['_fp_pow'])
+    comment(f, "Check if [x0] == 1 == fp_1!!")
+    load_label_address_into_register(f, extern_variables['_fp_1'], 'x1')
+    f.write('\tbl %s // x0 = [x0] == [x1] \n' % global_functions['_fp_eq'])
+    comment(f, "If equal (1) it is a quadratic residue!!")
+    newlines(f,1)
+    restore_mul_counter(f)
+    f.write('\tret\n\n')
+
+def write_fp_random(f):
+    introduce_global_function(f, global_functions['_fp_random'])
+    load_label_address_into_register(f, extern_variables['_p'], 'x1')
+    f.write('\tb %s\n' % extern_variables['_uint_random'])
+
+with open(fn+'.tmp','w') as f:
+    f.write('/* DO EDIT! generated by autogen */\n')
+    import_extern_variables(f)
+    f.write('.align 4\n')
+
+    f.write('.data\n')
+    init_counter_variables(f) 
+    f.write('.text\n')
+    write_fp_eq(f)
+    write_fp_set(f)
+    write_fp_enc(f)
+    write_fp_dec(f)
+    write_fp_mul2(f)
+    write_fp_add2(f)
+    write_fp_add3(f)
+    write_reduce_once(f)
+    write_fp_sub2(f)
+    write_fp_sub3(f)
+    write_fp_sq1(f)
+    write_fp_sq2(f)
+    write_fp_inv(f)
+    write_fp_pow(f)
+    write_fp_issquare(f)
+    write_fp_random(f)
+    maybeupdate(fn)

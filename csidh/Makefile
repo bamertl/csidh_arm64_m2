@@ -145,6 +145,14 @@ test_reduction: src/p${BITS}/params.h ${includes} ${sources} tests/test_reductio
 	@cc -I ./src/ -I ./src/p${BITS}/ -I ./tests/ -std=c99 -pedantic -g $(sources) tests/test_bigmul.c -o tests/test_reduction
 	./tests/test_reduction
 
+test_uint1024: src/p1024/params.h ${includes} ${sources} tests/test_uint1024.c
+	cc -I ./src/ -I ./src/p${BITS}/ -I ./tests/ -std=c99 -pedantic -g $(sources) tests/test_uint1024.c -o tests/test_uint1024
+	./tests/test_uint1024
+
+test_fp1024: src/p1024/params.h ${includes} ${sources} tests/test_fp1024.c
+	cc -I ./src/ -I ./src/p1024/ -I ./tests/ -std=c99 -pedantic -g $(sources) tests/test_fp1024.c -o tests/test_fp1024
+	./tests/test_fp1024
+
 clean:
 	@rm -f main debug bench bench_cycles libcsidh.so $(TEST_OUT)
 	@rm -rf ./tests/test_uint.DSYM
