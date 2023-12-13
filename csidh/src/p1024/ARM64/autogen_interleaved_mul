@@ -183,8 +183,8 @@ MUL16x1 = 'MUL_16x1'
 
 C_ADR_REAL = "x3"
 AI_REAL = "x4"
-A_ADR_REAL = "x30"
-B_ADR_REAL = "x5"
+A_ADR_REAL = "x1"
+B_ADR_REAL = "x2"
 P_ADR_REAL = "x6"
 C_REAL = ["x7", "x8", "x9", "x10"]
 T_REAL = ["x12","x13","x14", "x15", "x16", "x17", "x19", "x20", "x21", "x22", "x23", "x24", "x25", "x26", "x27", "x28"]
@@ -202,9 +202,9 @@ def WRITE_MUL_16x1(f):
     f.write('/*\n [C_ADR]+1 = [C_ADR] + [B_ADR] * AI   \n*/ \n')
     f.write('.macro %s, %s, %s, %s, %s, %s, %s \n' % (
                                         MUL16x1, 
-                                        C_ADR.replace('\\',''),
                                         AI.replace('\\',''),
                                         B_ADR.replace('\\',''),
+                                        C_ADR.replace('\\',''),
                                         CARRY_REG.replace('\\',''), 
                                         ', '.join(C_REGS).replace('\\',''),
                                         ', '.join(T_REGS).replace('\\','')
@@ -244,7 +244,14 @@ def WRITE_MUL_16x1(f):
 
 
 def call_mul_8x1_macro(f, b_addr):
-    f.write('\t%s %s, %s, %s, %s, %s, %s \n' % (MUL16x1, C_ADR, AI, b_addr, CARRY_REG, ', '.join(C_REGS), ', '.join(T_REGS)))
+    f.write('\t%s %s, %s, %s, %s, %s, %s \n' % (MUL16x1, 
+                                                AI, 
+                                                b_addr, 
+                                                C_ADR, 
+                                                CARRY_REG, 
+                                                ', '.join(C_REGS), 
+                                                ', '.join(T_REGS))
+                                                )
 
 MUL_STEP_MACRO = "MUL_STEP"
 K = "\\K"
@@ -255,10 +262,10 @@ def WRITE_MUL_STEP(f):
                                         MUL_STEP_MACRO, 
                                         K.replace('\\',''),
                                         A_ADR.replace('\\',''),
-                                        C_ADR.replace('\\',''),
-                                        AI.replace('\\',''),
                                         B_ADR.replace('\\',''),
+                                        C_ADR.replace('\\',''),
                                         P_ADR.replace('\\',''),
+                                        AI.replace('\\',''),
                                         CARRY_REG.replace('\\',''), 
                                         ', '.join(C_REGS).replace('\\',''),
                                         ', '.join(T_REGS).replace('\\','')
@@ -292,13 +299,14 @@ def call_mul_step_macro(f, number_k):
     f.write('\t%s %s, %s, %s, %s, %s, %s, %s, %s, %s \n' % (MUL_STEP_MACRO, 
                                                             number_k, 
                                                             A_ADR_REAL, 
-                                                            C_ADR_REAL, 
-                                                            AI_REAL, 
                                                             B_ADR_REAL, 
+                                                            C_ADR_REAL, 
                                                             P_ADR_REAL, 
+                                                            AI_REAL, 
                                                             CARRY_REG_REAL, 
                                                             ', '.join(C_REAL), 
-                                                            ', '.join(T_REAL)))
+                                                            ', '.join(T_REAL))
+                                                            )
 
 
 
@@ -323,6 +331,12 @@ with open(fn+'.tmp','w') as f:
     add(f, C_ADR_REAL, 'sp', '#%d' % C_OFFSET)
     mov(f, A_ADR_REAL, 'x1')
     mov(f, B_ADR_REAL, 'x2')
+    comment(f, "Init C to 0")
+    for i in range(8):
+        offset = i*16
+        stp(f, 'xzr', 'xzr', C_ADR_REAL, offset)
+    f.write('\tstr xzr, [%s, #%d] // set C[17] to 0 \n' % (C_ADR_REAL, limbs*8)) 
+
     newlines(f,1)
     for i in range(limbs):
         call_mul_step_macro(f, i)
@@ -342,5 +356,5 @@ with open(fn+'.tmp','w') as f:
     f.write('\tbl %s \n' % extern_variables['_reduce_once'])
     comment(f, "Restore Stack")
     add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, PLACE_FOR_C)
-
+    f.write('\tret \n')
     maybeupdate(fn)

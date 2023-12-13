@@ -8,7 +8,7 @@
 /*
  [C_ADR]+1 = [C_ADR] + [B_ADR] * AI   
 */ 
-.macro MUL_16x1, C_ADR, AI, B_ADR, CARRY_REG, C0, C1, C2, C3, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15 
+.macro MUL_16x1, AI, B_ADR, C_ADR, CARRY_REG, C0, C1, C2, C3, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15 
 	adds \CARRY_REG, xzr, xzr  // CARRY_REG = 0 
 
 	/* LIMBS C0-C3 */
@@ -168,10 +168,10 @@
  q ← μC mod r
  C ← (C + Nq)/r  
 */ 
-.macro MUL_STEP, K, A_ADR, C_ADR, AI, B_ADR, P_ADR, CARRY_REG, C0, C1, C2, C3, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15 
+.macro MUL_STEP, K, A_ADR, B_ADR, C_ADR, P_ADR, AI, CARRY_REG, C0, C1, C2, C3, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15 
 	ldr \AI, [\A_ADR , 8*\K] // load AI 
 	/* C ← C + ai B */
-	MUL_16x1 \C_ADR, \AI, \B_ADR, \CARRY_REG, \C0, \C1, \C2, \C3, \T0, \T1, \T2, \T3, \T4, \T5, \T6, \T7, \T8, \T9, \T10, \T11, \T12, \T13, \T14, \T15 
+	MUL_16x1 \AI, \B_ADR, \C_ADR, \CARRY_REG, \C0, \C1, \C2, \C3, \T0, \T1, \T2, \T3, \T4, \T5, \T6, \T7, \T8, \T9, \T10, \T11, \T12, \T13, \T14, \T15 
 	/* q ← μC mod r , we just need to multiply C[0] with inv_min_p_mod_r */
 	adrp \T0, _inv_min_p_mod_r@PAGE
 	add \T0, \T0, _inv_min_p_mod_r@PAGEOFF
@@ -179,7 +179,7 @@
 	ldr \T1, [\C_ADR] // load C[0] 
 	mul \AI, \T0, \T1  // q ← μC mod r 
 	/* C ← (C + Nq)/r */
-	MUL_16x1 \C_ADR, \AI, \P_ADR, \CARRY_REG, \C0, \C1, \C2, \C3, \T0, \T1, \T2, \T3, \T4, \T5, \T6, \T7, \T8, \T9, \T10, \T11, \T12, \T13, \T14, \T15 
+	MUL_16x1 \AI, \P_ADR, \C_ADR, \CARRY_REG, \C0, \C1, \C2, \C3, \T0, \T1, \T2, \T3, \T4, \T5, \T6, \T7, \T8, \T9, \T10, \T11, \T12, \T13, \T14, \T15 
 	/* We shift C  */
 	ldr \C0, [\C_ADR, #128]  
 	ldp \T0, \T1, [\C_ADR, #0]  
@@ -219,25 +219,35 @@ _fp_mul3:
 	adrp x6, _p@PAGE
 	add x6, x6, _p@PAGEOFF
 	add x3, sp, #88  
-	mov x30, x1  
-	mov x5, x2  
+	mov x1, x1  
+	mov x2, x2  
+	/* Init C to 0 */
+	stp xzr, xzr, [x3, #0]  
+	stp xzr, xzr, [x3, #16]  
+	stp xzr, xzr, [x3, #32]  
+	stp xzr, xzr, [x3, #48]  
+	stp xzr, xzr, [x3, #64]  
+	stp xzr, xzr, [x3, #80]  
+	stp xzr, xzr, [x3, #96]  
+	stp xzr, xzr, [x3, #112]  
+	str xzr, [x3, #128] // set C[17] to 0 
 
-	MUL_STEP 0, x30, x3, x4, x5, x6, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
-	MUL_STEP 1, x30, x3, x4, x5, x6, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
-	MUL_STEP 2, x30, x3, x4, x5, x6, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
-	MUL_STEP 3, x30, x3, x4, x5, x6, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
-	MUL_STEP 4, x30, x3, x4, x5, x6, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
-	MUL_STEP 5, x30, x3, x4, x5, x6, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
-	MUL_STEP 6, x30, x3, x4, x5, x6, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
-	MUL_STEP 7, x30, x3, x4, x5, x6, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
-	MUL_STEP 8, x30, x3, x4, x5, x6, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
-	MUL_STEP 9, x30, x3, x4, x5, x6, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
-	MUL_STEP 10, x30, x3, x4, x5, x6, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
-	MUL_STEP 11, x30, x3, x4, x5, x6, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
-	MUL_STEP 12, x30, x3, x4, x5, x6, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
-	MUL_STEP 13, x30, x3, x4, x5, x6, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
-	MUL_STEP 14, x30, x3, x4, x5, x6, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
-	MUL_STEP 15, x30, x3, x4, x5, x6, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
+	MUL_STEP 0, x1, x2, x3, x6, x4, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
+	MUL_STEP 1, x1, x2, x3, x6, x4, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
+	MUL_STEP 2, x1, x2, x3, x6, x4, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
+	MUL_STEP 3, x1, x2, x3, x6, x4, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
+	MUL_STEP 4, x1, x2, x3, x6, x4, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
+	MUL_STEP 5, x1, x2, x3, x6, x4, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
+	MUL_STEP 6, x1, x2, x3, x6, x4, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
+	MUL_STEP 7, x1, x2, x3, x6, x4, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
+	MUL_STEP 8, x1, x2, x3, x6, x4, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
+	MUL_STEP 9, x1, x2, x3, x6, x4, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
+	MUL_STEP 10, x1, x2, x3, x6, x4, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
+	MUL_STEP 11, x1, x2, x3, x6, x4, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
+	MUL_STEP 12, x1, x2, x3, x6, x4, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
+	MUL_STEP 13, x1, x2, x3, x6, x4, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
+	MUL_STEP 14, x1, x2, x3, x6, x4, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
+	MUL_STEP 15, x1, x2, x3, x6, x4, x11, x7, x8, x9, x10, x12, x13, x14, x15, x16, x17, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28 
 
 	/* Store Result C to [x0] and the overflow into x1 */
 	ldp x12, x13, [x3, #0]  
@@ -270,3 +280,4 @@ _fp_mul3:
 	ldp x27, x28, [sp, #64]
 	ldr x30, [sp, #80]
 	add sp, sp, #224
+	ret 
