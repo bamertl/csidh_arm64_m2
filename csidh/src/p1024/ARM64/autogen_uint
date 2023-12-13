@@ -46,7 +46,9 @@ def init_data_var(f, name):
     f.write('%s: \n' % name)
     f.write('\t.quad 0\n')
 
-def introduce_global_function(f, name):
+def introduce_global_function(f, name, comment=''):
+    if comment:
+        f.write('/* \n %s \n*/\n' % comment)
     f.write('.global %s\n' % name)
     f.write('%s: \n' % name)
 
@@ -204,7 +206,7 @@ def write_uint_eq(f):
 
     orr(f, RESULT_REG, RESULT_REG, RESULT_REG, 'clear result')
     for i in range(int(limbs/4)):
-        comment(f, 'iteration %d' % i)
+        comment(f, 'Limbs %s - %s' % (i*4, i*4+3))
         start_memory_offset = i*16*2 #32 steps
         ldp(f, A_REGS[0], A_REGS[1], A_ADR, start_memory_offset, 'load A')
         ldp(f, A_REGS[2], A_REGS[3], A_ADR, start_memory_offset + 16, 'load A')
@@ -248,7 +250,7 @@ def write_uint_len(f):
     mov(f, final_offset, '#0', 'initialize final result')
 
     for i in range(int(limbs/2)):
-        comment(f,"iteration %d" % i)
+        comment(f, 'Limbs %s - %s' % (i*2, i*2+1))
         ldp(f, num[0], num[1], 'x0', i*16, 'load two limbs to %s' % num)
         f.write('\tclz %s, %s // count leading zeros in first limb\n' % (zero_counts[0], num[0]))
         f.write('\tclz %s, %s // count leading zeros in second limb\n' % (zero_counts[1], num[1]))
@@ -281,7 +283,8 @@ def write_uint_bit(f):
     f.write('\tret \n\n')
 
 def write_uint_add3(f):
-    introduce_global_function(f, global_functions['_uint_add3'])
+    introduce_global_function(f, global_functions['_uint_add3'],
+                              '[x0] = [x1] + [x2] carry into x0')
     result_adr = 'x0'   
     a_adr = 'x1'
     b_adr = 'x2'
@@ -291,7 +294,7 @@ def write_uint_add3(f):
     RESULT_REGS = ['x11', 'x12', 'x13', 'x14']
 
     for i in range(int(limbs/4)):
-        comment(f, "Iteration %d" % i)
+        comment(f, 'Limbs %s - %s' % (i*4, i*4+3))
         offset = i*32
         ldp(f, A_REGS[0], A_REGS[1], a_adr, offset, 'load A')
         ldp(f, A_REGS[2], A_REGS[3], a_adr, offset + 16, 'load A')
@@ -307,6 +310,7 @@ def write_uint_add3(f):
         stp(f, RESULT_REGS[0], RESULT_REGS[1], result_adr, offset, 'store result')
         stp(f, RESULT_REGS[2], RESULT_REGS[3], result_adr, offset + 16, 'store result')
         newlines(f, 1)
+    adcs(f, result_adr, 'xzr', 'xzr', 'returing final carry')
     f.write('\tret \n\n')
 
 def write_uint_sub3(f):
@@ -321,7 +325,7 @@ def write_uint_sub3(f):
     RESULT_REGS = ['x11', 'x12', 'x13', 'x14']
 
     for i in range(int(limbs/4)):
-        comment(f, "Iteration %d" % i)
+        comment(f, 'Limbs %s - %s' % (i*4, i*4+3))
         offset = i*32
         ldp(f, A_REGS[0], A_REGS[1], a_adr, offset, 'load A')
         ldp(f, A_REGS[2], A_REGS[3], a_adr, offset + 16, 'load A')
@@ -352,7 +356,7 @@ def write_uint_mul3_64(f):
     CARRY_REG = 'x15'
     adds(f, CARRY_REG, 'xzr', 'xzr', 'initialize carry and set flags')
     for i in range(int(limbs/4)):
-        comment(f, "Iteration %d" % i)
+        comment(f, 'Limbs %s - %s' % (i*4, i*4+3))
         offset = i*32
         ldp(f, A_REGS[0], A_REGS[1], a_adr, offset, 'load A')
         ldp(f, A_REGS[2], A_REGS[3], a_adr, offset + 16, 'load A')

@@ -43,7 +43,7 @@ _uint_1:
 .global _uint_eq
 _uint_eq: 
 	orr x17, x17, x17  // clear result 
-	/* iteration 0 */
+	/* Limbs 0 - 3 */
 	ldp x2, x3, [x0, #0]  // load A 
 	ldp x4, x5, [x0, #16]  // load A 
 	ldp x6, x7, [x1, #0]  // load B 
@@ -56,7 +56,7 @@ _uint_eq:
 	orr x15, x12, x13  // accumulate 
 	orr x16, x14, x15  // accumulate intermediate together 
 	orr x17, x17, x16  // accumulate in result 
-	/* iteration 1 */
+	/* Limbs 4 - 7 */
 	ldp x2, x3, [x0, #32]  // load A 
 	ldp x4, x5, [x0, #48]  // load A 
 	ldp x6, x7, [x1, #32]  // load B 
@@ -69,7 +69,7 @@ _uint_eq:
 	orr x15, x12, x13  // accumulate 
 	orr x16, x14, x15  // accumulate intermediate together 
 	orr x17, x17, x16  // accumulate in result 
-	/* iteration 2 */
+	/* Limbs 8 - 11 */
 	ldp x2, x3, [x0, #64]  // load A 
 	ldp x4, x5, [x0, #80]  // load A 
 	ldp x6, x7, [x1, #64]  // load B 
@@ -82,7 +82,7 @@ _uint_eq:
 	orr x15, x12, x13  // accumulate 
 	orr x16, x14, x15  // accumulate intermediate together 
 	orr x17, x17, x16  // accumulate in result 
-	/* iteration 3 */
+	/* Limbs 12 - 15 */
 	ldp x2, x3, [x0, #96]  // load A 
 	ldp x4, x5, [x0, #112]  // load A 
 	ldp x6, x7, [x1, #96]  // load B 
@@ -115,7 +115,7 @@ _uint_set:
 .global _uint_len
 _uint_len: 
 	mov x7, #0  // initialize final result 
-	/* iteration 0 */
+	/* Limbs 0 - 1 */
 	ldp x2, x3, [x0, #0]  // load two limbs to ['x2', 'x3'] 
 	clz x4, x2 // count leading zeros in first limb
 	clz x5, x3 // count leading zeros in second limb
@@ -128,7 +128,7 @@ _uint_len:
 	cmp x5, #8 
 	csel x7, x5, x7, ne // if equal keep, else new result
 
-	/* iteration 1 */
+	/* Limbs 2 - 3 */
 	ldp x2, x3, [x0, #16]  // load two limbs to ['x2', 'x3'] 
 	clz x4, x2 // count leading zeros in first limb
 	clz x5, x3 // count leading zeros in second limb
@@ -141,7 +141,7 @@ _uint_len:
 	cmp x5, #24 
 	csel x7, x5, x7, ne // if equal keep, else new result
 
-	/* iteration 2 */
+	/* Limbs 4 - 5 */
 	ldp x2, x3, [x0, #32]  // load two limbs to ['x2', 'x3'] 
 	clz x4, x2 // count leading zeros in first limb
 	clz x5, x3 // count leading zeros in second limb
@@ -154,7 +154,7 @@ _uint_len:
 	cmp x5, #40 
 	csel x7, x5, x7, ne // if equal keep, else new result
 
-	/* iteration 3 */
+	/* Limbs 6 - 7 */
 	ldp x2, x3, [x0, #48]  // load two limbs to ['x2', 'x3'] 
 	clz x4, x2 // count leading zeros in first limb
 	clz x5, x3 // count leading zeros in second limb
@@ -167,7 +167,7 @@ _uint_len:
 	cmp x5, #56 
 	csel x7, x5, x7, ne // if equal keep, else new result
 
-	/* iteration 4 */
+	/* Limbs 8 - 9 */
 	ldp x2, x3, [x0, #64]  // load two limbs to ['x2', 'x3'] 
 	clz x4, x2 // count leading zeros in first limb
 	clz x5, x3 // count leading zeros in second limb
@@ -180,7 +180,7 @@ _uint_len:
 	cmp x5, #72 
 	csel x7, x5, x7, ne // if equal keep, else new result
 
-	/* iteration 5 */
+	/* Limbs 10 - 11 */
 	ldp x2, x3, [x0, #80]  // load two limbs to ['x2', 'x3'] 
 	clz x4, x2 // count leading zeros in first limb
 	clz x5, x3 // count leading zeros in second limb
@@ -193,7 +193,7 @@ _uint_len:
 	cmp x5, #88 
 	csel x7, x5, x7, ne // if equal keep, else new result
 
-	/* iteration 6 */
+	/* Limbs 12 - 13 */
 	ldp x2, x3, [x0, #96]  // load two limbs to ['x2', 'x3'] 
 	clz x4, x2 // count leading zeros in first limb
 	clz x5, x3 // count leading zeros in second limb
@@ -206,7 +206,7 @@ _uint_len:
 	cmp x5, #104 
 	csel x7, x5, x7, ne // if equal keep, else new result
 
-	/* iteration 7 */
+	/* Limbs 14 - 15 */
 	ldp x2, x3, [x0, #112]  // load two limbs to ['x2', 'x3'] 
 	clz x4, x2 // count leading zeros in first limb
 	clz x5, x3 // count leading zeros in second limb
@@ -236,9 +236,12 @@ _uint_bit:
 	and x0, x3, #1  // and with 1 to get bit result 
 	ret 
 
+/* 
+ [x0] = [x1] + [x2] carry into x0 
+*/
 .global _uint_add3
 _uint_add3: 
-	/* Iteration 0 */
+	/* Limbs 0 - 3 */
 	ldp x3, x4, [x1, #0]  // load A 
 	ldp x5, x6, [x1, #16]  // load A 
 	ldp x7, x8, [x2, #0]  // load B 
@@ -250,7 +253,7 @@ _uint_add3:
 	stp x11, x12, [x0, #0]  // store result 
 	stp x13, x14, [x0, #16]  // store result 
 
-	/* Iteration 1 */
+	/* Limbs 4 - 7 */
 	ldp x3, x4, [x1, #32]  // load A 
 	ldp x5, x6, [x1, #48]  // load A 
 	ldp x7, x8, [x2, #32]  // load B 
@@ -262,7 +265,7 @@ _uint_add3:
 	stp x11, x12, [x0, #32]  // store result 
 	stp x13, x14, [x0, #48]  // store result 
 
-	/* Iteration 2 */
+	/* Limbs 8 - 11 */
 	ldp x3, x4, [x1, #64]  // load A 
 	ldp x5, x6, [x1, #80]  // load A 
 	ldp x7, x8, [x2, #64]  // load B 
@@ -274,7 +277,7 @@ _uint_add3:
 	stp x11, x12, [x0, #64]  // store result 
 	stp x13, x14, [x0, #80]  // store result 
 
-	/* Iteration 3 */
+	/* Limbs 12 - 15 */
 	ldp x3, x4, [x1, #96]  // load A 
 	ldp x5, x6, [x1, #112]  // load A 
 	ldp x7, x8, [x2, #96]  // load B 
@@ -286,12 +289,13 @@ _uint_add3:
 	stp x11, x12, [x0, #96]  // store result 
 	stp x13, x14, [x0, #112]  // store result 
 
+	adcs x0, xzr, xzr  // returing final carry 
 	ret 
 
 	/* x0 = x1 - x2, x0 = carry */
 .global _uint_sub3
 _uint_sub3: 
-	/* Iteration 0 */
+	/* Limbs 0 - 3 */
 	ldp x3, x4, [x1, #0]  // load A 
 	ldp x5, x6, [x1, #16]  // load A 
 	ldp x7, x8, [x2, #0]  // load B 
@@ -303,7 +307,7 @@ _uint_sub3:
 	stp x11, x12, [x0, #0]  // store result 
 	stp x13, x14, [x0, #16]  // store result 
 
-	/* Iteration 1 */
+	/* Limbs 4 - 7 */
 	ldp x3, x4, [x1, #32]  // load A 
 	ldp x5, x6, [x1, #48]  // load A 
 	ldp x7, x8, [x2, #32]  // load B 
@@ -315,7 +319,7 @@ _uint_sub3:
 	stp x11, x12, [x0, #32]  // store result 
 	stp x13, x14, [x0, #48]  // store result 
 
-	/* Iteration 2 */
+	/* Limbs 8 - 11 */
 	ldp x3, x4, [x1, #64]  // load A 
 	ldp x5, x6, [x1, #80]  // load A 
 	ldp x7, x8, [x2, #64]  // load B 
@@ -327,7 +331,7 @@ _uint_sub3:
 	stp x11, x12, [x0, #64]  // store result 
 	stp x13, x14, [x0, #80]  // store result 
 
-	/* Iteration 3 */
+	/* Limbs 12 - 15 */
 	ldp x3, x4, [x1, #96]  // load A 
 	ldp x5, x6, [x1, #112]  // load A 
 	ldp x7, x8, [x2, #96]  // load B 
@@ -346,7 +350,7 @@ _uint_sub3:
 .global _uint_mul3_64
 _uint_mul3_64: 
 	adds x15, xzr, xzr  // initialize carry and set flags 
-	/* Iteration 0 */
+	/* Limbs 0 - 3 */
 	ldp x3, x4, [x1, #0]  // load A 
 	ldp x5, x6, [x1, #16]  // load A 
 	mul x7, x3, x2  // C0 
@@ -366,7 +370,7 @@ _uint_mul3_64:
 	stp x7, x8, [x0, #0]  // store C0 and C1 
 	stp x10, x12, [x0, #16]  // store C2 and C3 
 
-	/* Iteration 1 */
+	/* Limbs 4 - 7 */
 	ldp x3, x4, [x1, #32]  // load A 
 	ldp x5, x6, [x1, #48]  // load A 
 	mul x7, x3, x2  // C4 
@@ -386,7 +390,7 @@ _uint_mul3_64:
 	stp x7, x8, [x0, #32]  // store C4 and C5 
 	stp x10, x12, [x0, #48]  // store C6 and C7 
 
-	/* Iteration 2 */
+	/* Limbs 8 - 11 */
 	ldp x3, x4, [x1, #64]  // load A 
 	ldp x5, x6, [x1, #80]  // load A 
 	mul x7, x3, x2  // C8 
@@ -406,7 +410,7 @@ _uint_mul3_64:
 	stp x7, x8, [x0, #64]  // store C8 and C9 
 	stp x10, x12, [x0, #80]  // store C10 and C11 
 
-	/* Iteration 3 */
+	/* Limbs 12 - 15 */
 	ldp x3, x4, [x1, #96]  // load A 
 	ldp x5, x6, [x1, #112]  // load A 
 	mul x7, x3, x2  // C12 
@@ -427,6 +431,7 @@ _uint_mul3_64:
 	stp x10, x12, [x0, #112]  // store C14 and C15 
 
 	ret 
+
 
 	/* x0 = x0: place to store random number x1: uniformly distributed in (0,x1 */
 .global _uint_random
