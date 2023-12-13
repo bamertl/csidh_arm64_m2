@@ -11,6 +11,7 @@
 .extern _uint_add3
 .extern _uint_sub3
 .extern _uint_len
+.extern _uint_random
 
 .align 4
 .data
@@ -282,7 +283,6 @@ _fp_sq2:
 	mov x2, x1  // move x1 to x2 for mul 
 	bl _fp_mul3
 	/* Restore Mul Counter */
-
 	ldp lr, x3, [sp, #0]
 	ldr x4, [sp, #16]
 	add sp, sp, #32
@@ -318,7 +318,6 @@ _fp_inv:
 	add x1, x1, _p_minus_2@PAGEOFF
 	bl _fp_pow
 	/* Restore Mul Counter */
-
 	ldp lr, x3, [sp, #0]
 	ldr x4, [sp, #16]
 	add sp, sp, #32
@@ -326,7 +325,7 @@ _fp_inv:
 	ret
 
 /*
- [x0] = [x1] ^ [x2] mod [p] 
+ [x0] = [x0] ^ [x1] mod [p] 
  a ← 1 ; m ← a 
  for i = 0 to k − 1: 
     if di = 1 then a ← a · m mod n 
@@ -342,8 +341,8 @@ _fp_pow:
 	stp x21, x22, [sp, #48]
 	str x23, [sp, #64]
 
-	mov x19, x1  // move x1 to x1_adr 
-	mov x20, x2  // move x2 to x2_adr 
+	mov x19, x0  // move x1 to x1_adr 
+	mov x20, x1  // move x2 to x2_adr 
 	mov x25, x0  // move x0 to result_adr 
 	adrp x3, _fp_1@PAGE
 	add x3, x3, _fp_1@PAGEOFF
@@ -439,3 +438,48 @@ _fp_pow_end:
 	add sp, sp, #464
 	ret
 
+/*
+ return 1 if [x0] is a square, 0 otherwise  
+*/
+.global _fp_issquare
+_fp_issquare: 
+	/* First we set the mul counter pointer to 0, so it doesnt get updated, later we restore it */
+	adrp x3, _fp_mul_counter@PAGE
+	add x3, x3, _fp_mul_counter@PAGEOFF
+	ldr x4, [x3, #0]  // load counter pointer 
+	sub sp, sp, #32
+	stp lr, x3, [sp, #0]
+	str x4, [sp, #16]
+	str xzr, [x3, #0]
+
+	adrp x3, _fp_sqt_counter@PAGE
+	add x3, x3, _fp_sqt_counter@PAGEOFF
+	ldr x3, [x3, #0]  // load counter pointer 
+	cbz x3, 0f // skip to 0f if pointer to mul_counter is 0 
+	ldr x4, [x3, #0]  // load counter value 
+	adds x4, x4, #1  // increase counter value 
+	str x4, [x3, #0]
+
+	0: // skip label
+	adrp x1, _p_minus_1_halves@PAGE
+	add x1, x1, _p_minus_1_halves@PAGEOFF
+	bl _fp_pow // [x0] = [x0] ^ [p_minus1_halves] mod [p] 
+
+	/* Check if [x0] == 1 == fp_1!! */
+	adrp x1, _fp_1@PAGE
+	add x1, x1, _fp_1@PAGEOFF
+	bl _fp_eq // x0 = [x0] == [x1] 
+	/* If equal (1) it is a quadratic residue!! */
+
+	/* Restore Mul Counter */
+	ldp lr, x3, [sp, #0]
+	ldr x4, [sp, #16]
+	add sp, sp, #32
+	str x4, [x3, #0]
+	ret
+
+.global _fp_random
+_fp_random: 
+	adrp x1, _p@PAGE
+	add x1, x1, _p@PAGEOFF
+	b _uint_random
