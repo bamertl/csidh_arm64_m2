@@ -144,7 +144,7 @@ _reduce_once:
 	stp x11, x12, [x0, #96]  // store result 
 	stp x13, x14, [x0, #112]  // store result 
 	/* Final carry of a+b-p */
-	sbcs x1, x1, xzr  // potential overflow of a+b 
+	//sbcs x1, x1, xzr  // potential overflow of a+b 
 	sbcs x1, xzr, xzr  // if a-p negative, carry is 1 
 	/* AND P and a + p */
 	/* Limbs 0 - 3 */
