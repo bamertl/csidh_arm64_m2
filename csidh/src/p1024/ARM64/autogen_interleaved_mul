@@ -8,6 +8,7 @@ fn = './src/p1024/ARM64/mul/fp_mul_interleaved.s'
 
 extern_variables = {'_inv_min_p_mod_r': '_inv_min_p_mod_r',
                      '_p': '_p',
+                     '_fp_reduce_once': '_fp_reduce_once'
                     }
 
 
@@ -176,14 +177,15 @@ def import_extern_variables(f):
         f.write('.extern %s\n' % var)
     newlines(f,1)
 
-MUL_STEP_MACRO = 'MUL_STEP_MACRO'
+MUL16x1 = 'MUL_16x1'
 
 # 17 Regs for C
 
 C_ADR_REAL = "x3"
-AI_REAL = "x4",
+AI_REAL = "x4"
+A_ADR_REAL = "x30"
 B_ADR_REAL = "x5"
-P_ADR = "x6"
+P_ADR_REAL = "x6"
 C_REAL = ["x7", "x8", "x9", "x10"]
 T_REAL = ["x12","x13","x14", "x15", "x16", "x17", "x19", "x20", "x21", "x22", "x23", "x24", "x25", "x26", "x27", "x28"]
 CARRY_REG_REAL = "x11"
@@ -191,15 +193,15 @@ CARRY_REG_REAL = "x11"
 C_REGS = ['\C'+str(i) for i in range(len(C_REAL))]
 C_ADR = '\\C_ADR'
 T_REGS = ['\T'+str(i) for i in range(len(T_REAL))]
+P_ADR = '\\P_ADR'
 B_ADR = '\\B_ADR' 
 AI = '\\AI'
 CARRY_REG = '\\CARRY_REG'
 
-
-def MUL_16x1(f):
+def WRITE_MUL_16x1(f):
     f.write('/*\n [C_ADR]+1 = [C_ADR] + [B_ADR] * AI   \n*/ \n')
     f.write('.macro %s, %s, %s, %s, %s, %s, %s \n' % (
-                                        MUL_STEP_MACRO, 
+                                        MUL16x1, 
                                         C_ADR.replace('\\',''),
                                         AI.replace('\\',''),
                                         B_ADR.replace('\\',''),
@@ -212,21 +214,14 @@ def MUL_16x1(f):
         newlines(f,1)
         comment(f, "LIMBS C%d-C%d" % (i*4, i*4+3))
         offset = i*16*2
-        ldp(f, T_REGS[0], T_REGS[1], B_ADR, offset, 'Load B')
-        ldp(f, T_REGS[2], T_REGS[3], B_ADR, offset+16)
-        ldp(f, C_REGS[0], C_REGS[1], C_ADR, offset, 'Load C')
-        ldp(f, C_REGS[2], C_REGS[3], C_ADR, offset+16)
+        for j in range(2):
+            ldp(f, T_REGS[j], T_REGS[j+1], B_ADR, offset + j*16, 'Load B')
+            ldp(f, C_REGS[j], C_REGS[j+1], C_ADR, offset + j*16, 'Load C')
         newlines(f,1)
-        mul(f, T_REGS[8], AI, T_REGS[0], 'B * AI')
-        umulh(f, T_REGS[9], AI, T_REGS[0])
-        mul(f, T_REGS[10], AI, T_REGS[1])
-        umulh(f, T_REGS[11], AI, T_REGS[1])
-        mul(f, T_REGS[12], AI, T_REGS[2])
-        umulh(f, T_REGS[13], AI, T_REGS[2])
-        mul(f, T_REGS[14], AI, T_REGS[3])
-        umulh(f, T_REGS[15], AI, T_REGS[3])
+        for j in range(4):
+            mul(f, T_REGS[8 + 2*j], T_REGS[j], AI)
+            umulh(f, T_REGS[8 + 2*j + 1], T_REGS[j], AI)
         newlines(f,1)
-
         # The thing below should be packed into a loop 
         for j in range(4):
             if j == 0:
@@ -244,6 +239,66 @@ def MUL_16x1(f):
         adcs(f, CARRY_REG, CARRY_REG, T_REGS[15])
     comment(f,"Store last C at [C_ADR]+1, which means offset: %d" % (limbs*8))
     f.write('\tstr %s, [%s, #%d] \n' % (CARRY_REG, C_ADR, limbs*8))
+    newlines(f,1)
+
+
+def call_mul_8x1_macro(f, b_addr):
+    f.write('\t%s %s, %s, %s, %s, %s, %s \n' % (MUL16x1, C_ADR, AI, b_addr, CARRY_REG, ', '.join(C_REGS), ', '.join(T_REGS)))
+
+MUL_STEP_MACRO = "MUL_STEP"
+K = "\\K"
+A_ADR = "\\A_ADR"
+def WRITE_MUL_STEP(f):
+    f.write("/*\n C ← C + ai B \n q ← μC mod r\n C ← (C + Nq)/r  \n*/ \n")
+    f.write('.macro %s, %s, %s, %s, %s, %s, %s, %s, %s, %s \n' % (
+                                        MUL_STEP_MACRO, 
+                                        K.replace('\\',''),
+                                        A_ADR.replace('\\',''),
+                                        C_ADR.replace('\\',''),
+                                        AI.replace('\\',''),
+                                        B_ADR.replace('\\',''),
+                                        P_ADR.replace('\\',''),
+                                        CARRY_REG.replace('\\',''), 
+                                        ', '.join(C_REGS).replace('\\',''),
+                                        ', '.join(T_REGS).replace('\\','')
+                                        ))
+    # LOAD AI from offset \\K
+    f.write('\tldr %s, [%s , 8*%s] // load AI \n' % (AI, A_ADR, K))
+    comment(f, "C ← C + ai B")
+    call_mul_8x1_macro(f, B_ADR)
+    comment(f, "q ← μC mod r , we just need to multiply C[0] with inv_min_p_mod_r")
+    load_label_address_into_register(f, '_inv_min_p_mod_r', T_REGS[0])
+    f.write('\tldr %s, [%s] // load inv_min_p_mod_r \n' % (T_REGS[0], '_inv_min_p_mod_r'))
+    f.write('\tldr %s, [%s] // load C[0] \n' % (T_REGS[1], C_ADR))
+    mul(f, AI, T_REGS[0], T_REGS[1], 'q ← μC mod r')
+    comment(f, "C ← (C + Nq)/r")
+    call_mul_8x1_macro(f, P_ADR)
+
+    comment(f, "We shift C ")
+    ldr(f, C_REGS[0], C_ADR, 128)
+    # make a loop that counts backwards from 8 to 0 
+    for i in range(int(limbs/2)):
+        ldp(f, T_REGS[i*2], T_REGS[i*2+1], C_ADR, i*16)
+
+    for i in range(0, int(limbs/2) -1 ):
+        stp(f, T_REGS[i*2 + 1], T_REGS[i*2+2], C_ADR, (i)*16) 
+    stp(f, T_REGS[15], C_REGS[0], C_ADR, (limbs-2)*8)
+    f.write('\tstr xzr, [%s, #%d] // set C[0] to 0 \n' % (C_ADR, (limbs)*8))
+    newlines(f,1)
+
+def call_mul_step_macro(f, number_k):
+    f.write('\t%s %s, %s, %s, %s, %s, %s, %s, %s, %s \n' % (MUL_STEP_MACRO, 
+                                                            number_k, 
+                                                            A_ADR_REAL, 
+                                                            C_ADR_REAL, 
+                                                            AI_REAL, 
+                                                            B_ADR_REAL, 
+                                                            P_ADR_REAL, 
+                                                            CARRY_REG_REAL, 
+                                                            ', '.join(C_REAL), 
+                                                            ', '.join(T_REAL)))
+
+
 
 with open(fn+'.tmp','w') as f:
     f.write('/* DO EDIT! generated by autogen */\n')
@@ -251,9 +306,27 @@ with open(fn+'.tmp','w') as f:
     f.write('.text\n')
     f.write('.align 4\n')
 
-    MUL_16x1(f)
+    WRITE_MUL_16x1(f)
+    WRITE_MUL_STEP(f)
     introduce_global_function(f, '_fp_mul3', '[x0] = [x1] * [x2] mod [p] Interleaved Montgomery multiplication')
+    REGS_TO_STORE = ['x19', 'x20', 'x21', 'x22', 'x23', 'x24', 'x25', 'x26', 'x27', 'x28', 'x30']
+    PLACE_FOR_C = limbs * 8 + 8
+    C_OFFSET = len(REGS_TO_STORE)*8 
 
+    sub_stack_and_store_on_stack(f, REGS_TO_STORE, PLACE_FOR_C) 
+    newlines(f,1)
 
+    comment(f, "Load adress of P, A and B and C into respective registers")
+    load_label_address_into_register(f, '_p', P_ADR_REAL)
+    add(f, C_ADR_REAL, 'sp', '#%d' % C_OFFSET)
+    mov(f, A_ADR_REAL, 'x1')
+    mov(f, B_ADR_REAL, 'x2')
+    newlines(f,1)
+    for i in range(limbs):
+        call_mul_step_macro(f, i)
+    newlines(f,1)
+    f.write('\tbl _fp_reduce_once\n')
+    comment(f, "Restore Stack")
+    add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, PLACE_FOR_C)
 
     maybeupdate(fn)
