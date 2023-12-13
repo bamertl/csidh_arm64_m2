@@ -204,7 +204,7 @@ def write_uint_eq(f):
     A_ADR = 'x0'
     B_ADR = 'x1'
 
-    orr(f, RESULT_REG, RESULT_REG, RESULT_REG, 'clear result')
+    eor(f, RESULT_REG, RESULT_REG, RESULT_REG, 'clear result')
     for i in range(int(limbs/4)):
         comment(f, 'Limbs %s - %s' % (i*4, i*4+3))
         start_memory_offset = i*16*2 #32 steps
@@ -248,16 +248,17 @@ def write_uint_len(f):
     zero_counts = ['x4', 'x5']
     final_offset = 'x7'
     mov(f, final_offset, '#0', 'initialize final result')
-
+    numba_64 = 'x17'
+    mov(f, numba_64, '#64', 'init x17')
     for i in range(int(limbs/2)):
         comment(f, 'Limbs %s - %s' % (i*2, i*2+1))
         ldp(f, num[0], num[1], 'x0', i*16, 'load two limbs to %s' % num)
         f.write('\tclz %s, %s // count leading zeros in first limb\n' % (zero_counts[0], num[0]))
         f.write('\tclz %s, %s // count leading zeros in second limb\n' % (zero_counts[1], num[1]))
-        f.write('\tsub %s, #64, %s // subtract from 64 for position of first bit that is 1 or 0\n' % (zero_counts[0], zero_counts[0]))
-        f.write('\tsub %s, #64, %s // subtract from 64 for position of first bit that is 1 or 0\n' % (zero_counts[1], zero_counts[1]))
-        f.write('\tadd %s, %s, #%d // add limb offsets\n' % (zero_counts[0], zero_counts[0], i*16))
-        f.write('\tadd %s, %s, #%d \n' % (zero_counts[1], zero_counts[1], i*16 + 8))
+        f.write('\tsub %s, %s, %s // subtract from 64 for position of first bit that is 1 or 0\n' % (zero_counts[0], numba_64, zero_counts[0]))
+        f.write('\tsub %s, %s, %s // subtract from 64 for position of first bit that is 1 or 0\n' % (zero_counts[1], numba_64, zero_counts[1]))
+        f.write('\tadd %s, %s, #%d // add limb offsets\n' % (zero_counts[0], zero_counts[0], i*2*64))
+        f.write('\tadd %s, %s, #%d \n' % (zero_counts[1], zero_counts[1], i*2*64 + 64))
         f.write('\tcmp %s, %s // Now we compare if the limb offset equals the current offset (if this is the case there is no 0)\n' % (zero_counts[0], i*16))
         f.write('\tcsel %s, %s, %s, ne // if equal keep, else new result\n' % (final_offset, zero_counts[0], final_offset))
         f.write('\tcmp %s, #%s \n' % (zero_counts[1], i*16 + 8))

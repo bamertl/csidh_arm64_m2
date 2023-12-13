@@ -85,7 +85,7 @@ _fp_add2:
 _fp_add3: 
 	sub sp, sp, #16
 	stp x0, lr, [sp, #0]
-	bl // this returns the carry in x0 _uint_add3
+	bl _uint_add3 // this returns the carry in x0
 	mov x1, x0  // move the carry of a + b to x1 
 	ldp x0, lr, [sp, #0]
 	add sp, sp, #16
@@ -157,7 +157,7 @@ _reduce_once:
 	and x9, x9, x1  
 	and x10, x10, x1  
 
-	adcs x11, x3, x7  
+	adds x11, x3, x7  
 	adcs x12, x4, x8  
 	adcs x13, x5, x9  
 	adcs x14, x6, x10  
@@ -234,14 +234,14 @@ _fp_sub3:
 	stp x0, x1, [sp, #0]
 	str lr, [sp, #16]
 	/* [temp] = [p] - [x2] */
-	adds x0, sp, 24  
+	adds x0, sp, #24  
 	adrp x1, _p@PAGE
 	add x1, x1, _p@PAGEOFF
 	bl _uint_sub3 
-	ldr x0, [sp, #0]  // load initial result addr 
-	ldr x1, [sp, #8]  // load initial x1 
-	adds x2, sp, 24  
-	bl _reduce_once
+	ldp x0, x1, [sp, #0]  
+	adds x2, sp, #24  
+	/* [x0] = [x1] + [temp] mod [p] */
+	bl _fp_add3
 	ldp x0, x1, [sp, #0]
 	ldr lr, [sp, #16]
 	add sp, sp, #160
@@ -401,7 +401,7 @@ _fp_pow_bit_is_zero:
 
 _fp_pow_bit_finish:
 	add x0, sp, 200  // = m 
-	bl fp_sq1 // m = m * m 
+	bl _fp_sq1 // m = m * m 
 	lsr x23, x23, #1  // shift current word right by 1 
 	subs x22, x22, #1  // decrease bit counter 
 	b.ne _fp_pow_bit_loop // branch if bit counter != 0 

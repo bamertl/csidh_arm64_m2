@@ -122,4 +122,4 @@ crypto_classify.o: ../high-ctidh-20210523/crypto_classify.c ../high-ctidh-202105
 clean:
 	@rm -f *.o *.a ./*.S *.out
 	@rm -rf *.dSYM tests/*.dSYM
-	@rm -f tests/test_uintbig tests/test_fp tests/test_mul_vec
+	@rm -f tests/test_uintbig tests/test_fp tests/test_mul_vec tests/test_uint1024

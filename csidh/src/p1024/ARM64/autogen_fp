@@ -267,7 +267,7 @@ def write_fp_add3(f):
     
     x1 = 'x1'
     x0 = 'x0'
-    f.write('\tbl // this returns the carry in x0 %s\n' % extern_variables['_uint_add3'])
+    f.write('\tbl %s // this returns the carry in x0\n' % extern_variables['_uint_add3'])
     mov(f, x1, x0, 'move the carry of a + b to x1')
     add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, 0)
     f.write('\tb %s\n' % global_functions['_reduce_once'])
@@ -314,8 +314,8 @@ def write_reduce_once(f):
         ldp(f, A_REGS[2], A_REGS[3], result_adr, i*32 + 16, 'load A')
         ldp(f, P_REGS[0], P_REGS[1], P_ADR, i*32, 'load P')
         ldp(f, P_REGS[2], P_REGS[3], P_ADR, i*32 + 16, 'load P')
-        for i in range(4):
-            andd(f, P_REGS[i], P_REGS[i], CARRY_REG)
+        for j in range(4):
+            andd(f, P_REGS[j], P_REGS[j], CARRY_REG)
         newlines(f,1)
         if i==0:
             adds(f, RESULT_REGS[0], A_REGS[0], P_REGS[0])
@@ -344,7 +344,7 @@ but better safe then sorry')
     comment(f, "we add -[x2] by first calculating [p] - [x2]")
 
     REGS_TO_STORE = ['x0','x1', 'lr']
-    temp_addr_stack_offset = len(REGS_TO_STORE)*8 # right after the stored registers
+    temp_addr_stack_offset = '#' + str(len(REGS_TO_STORE)*8) # right after the stored registers
     sub_stack_and_store_on_stack(f, REGS_TO_STORE, limbs*8)
 
     comment(f, "[temp] = [p] - [x2]")
@@ -353,10 +353,10 @@ but better safe then sorry')
     P_ADR = 'x1'
     load_label_address_into_register(f, extern_variables['_p'], P_ADR) 
     f.write('\tbl %s \n' % extern_variables['_uint_sub3'])
-    ldr(f,'x0', 'sp', 0, 'load initial result addr')
-    ldr(f,'x1', 'sp', 8, 'load initial x1')
+    ldp(f, 'x0', 'x1', 'sp', 0)
     adds(f, 'x2', 'sp', temp_addr_stack_offset)
-    f.write('\tbl %s\n' % global_functions['_reduce_once'])
+    comment(f, "[x0] = [x1] + [temp] mod [p]")
+    f.write('\tbl %s\n' % global_functions['_fp_add3'])
     add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, limbs*8)
     f.write('\tret\n\n')
     newlines(f,1)
@@ -514,7 +514,7 @@ We add a dummy to make it time-constant'
     newlines(f,1)
     f.write('%s:\n' % _fp_pow_bit_finish)
     add(f, 'x0', sp, offset_m, '= m')
-    f.write('\tbl fp_sq1 // m = m * m \n')
+    f.write('\tbl _fp_sq1 // m = m * m \n')
     lsr(f, current_word, current_word, '#1', 'shift current word right by 1')
     subs(f, bit_counter, bit_counter, '#1', 'decrease bit counter')
     f.write('\tb.ne %s // branch if bit counter != 0 \n' % _fp_pow_bit_loop)

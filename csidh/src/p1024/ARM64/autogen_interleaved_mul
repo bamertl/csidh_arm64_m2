@@ -8,7 +8,7 @@ fn = './src/p1024/ARM64/mul/fp_mul_interleaved.s'
 
 extern_variables = {'_inv_min_p_mod_r': '_inv_min_p_mod_r',
                      '_p': '_p',
-                     '_fp_reduce_once': '_fp_reduce_once'
+                     '_reduce_once': '_reduce_once'
                     }
 
 
@@ -240,6 +240,7 @@ def WRITE_MUL_16x1(f):
     comment(f,"Store last C at [C_ADR]+1, which means offset: %d" % (limbs*8))
     f.write('\tstr %s, [%s, #%d] \n' % (CARRY_REG, C_ADR, limbs*8))
     newlines(f,1)
+    f.write('.endm \n\n')
 
 
 def call_mul_8x1_macro(f, b_addr):
@@ -268,7 +269,7 @@ def WRITE_MUL_STEP(f):
     call_mul_8x1_macro(f, B_ADR)
     comment(f, "q ← μC mod r , we just need to multiply C[0] with inv_min_p_mod_r")
     load_label_address_into_register(f, '_inv_min_p_mod_r', T_REGS[0])
-    f.write('\tldr %s, [%s] // load inv_min_p_mod_r \n' % (T_REGS[0], '_inv_min_p_mod_r'))
+    f.write('\tldr %s, [%s] // load inv_min_p_mod_r \n' % (T_REGS[0], T_REGS[0]))
     f.write('\tldr %s, [%s] // load C[0] \n' % (T_REGS[1], C_ADR))
     mul(f, AI, T_REGS[0], T_REGS[1], 'q ← μC mod r')
     comment(f, "C ← (C + Nq)/r")
@@ -285,6 +286,7 @@ def WRITE_MUL_STEP(f):
     stp(f, T_REGS[15], C_REGS[0], C_ADR, (limbs-2)*8)
     f.write('\tstr xzr, [%s, #%d] // set C[0] to 0 \n' % (C_ADR, (limbs)*8))
     newlines(f,1)
+    f.write('.endm \n\n')
 
 def call_mul_step_macro(f, number_k):
     f.write('\t%s %s, %s, %s, %s, %s, %s, %s, %s, %s \n' % (MUL_STEP_MACRO, 
@@ -325,7 +327,19 @@ with open(fn+'.tmp','w') as f:
     for i in range(limbs):
         call_mul_step_macro(f, i)
     newlines(f,1)
-    f.write('\tbl _fp_reduce_once\n')
+
+    comment(f, "Store Result C to [x0] and the overflow into x1")
+    for i in range(2):
+        offset = i * 16 * 4
+        for j in range(4):
+            ldp(f, T_REAL[j*2], T_REAL[j*2+1], C_ADR_REAL, offset + j*16)
+        newlines(f,1)
+        for j in range(4):
+            stp(f, T_REAL[j*2], T_REAL[j*2+1], 'x0', offset + j*16)
+        newlines(f,1)
+    f.write('\tldr x1, [%s, #%d] // load the overflow limb into x1, reduce_once wants it that way \n' % (C_ADR_REAL, limbs*8))
+
+    f.write('\tbl %s \n' % extern_variables['_reduce_once'])
     comment(f, "Restore Stack")
     add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, PLACE_FOR_C)
 

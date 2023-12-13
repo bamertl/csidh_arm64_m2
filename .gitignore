@@ -10,6 +10,8 @@ csidh/bench_muls
 high-ctidh-20210523/bench512custom
 high-ctidh-20210523/costpoly512
 csidh/main
+csidh/tests/test_uint1024
+csidh/tests/test_fp1024
 # Object files
 *.o
 *.obj

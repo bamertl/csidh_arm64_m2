@@ -58,8 +58,14 @@ make bench_muls ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SCHOOLBOOK
 ## Autogens
 ```bash
 ./src/p1024/ARM64/autogen_uint
+./src/p1024/ARM64/autogen_fp
+./src/p1024/ARM64/autogen_interleaved_mul
 ```
 
+## Run
+```bash
+make BITS=1024 ARCH=ARM64
+```
 
 
 ## Important Information for Apple M2

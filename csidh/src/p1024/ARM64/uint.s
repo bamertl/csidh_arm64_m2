@@ -42,7 +42,7 @@ _uint_1:
 
 .global _uint_eq
 _uint_eq: 
-	orr x17, x17, x17  // clear result 
+	eor x17, x17, x17  // clear result 
 	/* Limbs 0 - 3 */
 	ldp x2, x3, [x0, #0]  // load A 
 	ldp x4, x5, [x0, #16]  // load A 
@@ -115,14 +115,15 @@ _uint_set:
 .global _uint_len
 _uint_len: 
 	mov x7, #0  // initialize final result 
+	mov x17, #64  // init x17 
 	/* Limbs 0 - 1 */
 	ldp x2, x3, [x0, #0]  // load two limbs to ['x2', 'x3'] 
 	clz x4, x2 // count leading zeros in first limb
 	clz x5, x3 // count leading zeros in second limb
-	sub x4, #64, x4 // subtract from 64 for position of first bit that is 1 or 0
-	sub x5, #64, x5 // subtract from 64 for position of first bit that is 1 or 0
+	sub x4, x17, x4 // subtract from 64 for position of first bit that is 1 or 0
+	sub x5, x17, x5 // subtract from 64 for position of first bit that is 1 or 0
 	add x4, x4, #0 // add limb offsets
-	add x5, x5, #8 
+	add x5, x5, #64 
 	cmp x4, 0 // Now we compare if the limb offset equals the current offset (if this is the case there is no 0)
 	csel x7, x4, x7, ne // if equal keep, else new result
 	cmp x5, #8 
@@ -132,10 +133,10 @@ _uint_len:
 	ldp x2, x3, [x0, #16]  // load two limbs to ['x2', 'x3'] 
 	clz x4, x2 // count leading zeros in first limb
 	clz x5, x3 // count leading zeros in second limb
-	sub x4, #64, x4 // subtract from 64 for position of first bit that is 1 or 0
-	sub x5, #64, x5 // subtract from 64 for position of first bit that is 1 or 0
-	add x4, x4, #16 // add limb offsets
-	add x5, x5, #24 
+	sub x4, x17, x4 // subtract from 64 for position of first bit that is 1 or 0
+	sub x5, x17, x5 // subtract from 64 for position of first bit that is 1 or 0
+	add x4, x4, #128 // add limb offsets
+	add x5, x5, #192 
 	cmp x4, 16 // Now we compare if the limb offset equals the current offset (if this is the case there is no 0)
 	csel x7, x4, x7, ne // if equal keep, else new result
 	cmp x5, #24 
@@ -145,10 +146,10 @@ _uint_len:
 	ldp x2, x3, [x0, #32]  // load two limbs to ['x2', 'x3'] 
 	clz x4, x2 // count leading zeros in first limb
 	clz x5, x3 // count leading zeros in second limb
-	sub x4, #64, x4 // subtract from 64 for position of first bit that is 1 or 0
-	sub x5, #64, x5 // subtract from 64 for position of first bit that is 1 or 0
-	add x4, x4, #32 // add limb offsets
-	add x5, x5, #40 
+	sub x4, x17, x4 // subtract from 64 for position of first bit that is 1 or 0
+	sub x5, x17, x5 // subtract from 64 for position of first bit that is 1 or 0
+	add x4, x4, #256 // add limb offsets
+	add x5, x5, #320 
 	cmp x4, 32 // Now we compare if the limb offset equals the current offset (if this is the case there is no 0)
 	csel x7, x4, x7, ne // if equal keep, else new result
 	cmp x5, #40 
@@ -158,10 +159,10 @@ _uint_len:
 	ldp x2, x3, [x0, #48]  // load two limbs to ['x2', 'x3'] 
 	clz x4, x2 // count leading zeros in first limb
 	clz x5, x3 // count leading zeros in second limb
-	sub x4, #64, x4 // subtract from 64 for position of first bit that is 1 or 0
-	sub x5, #64, x5 // subtract from 64 for position of first bit that is 1 or 0
-	add x4, x4, #48 // add limb offsets
-	add x5, x5, #56 
+	sub x4, x17, x4 // subtract from 64 for position of first bit that is 1 or 0
+	sub x5, x17, x5 // subtract from 64 for position of first bit that is 1 or 0
+	add x4, x4, #384 // add limb offsets
+	add x5, x5, #448 
 	cmp x4, 48 // Now we compare if the limb offset equals the current offset (if this is the case there is no 0)
 	csel x7, x4, x7, ne // if equal keep, else new result
 	cmp x5, #56 
@@ -171,10 +172,10 @@ _uint_len:
 	ldp x2, x3, [x0, #64]  // load two limbs to ['x2', 'x3'] 
 	clz x4, x2 // count leading zeros in first limb
 	clz x5, x3 // count leading zeros in second limb
-	sub x4, #64, x4 // subtract from 64 for position of first bit that is 1 or 0
-	sub x5, #64, x5 // subtract from 64 for position of first bit that is 1 or 0
-	add x4, x4, #64 // add limb offsets
-	add x5, x5, #72 
+	sub x4, x17, x4 // subtract from 64 for position of first bit that is 1 or 0
+	sub x5, x17, x5 // subtract from 64 for position of first bit that is 1 or 0
+	add x4, x4, #512 // add limb offsets
+	add x5, x5, #576 
 	cmp x4, 64 // Now we compare if the limb offset equals the current offset (if this is the case there is no 0)
 	csel x7, x4, x7, ne // if equal keep, else new result
 	cmp x5, #72 
@@ -184,10 +185,10 @@ _uint_len:
 	ldp x2, x3, [x0, #80]  // load two limbs to ['x2', 'x3'] 
 	clz x4, x2 // count leading zeros in first limb
 	clz x5, x3 // count leading zeros in second limb
-	sub x4, #64, x4 // subtract from 64 for position of first bit that is 1 or 0
-	sub x5, #64, x5 // subtract from 64 for position of first bit that is 1 or 0
-	add x4, x4, #80 // add limb offsets
-	add x5, x5, #88 
+	sub x4, x17, x4 // subtract from 64 for position of first bit that is 1 or 0
+	sub x5, x17, x5 // subtract from 64 for position of first bit that is 1 or 0
+	add x4, x4, #640 // add limb offsets
+	add x5, x5, #704 
 	cmp x4, 80 // Now we compare if the limb offset equals the current offset (if this is the case there is no 0)
 	csel x7, x4, x7, ne // if equal keep, else new result
 	cmp x5, #88 
@@ -197,10 +198,10 @@ _uint_len:
 	ldp x2, x3, [x0, #96]  // load two limbs to ['x2', 'x3'] 
 	clz x4, x2 // count leading zeros in first limb
 	clz x5, x3 // count leading zeros in second limb
-	sub x4, #64, x4 // subtract from 64 for position of first bit that is 1 or 0
-	sub x5, #64, x5 // subtract from 64 for position of first bit that is 1 or 0
-	add x4, x4, #96 // add limb offsets
-	add x5, x5, #104 
+	sub x4, x17, x4 // subtract from 64 for position of first bit that is 1 or 0
+	sub x5, x17, x5 // subtract from 64 for position of first bit that is 1 or 0
+	add x4, x4, #768 // add limb offsets
+	add x5, x5, #832 
 	cmp x4, 96 // Now we compare if the limb offset equals the current offset (if this is the case there is no 0)
 	csel x7, x4, x7, ne // if equal keep, else new result
 	cmp x5, #104 
@@ -210,10 +211,10 @@ _uint_len:
 	ldp x2, x3, [x0, #112]  // load two limbs to ['x2', 'x3'] 
 	clz x4, x2 // count leading zeros in first limb
 	clz x5, x3 // count leading zeros in second limb
-	sub x4, #64, x4 // subtract from 64 for position of first bit that is 1 or 0
-	sub x5, #64, x5 // subtract from 64 for position of first bit that is 1 or 0
-	add x4, x4, #112 // add limb offsets
-	add x5, x5, #120 
+	sub x4, x17, x4 // subtract from 64 for position of first bit that is 1 or 0
+	sub x5, x17, x5 // subtract from 64 for position of first bit that is 1 or 0
+	add x4, x4, #896 // add limb offsets
+	add x5, x5, #960 
 	cmp x4, 112 // Now we compare if the limb offset equals the current offset (if this is the case there is no 0)
 	csel x7, x4, x7, ne // if equal keep, else new result
 	cmp x5, #120 
