@@ -453,7 +453,7 @@ def write_fp_pow(f):
 We add a dummy to make it time-constant'
     )
     sp = 'sp'
-    REGS_TO_STORE = ['lr', 'x0', 'x1', 'x2', 'x19', 'x20', 'x21', 'x22', 'x23']
+    REGS_TO_STORE = ['lr', 'x0', 'x1', 'x2', 'x19', 'x20', 'x21', 'x22', 'x23', 'x24']
     x1_adr = 'x19'
     x2_adr = 'x20'
     current_word_offset = 'x21'

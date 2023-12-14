@@ -40,7 +40,6 @@ void test_fp_add(void) {
 
 void test_len(void){
     size_t lenn = uint_len(&p_minus_2);
-    printf("%zu\n", lenn);
     assert(lenn == 1020); // Changed from 511 to 1023
 }
 
@@ -55,9 +54,9 @@ void test_eq(void){
 }
 
 void test_uintbig_set(void){
-    uint a = {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}; // Doubled the size
-    uint_set(&a, 1);
-    uint expected = {{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}; // Doubled the size
+    uint a = {{0,0,0,0,0,0,0,0,0,1,0,2,0,4,0,0}}; // Doubled the size
+    uint_set(&a, 5);
+    uint expected = {{5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}; // Doubled the size
     for(int i = 0; i < LIMBS; i++) {
         assert(expected.c[i] == a.c[i]);
     }
@@ -96,14 +95,11 @@ void test_uint_sub3(void){
     uint ba = {{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}}; // Expanded to 16 limbs
     uint result = {{1}};
     uint_sub3(&result, &aa, &ba);
-    uint_print(&result);
 
     uint expected2 = {{0}}; // Expanded to 16 limbs
     for(int i = 0; i < LIMBS; i++) {
         assert(expected2.c[i] == result.c[i]);
     }
-
-
 }
 
 void test_uint_random(void){
@@ -111,6 +107,7 @@ void test_uint_random(void){
     uint b = {{0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0}}; // Expanded to 16 limbs
     uint_random(&a, &b);
 }
+
 
 int main(void)
 {
@@ -123,7 +120,7 @@ int main(void)
     test_uint_sub3();
     test_fp_add();
     //test_uint_random();
-
+    test_uint_mul3_64();
 
     return PASSED;
 }

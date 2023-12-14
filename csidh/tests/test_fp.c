@@ -96,6 +96,7 @@ void test_mul_more(void){
     fp b = {{1,2,3,4,5,6,7,8}};
     fp_set(&a, 5);
     fp_set(&b, 6);
+
     fp_mul2(&a, &b);
     fp_dec(&result, &a);
     fp expected = {{30,0,0,0,0,0,0,0}};

@@ -215,8 +215,8 @@ def WRITE_MUL_16x1(f):
         comment(f, "LIMBS C%d-C%d" % (i*4, i*4+3))
         offset = i*16*2
         for j in range(2):
-            ldp(f, T_REGS[j], T_REGS[j+1], B_ADR, offset + j*16, 'Load B')
-            ldp(f, C_REGS[j], C_REGS[j+1], C_ADR, offset + j*16, 'Load C')
+            ldp(f, T_REGS[j*2], T_REGS[2*j+1], B_ADR, offset + j*16, 'Load B')
+            ldp(f, C_REGS[2*j], C_REGS[2*j+1], C_ADR, offset + j*16, 'Load C')
         newlines(f,1)
         for j in range(4):
             mul(f, T_REGS[8 + 2*j], T_REGS[j], AI)
@@ -225,23 +225,67 @@ def WRITE_MUL_16x1(f):
         # The thing below should be packed into a loop 
         for j in range(4):
             if j == 0:
-                adcs(f, T_REGS[j+8], CARRY_REG, T_REGS[8], 'add carry')
+                adcs(f, C_REGS[j], C_REGS[j], CARRY_REG, 'add carry')
                 adcs(f, CARRY_REG, 'xzr', 'xzr')            
-                adcs(f, T_REGS[j+8], T_REGS[j+8], C_REGS[0], 'add C%d' % (i*4+j))
+                adcs(f, C_REGS[j], C_REGS[0], T_REGS[8], 'add C%d' % (i*4+j))
             else:
-                adcs(f, T_REGS[j+8], CARRY_REG, T_REGS[8+2*j-1], 'add carry')
+                adcs(f, C_REGS[j], C_REGS[j], CARRY_REG, 'add carry')
                 adcs(f, CARRY_REG, 'xzr', 'xzr')
-                adcs(f, T_REGS[j+8], T_REGS[j+8], C_REGS[j], 'add C%d' % (i*4+j))
+                adcs(f, C_REGS[j], C_REGS[j], T_REGS[8+2*j-1], 'add C%d' % (i*4+j))
                 adcs(f, CARRY_REG, CARRY_REG, 'xzr')
-                adcs(f, T_REGS[j+8], T_REGS[j+8], T_REGS[8+2*j], 'add T')
-        stp(f, T_REGS[8], T_REGS[9], C_ADR, offset, 'Store C')
-        stp(f, T_REGS[10], T_REGS[11], C_ADR, offset+16)
+                adcs(f, C_REGS[j], C_REGS[j], T_REGS[8+2*j], 'add T')
+            newlines(f,1)
         adcs(f, CARRY_REG, CARRY_REG, T_REGS[15])
+        stp(f, C_REGS[0], C_REGS[1], C_ADR, offset, 'Store C')
+        stp(f, C_REGS[2], C_REGS[3], C_ADR, offset+16)
     comment(f,"Store last C at [C_ADR]+1, which means offset: %d" % (limbs*8))
-    f.write('\tstr %s, [%s, #%d] \n' % (CARRY_REG, C_ADR, limbs*8))
+    #load last c
+    ldr(f, C_REGS[0], C_ADR, limbs*8)
+    #add carry
+    adcs(f, C_REGS[0], C_REGS[0], CARRY_REG, 'add carry')
+    f.write('\tstr %s, [%s, #%d] \n' % (C_REGS[0], C_ADR, limbs*8))
     newlines(f,1)
     f.write('.endm \n\n')
 
+
+def write_16x1_function(f):
+    introduce_global_function(f, '_fp_mul16x1', 'C[x0] 17 words = C[x0] + B[x1] 16 words * x2(ai)  8x1 Montgomery multiplication')
+    c_adr = 'x0'
+    b_adr = 'x1'
+    ai = 'x2'
+    carry_reg = 'x11'
+    t_regs = ['x7', 'x8', 'x9', 'x10', 'x11', 'x12', 'x13', 'x14']
+    c_regs = ['x3', 'x4', 'x5', 'x6']
+    adds(f, carry_reg, 'xzr', 'xzr', 'carry_reg = 0')   
+    for i in range(int(limbs/4)):
+        newlines(f,1)
+        comment(f, "LIMBS C%d-C%d" % (i*4, i*4+3))
+        offset = i*16*2
+        for j in range(2):
+            ldp(f, T_REGS[j*2], T_REGS[j*2+1], b_adr, offset + j*16, 'Load B')
+            ldp(f, c_regs[j*2], c_regs[j*2+1], c_adr, offset + j*16, 'Load C')
+        newlines(f,1)
+        for j in range(4):
+            mul(f, T_REGS[j*2], T_REGS[j], AI)
+            umulh(f, T_REGS[j*2+1], T_REGS[j], AI)
+        newlines(f,1)
+        # The thing below should be packed into a loop 
+        for j in range(4):
+            if j == 0:
+                adcs(f, c_regs[j], c_regs[j], carry_reg, 'add carry')
+                adcs(f, carry_reg, 'xzr', 'xzr')            
+                adcs(f, c_regs[j], c_regs[j], T_REGS[j], 'add C%d' % (i*4+j))
+            else:
+                adcs(f, c_regs[j], c_regs[j], carry_reg, 'add carry')
+                adcs(f, CARRY_REG, 'xzr', 'xzr')
+                adcs(f, C_REGS[j], c_regs[j], T_REGS[2*j-1], 'add C%d' % (i*4+j))
+                adcs(f, carry_reg, carry_reg, 'xzr')
+                adcs(f, c_regs[j], c_regs[j], T_REGS[2*j], 'add T')
+            newlines(f,1)
+        adcs(f, carry_reg, carry_reg, T_REGS[15])
+        stp(f, c_regs[0], c_regs[1], c_adr, offset, 'Store C')
+        stp(f, T_REGS[2], T_REGS[3], c_adr, offset+16)
+    comment(f,"Store last C at [C_ADR]+1, which means offset: %d" % (limbs*8))
 
 def call_mul_8x1_macro(f, b_addr):
     f.write('\t%s %s, %s, %s, %s, %s, %s \n' % (MUL16x1, 
@@ -271,7 +315,7 @@ def WRITE_MUL_STEP(f):
                                         ', '.join(T_REGS).replace('\\','')
                                         ))
     # LOAD AI from offset \\K
-    f.write('\tldr %s, [%s , 8*%s] // load AI \n' % (AI, A_ADR, K))
+    f.write('\tldr %s, [%s ,%s] // load AI \n' % (AI, A_ADR, K))
     comment(f, "C ← C + ai B")
     call_mul_8x1_macro(f, B_ADR)
     comment(f, "q ← μC mod r , we just need to multiply C[0] with inv_min_p_mod_r")
@@ -280,6 +324,7 @@ def WRITE_MUL_STEP(f):
     f.write('\tldr %s, [%s] // load C[0] \n' % (T_REGS[1], C_ADR))
     mul(f, AI, T_REGS[0], T_REGS[1], 'q ← μC mod r')
     comment(f, "C ← (C + Nq)/r")
+
     call_mul_8x1_macro(f, P_ADR)
 
     comment(f, "We shift C ")
@@ -295,6 +340,7 @@ def WRITE_MUL_STEP(f):
     newlines(f,1)
     f.write('.endm \n\n')
 
+
 def call_mul_step_macro(f, number_k):
     f.write('\t%s %s, %s, %s, %s, %s, %s, %s, %s, %s \n' % (MUL_STEP_MACRO, 
                                                             number_k, 
@@ -308,18 +354,10 @@ def call_mul_step_macro(f, number_k):
                                                             ', '.join(T_REAL))
                                                             )
 
-
-
-with open(fn+'.tmp','w') as f:
-    f.write('/* DO EDIT! generated by autogen */\n')
-    import_extern_variables(f)
-    f.write('.text\n')
-    f.write('.align 4\n')
-
-    WRITE_MUL_16x1(f)
-    WRITE_MUL_STEP(f)
+def write_interleaved_mul_macro(f):
     introduce_global_function(f, '_fp_mul3', '[x0] = [x1] * [x2] mod [p] Interleaved Montgomery multiplication')
-    REGS_TO_STORE = ['x19', 'x20', 'x21', 'x22', 'x23', 'x24', 'x25', 'x26', 'x27', 'x28', 'x30']
+    REGS_TO_STORE = ['lr', 'x0','x19', 'x20', 'x21', 'x22', 'x23', 'x24', 'x25', 'x26', 'x27', 'x28', 'x30']
+
     PLACE_FOR_C = limbs * 8 + 8
     C_OFFSET = len(REGS_TO_STORE)*8 
 
@@ -339,7 +377,7 @@ with open(fn+'.tmp','w') as f:
 
     newlines(f,1)
     for i in range(limbs):
-        call_mul_step_macro(f, i)
+        call_mul_step_macro(f, '#'+str(i*8))
     newlines(f,1)
 
     comment(f, "Store Result C to [x0] and the overflow into x1")
@@ -357,4 +395,15 @@ with open(fn+'.tmp','w') as f:
     comment(f, "Restore Stack")
     add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, PLACE_FOR_C)
     f.write('\tret \n')
+
+with open(fn+'.tmp','w') as f:
+    f.write('/* DO EDIT! generated by autogen */\n')
+    import_extern_variables(f)
+    f.write('.text\n')
+    f.write('.align 4\n')
+
+    WRITE_MUL_16x1(f)
+    WRITE_MUL_STEP(f)
+    write_interleaved_mul_macro(f)
+
     maybeupdate(fn)
