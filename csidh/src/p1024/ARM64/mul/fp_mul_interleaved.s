@@ -50,7 +50,7 @@
 
 	adcs \CARRY_REG, \CARRY_REG, \T15  
 	stp \C0, \C1, [\C_ADR, #0]  // Store C 
-	stp \T2, \T3, [\C_ADR, #16]  
+	stp \C2, \C3, [\C_ADR, #16]  
 
 	/* LIMBS C4-C7 */
 	ldp \T0, \T1, [\B_ADR, #32]  // Load B 
@@ -91,7 +91,7 @@
 
 	adcs \CARRY_REG, \CARRY_REG, \T15  
 	stp \C0, \C1, [\C_ADR, #32]  // Store C 
-	stp \T2, \T3, [\C_ADR, #48]  
+	stp \C2, \C3, [\C_ADR, #48]  
 
 	/* LIMBS C8-C11 */
 	ldp \T0, \T1, [\B_ADR, #64]  // Load B 
@@ -132,7 +132,7 @@
 
 	adcs \CARRY_REG, \CARRY_REG, \T15  
 	stp \C0, \C1, [\C_ADR, #64]  // Store C 
-	stp \T2, \T3, [\C_ADR, #80]  
+	stp \C2, \C3, [\C_ADR, #80]  
 
 	/* LIMBS C12-C15 */
 	ldp \T0, \T1, [\B_ADR, #96]  // Load B 
@@ -173,7 +173,7 @@
 
 	adcs \CARRY_REG, \CARRY_REG, \T15  
 	stp \C0, \C1, [\C_ADR, #96]  // Store C 
-	stp \T2, \T3, [\C_ADR, #112]  
+	stp \C2, \C3, [\C_ADR, #112]  
 	/* Store last C at [C_ADR]+1, which means offset: 128 */
 	ldr \C0, [\C_ADR, #128]  
 	adcs \C0, \C0, \CARRY_REG  // add carry 
@@ -197,7 +197,6 @@
 	ldr \T1, [\C_ADR] // load C[0] 
 	mul \AI, \T0, \T1  // q ← μC mod r 
 	/* C ← (C + Nq)/r */
-
 	MUL_16x1 \AI, \P_ADR, \C_ADR, \CARRY_REG, \C0, \C1, \C2, \C3, \T0, \T1, \T2, \T3, \T4, \T5, \T6, \T7, \T8, \T9, \T10, \T11, \T12, \T13, \T14, \T15 
 	/* We shift C  */
 	ldr \C0, [\C_ADR, #128]  

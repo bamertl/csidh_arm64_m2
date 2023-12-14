@@ -126,11 +126,11 @@ void test_mul(void){
 
 
 int main(void){
-    //test_fp_eq();
-    //test_fp_add();
-    //test_mul_more();
-    //test_mul_3();
-    //test_fp_sub();
+    test_fp_eq();
+    test_fp_add();
+    test_mul_more();
+    test_mul_3();
+    test_fp_sub();
     //test_encode_decode();
     test_mul();
 
