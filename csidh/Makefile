@@ -3,7 +3,7 @@
 BITS?=512
 
 .PHONY: main bench clean tests
- CC = clang -O3 -Os -march=native 
+ CC = clang -O3 -g -Os -march=native 
 
 
 ifndef ARCH
@@ -38,7 +38,6 @@ else ifeq "$(ARCH)" "ARM64"
     FP_IMPL+=$(wildcard  src/p${BITS}/ARM64/inv/*.s)
 	FP_IMPL+= ./src/p${BITS}/ARM64/mul/${MUL_FILE}
 endif
-
 
 sources = ./src/p${BITS}/constants.c
 sources += src/rng.c

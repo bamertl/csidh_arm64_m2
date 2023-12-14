@@ -339,7 +339,7 @@ _fp_pow:
 	stp x1, x2, [sp, #16]
 	stp x19, x20, [sp, #32]
 	stp x21, x22, [sp, #48]
-	str x23, [sp, #64]
+	stp x23, x24, [sp, #64]
 
 	mov x19, x0  // move x1 to x1_adr 
 	mov x20, x1  // move x2 to x2_adr 
@@ -351,34 +351,34 @@ _fp_pow:
 	ldp x6, x7, [x19, #16]  
 	ldp x8, x9, [x3, #0]  // load fp1 
 	ldp x10, x11, [x3, #16]  
-	stp x4, x5, [sp, #200]  // store x1 into m, offset m: 200, offset: 0 
-	stp x6, x7, [sp, #216]  
-	stp x8, x9, [sp, #72]  // store fp_1 into a, offset a: 72, offset: 0 
-	stp x10, x11, [sp, #88]  
+	stp x4, x5, [sp, #208]  // store x1 into m, offset m: 208, offset: 0 
+	stp x6, x7, [sp, #224]  
+	stp x8, x9, [sp, #80]  // store fp_1 into a, offset a: 80, offset: 0 
+	stp x10, x11, [sp, #96]  
 	ldp x4, x5, [x19, #32]  // load x1 
 	ldp x6, x7, [x19, #48]  
 	ldp x8, x9, [x3, #32]  // load fp1 
 	ldp x10, x11, [x3, #48]  
-	stp x4, x5, [sp, #232]  // store x1 into m, offset m: 200, offset: 32 
-	stp x6, x7, [sp, #248]  
-	stp x8, x9, [sp, #104]  // store fp_1 into a, offset a: 72, offset: 32 
-	stp x10, x11, [sp, #120]  
+	stp x4, x5, [sp, #240]  // store x1 into m, offset m: 208, offset: 32 
+	stp x6, x7, [sp, #256]  
+	stp x8, x9, [sp, #112]  // store fp_1 into a, offset a: 80, offset: 32 
+	stp x10, x11, [sp, #128]  
 	ldp x4, x5, [x19, #64]  // load x1 
 	ldp x6, x7, [x19, #80]  
 	ldp x8, x9, [x3, #64]  // load fp1 
 	ldp x10, x11, [x3, #80]  
-	stp x4, x5, [sp, #264]  // store x1 into m, offset m: 200, offset: 64 
-	stp x6, x7, [sp, #280]  
-	stp x8, x9, [sp, #136]  // store fp_1 into a, offset a: 72, offset: 64 
-	stp x10, x11, [sp, #152]  
+	stp x4, x5, [sp, #272]  // store x1 into m, offset m: 208, offset: 64 
+	stp x6, x7, [sp, #288]  
+	stp x8, x9, [sp, #144]  // store fp_1 into a, offset a: 80, offset: 64 
+	stp x10, x11, [sp, #160]  
 	ldp x4, x5, [x19, #96]  // load x1 
 	ldp x6, x7, [x19, #112]  
 	ldp x8, x9, [x3, #96]  // load fp1 
 	ldp x10, x11, [x3, #112]  
-	stp x4, x5, [sp, #296]  // store x1 into m, offset m: 200, offset: 96 
-	stp x6, x7, [sp, #312]  
-	stp x8, x9, [sp, #168]  // store fp_1 into a, offset a: 72, offset: 96 
-	stp x10, x11, [sp, #184]  
+	stp x4, x5, [sp, #304]  // store x1 into m, offset m: 208, offset: 96 
+	stp x6, x7, [sp, #320]  
+	stp x8, x9, [sp, #176]  // store fp_1 into a, offset a: 80, offset: 96 
+	stp x10, x11, [sp, #192]  
 
 	mov x21, #0  // init current word offset to 0 (limbs* 8) 
 	mov x24, #16  // init word counter to 16 
@@ -390,17 +390,17 @@ _fp_pow_bit_loop:
 	tst x23, #1 // check if least significant bit is 1
 	beq _fp_pow_bit_is_zero // branch if 0 
 _fp_pow_bit_is_one:
-	add x0, sp, 72  // = a 
-	add x1, sp, 200  // = m 
+	add x0, sp, 80  // = a 
+	add x1, sp, 208  // = m 
 	bl _fp_mul2 // a = a * m 
 	b _fp_pow_bit_finish
 _fp_pow_bit_is_zero:
-	add x0, sp, 328  // = dummy 
-	add x1, sp, 200  // = m 
+	add x0, sp, 336  // = dummy 
+	add x1, sp, 208  // = m 
 	bl _fp_mul2 // dummy = dummy * m 
 
 _fp_pow_bit_finish:
-	add x0, sp, 200  // = m 
+	add x0, sp, 208  // = m 
 	bl _fp_sq1 // m = m * m 
 	lsr x23, x23, #1  // shift current word right by 1 
 	subs x22, x22, #1  // decrease bit counter 
@@ -412,18 +412,18 @@ _fp_pow_bit_finish:
 _fp_pow_end:
 	mov x0, x25  // move result_adr to x0 
 	/* Store a into result */
-	ldp x4, x5, [sp, #72]  // load a 
-	ldp x6, x7, [sp, #88]  
-	ldp x8, x9, [sp, #104]  
-	ldp x10, x11, [sp, #120]  
+	ldp x4, x5, [sp, #80]  // load a 
+	ldp x6, x7, [sp, #96]  
+	ldp x8, x9, [sp, #112]  
+	ldp x10, x11, [sp, #128]  
 	stp x4, x5, [x0, #0]  // store a 
 	stp x6, x7, [x0, #16]  
 	stp x8, x9, [x0, #32]  
 	stp x10, x11, [x0, #48]  
-	ldp x4, x5, [sp, #136]  // load a 
-	ldp x6, x7, [sp, #152]  
-	ldp x8, x9, [sp, #168]  
-	ldp x10, x11, [sp, #184]  
+	ldp x4, x5, [sp, #144]  // load a 
+	ldp x6, x7, [sp, #160]  
+	ldp x8, x9, [sp, #176]  
+	ldp x10, x11, [sp, #192]  
 	stp x4, x5, [x0, #64]  // store a 
 	stp x6, x7, [x0, #80]  
 	stp x8, x9, [x0, #96]  
@@ -434,7 +434,7 @@ _fp_pow_end:
 	ldp x1, x2, [sp, #16]
 	ldp x19, x20, [sp, #32]
 	ldp x21, x22, [sp, #48]
-	ldr x23, [sp, #64]
+	ldp x23, x24, [sp, #64]
 	add sp, sp, #464
 	ret
 
