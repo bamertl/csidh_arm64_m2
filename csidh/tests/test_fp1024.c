@@ -70,13 +70,8 @@ void test_mul_more(void){
     fp a = {{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}}; // Expanded to 16 limbs
     fp b = {{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}}; // Expanded to 16 limbs
     fp_set(&a, 5);
-    printf("a: ");
-    fp_print(&a);
     fp_set(&b, 6);
-    fp_print(&b);
     fp_mul3(&a, &a, &b);
-
-    fp_print(&a);
     fp_dec(&result, &a);
     fp expected = {{30,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}; // Expanded to 16 limbs
     
@@ -102,27 +97,68 @@ void test_fp_sub(void){
     } 
 }
 
-void test_mul(void){
-
-    fp a = {{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}};
-    fp b = {{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}};
-    fp c = {{0}};
-    fp_mul3(&c, &a, &b);
-    fp_mul3(&a, &c, &c);
-
-    fp_print(&a);   
-
+void test_encode_decode(void){
+    uint aa = {{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}};
+    uint bb = {{0}};
+    fp a = {{0}};
+    fp_enc(&a, &aa);
+    fp_dec(&bb, &a);
+    for(int i = 0; i < 16; i++) { // Updated loop count to 16
+        assert(aa.c[i] == bb.c[i]);
+    }
 }
 
-// void test_encode_decode(void){
-//     uint aa = {{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}}; // Expanded to 16 limbs
-//     uint bb = {{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}}; // Expanded to 16 limbs
-//     fp a = {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}; // Expanded to 16 limbs
-  
-//     for(int i = 0; i < LIMBS; i++) {
-//         assert(aa.c[i] == bb.c[i]);
-//     }
-// }
+void test_sq1(void){
+    uint aa = {{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+    uint bb = {{0}};
+    fp a = {{0}};
+    fp_enc(&a, &aa); 
+    fp expected = {{4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+    fp_sq1(&a);
+    fp_dec(&bb, &a);
+    for(int i = 0; i < 16; i++) { // Updated loop count to 16
+        assert(expected.c[i] == bb.c[i]);
+    } 
+    fp_sq2(&a, &a);
+    fp_dec(&bb, &a);
+    fp expected2 = {{16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+    for(int i = 0; i < 16; i++) { // Updated loop count to 16
+        assert(expected2.c[i] == bb.c[i]);
+    }
+}
+
+void test_inverse(void){
+    uint a = {{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+    fp b = {{0}};
+    fp_enc(&b, &a);
+    fp_inv(&b);
+}
+
+void test_fp_pow(void){
+    uint aa = {{5, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+    uint bb = {{0}};
+    fp a = {{0}};
+    fp_enc(&a, &aa);
+
+    fp_dec(&aa, &a);
+    uint b = {{30, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+    fp_pow(&a, &b);
+}
+
+void test_issquare(void){
+    uint a = {{4}};
+    uint b = {{15}};
+    fp aa = {{0}};
+    fp_enc(&aa, &a);
+    bool itis = fp_issquare(&aa);
+    assert(itis == true);
+}
+
+void test_fp_random(void){
+    fp a = {{0}};
+    fp_random(&a);
+    fp_print(&a);
+}
 
 
 int main(void){
@@ -131,7 +167,10 @@ int main(void){
     test_mul_more();
     test_mul_3();
     test_fp_sub();
-    //test_encode_decode();
-    test_mul();
-
+    test_encode_decode();
+    test_sq1();
+    test_inverse();
+    test_issquare();
+    test_fp_pow();
+    test_fp_random();
 }

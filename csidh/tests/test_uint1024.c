@@ -100,8 +100,6 @@ void test_uint_sub3(void){
     for(int i = 0; i < LIMBS; i++) {
         assert(expected2.c[i] == result.c[i]);
     }
-
-
 }
 
 void test_uint_random(void){
@@ -109,6 +107,7 @@ void test_uint_random(void){
     uint b = {{0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0}}; // Expanded to 16 limbs
     uint_random(&a, &b);
 }
+
 
 int main(void)
 {
@@ -121,7 +120,7 @@ int main(void)
     test_uint_sub3();
     test_fp_add();
     //test_uint_random();
-
+    test_uint_mul3_64();
 
     return PASSED;
 }
