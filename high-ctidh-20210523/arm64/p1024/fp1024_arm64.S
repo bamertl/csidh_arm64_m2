@@ -453,3 +453,150 @@ fp_sub3:
 	add sp, sp, #160
 	ret
 
+	/* x0 = -x1 */
+_minus_number: 
+	sub sp, sp, #32
+	stp x19, x20, [sp, #0]
+	str x21, [sp, #16]
+	adrp x20, uintbig_p @PAGE
+	add x20, x20, uintbig_p@PAGEOFF
+	mov x21, xzr  
+	/* P-A */
+	ldp x3, x4, [x1, #0]  
+	ldp x7, x8, [x20, #0]  
+	ldp x5, x6, [x1, #16]  
+	ldp x9, x10, [x20, #16]  
+	subs x11, x7, x3  
+	orr x21, x21, x11  
+	sbcs x12, x8, x4  
+	orr x21, x21, x12  
+	sbcs x13, x9, x5  
+	orr x21, x21, x13  
+	sbcs x14, x10, x6  
+	orr x21, x21, x14  
+	stp x11, x12, [x0, #0]  
+	stp x13, x14, [x0, #16]  
+	ldp x3, x4, [x1, #32]  
+	ldp x7, x8, [x20, #32]  
+	ldp x5, x6, [x1, #48]  
+	ldp x9, x10, [x20, #48]  
+	sbcs x11, x7, x3  
+	orr x21, x21, x11  
+	sbcs x12, x8, x4  
+	orr x21, x21, x12  
+	sbcs x13, x9, x5  
+	orr x21, x21, x13  
+	sbcs x14, x10, x6  
+	orr x21, x21, x14  
+	stp x11, x12, [x0, #32]  
+	stp x13, x14, [x0, #48]  
+	ldp x3, x4, [x1, #64]  
+	ldp x7, x8, [x20, #64]  
+	ldp x5, x6, [x1, #80]  
+	ldp x9, x10, [x20, #80]  
+	sbcs x11, x7, x3  
+	orr x21, x21, x11  
+	sbcs x12, x8, x4  
+	orr x21, x21, x12  
+	sbcs x13, x9, x5  
+	orr x21, x21, x13  
+	sbcs x14, x10, x6  
+	orr x21, x21, x14  
+	stp x11, x12, [x0, #64]  
+	stp x13, x14, [x0, #80]  
+	ldp x3, x4, [x1, #96]  
+	ldp x7, x8, [x20, #96]  
+	ldp x5, x6, [x1, #112]  
+	ldp x9, x10, [x20, #112]  
+	sbcs x11, x7, x3  
+	orr x21, x21, x11  
+	sbcs x12, x8, x4  
+	orr x21, x21, x12  
+	sbcs x13, x9, x5  
+	orr x21, x21, x13  
+	sbcs x14, x10, x6  
+	orr x21, x21, x14  
+	stp x11, x12, [x0, #96]  
+	stp x13, x14, [x0, #112]  
+	cmp x21, #0
+	cset x21, eq
+	lsl x20, x20, #63
+	asr x20, x20, #63
+	/* and the prime (if a was 0 then we and with 1, otherwise 0) */
+	ldp x3, x4, [x0, #0]  
+	ldp x7, x8, [x20, #0]  
+	ldp x5, x6, [x0, #16]  
+	ldp x9, x10, [x20, #16]  
+	and x7, x7, x21  
+	and x8, x8, x21  
+	and x9, x9, x21  
+	and x10, x10, x21  
+	subs x11, x3, x7  
+	sbcs x12, x4, x8  
+	sbcs x13, x5, x9  
+	sbcs x14, x6, x10  
+	stp x11, x12, [x0, #0]  
+	stp x13, x14, [x0, #16]  
+	ldp x3, x4, [x0, #32]  
+	ldp x7, x8, [x20, #32]  
+	ldp x5, x6, [x0, #48]  
+	ldp x9, x10, [x20, #48]  
+	and x7, x7, x21  
+	and x8, x8, x21  
+	and x9, x9, x21  
+	and x10, x10, x21  
+	sbcs x11, x3, x7  
+	sbcs x12, x4, x8  
+	sbcs x13, x5, x9  
+	sbcs x14, x6, x10  
+	stp x11, x12, [x0, #32]  
+	stp x13, x14, [x0, #48]  
+	ldp x3, x4, [x0, #64]  
+	ldp x7, x8, [x20, #64]  
+	ldp x5, x6, [x0, #80]  
+	ldp x9, x10, [x20, #80]  
+	and x7, x7, x21  
+	and x8, x8, x21  
+	and x9, x9, x21  
+	and x10, x10, x21  
+	sbcs x11, x3, x7  
+	sbcs x12, x4, x8  
+	sbcs x13, x5, x9  
+	sbcs x14, x6, x10  
+	stp x11, x12, [x0, #64]  
+	stp x13, x14, [x0, #80]  
+	ldp x3, x4, [x0, #96]  
+	ldp x7, x8, [x20, #96]  
+	ldp x5, x6, [x0, #112]  
+	ldp x9, x10, [x20, #112]  
+	and x7, x7, x21  
+	and x8, x8, x21  
+	and x9, x9, x21  
+	and x10, x10, x21  
+	sbcs x11, x3, x7  
+	sbcs x12, x4, x8  
+	sbcs x13, x5, x9  
+	sbcs x14, x6, x10  
+	stp x11, x12, [x0, #96]  
+	stp x13, x14, [x0, #112]  
+	ldp x19, x20, [sp, #0]
+	ldr x21, [sp, #16]
+	add sp, sp, #32
+	ret
+
+	/* x0 = x0^2, straight to fp_sq2 */
+.global fp_sq1
+fp_sq1: 
+	mov x1, x0
+	/* x0 = x1^2 mod p */
+.global fp_sq2
+fp_sq2: 
+	/* Increment sq counter */
+	adrp x3, fp_sq_count @PAGE
+	add x3, x3, fp_sq_count@PAGEOFF
+	ldr x4, [x3]
+	add x4, x4, #1
+	str x4, [x3]
+
+	mov x2, x1
+	b fp_mul3
