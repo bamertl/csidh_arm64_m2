@@ -1,0 +1,300 @@
+#!/usr/bin/env python3
+
+import os
+import math
+import re
+import sys
+sys.setrecursionlimit(10000)
+
+data = (
+  (1024,
+   (3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257,263,269,271,277,281,283,293,307,311,313,317,331,337,347,349,353,359,367,373,379,383,389,397,401,409,419,421,431,433,439,443,449,457,461,463,467,479,487,491,499,503,509,521,523,541,547,557,563,569,571,577,587,593,599,601,607,613,617,619,631,641,643,647,653,659,661,673,677,683,691,701,709,719,727,733,983),
+  ),
+  (2048,
+   (3,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257,263,269,271,277,281,283,293,307,311,313,317,331,337,347,349,353,359,367,373,379,383,389,397,401,409,419,421,431,433,439,443,449,457,461,463,467,479,487,491,499,503,509,521,523,541,547,557,563,569,571,577,587,593,599,601,607,613,617,619,631,641,643,647,653,659,661,673,677,683,691,701,709,719,727,733,739,743,751,757,761,769,773,787,797,809,811,821,823,827,829,839,853,857,859,863,877,881,883,887,907,911,919,929,937,941,947,953,967,971,977,983,991,997,1009,1013,1019,1021,1031,1033,1039,1049,1051,1061,1063,1069,1087,1091,1093,1097,1103,1109,1117,1123,1129,1151,1153,1163,1171,1181,1187,1193,1201,1213,1217,1223,1229,1231,1237,1249,1259,1277,1279,1283,1289,1291,1297,1301,1303,1307,1319,1321,1327,1361,1367,1373,1381,1399,1409,1423,1427,1429,1433,1439,1447,1451,1453,1459,3413),
+  )
+)
+
+
+globals = {
+  'uint_big_p': 'uintbig_p',
+  'uint_big_1': 'uintbig_1',
+  'uintbig_bit': 'uintbig_bit',
+  'uintbig_set': 'uintbig_set',
+  'uintbig_add3': 'uintbig_add3',
+  'uintbig_sub3': 'uintbig_sub3',
+  'uintbig_mul3_64': 'uintbig_mul3_64',
+  'uintbig_four_sqrt_p': 'uintbig_four_sqrt_p', 
+  'uintbig_mul3_64_full': 'uintbig_mul3_64_full'}
+
+def maybeupdate(fn):
+  if os.access(fn,os.F_OK):
+    with open(fn) as f:
+      x = f.read()
+    with open(fn+'.tmp') as f:
+      y = f.read()
+    if x == y:
+      os.unlink(fn+'.tmp')
+      return
+  os.rename(fn+'.tmp',fn)
+
+def comment(f, comment):
+    f.write('/* %s */\n' % comment)
+
+def init_data_var(f, name):
+    f.write('.global %s\n' % name)
+    f.write('%s: \n' % name)
+    f.write('\t.quad 0\n')
+
+def introduce_global_function(f, name):
+    f.write('.global %s\n' % name)
+    f.write('%s: \n' % name)
+
+
+def sub_stack_and_store_on_stack(f, regs, additional_offset):
+    total_offset = len(regs)*8 + additional_offset 
+    if total_offset % 16 != 0:
+        total_offset = ((total_offset // 16) + 1) * 16
+    f.write('\tsub sp, sp, #%d\n' % total_offset)
+    offset = 0
+    i = 0
+    while i < len(regs):
+        # Check if there's at least one more register after the current one
+        if i + 1 < len(regs):
+            # If yes, store the pair of registers
+            f.write('\tstp %s, %s, [sp, #%d]\n' % (regs[i], regs[i+1], offset))
+            i += 2
+        else:
+            # If no, store the single register
+            f.write('\tstr %s, [sp, #%d]\n' % (regs[i],offset))
+            i += 1
+        offset += 16
+
+def add_stack_and_restore_regs_from_stack(f, regs, additional_offset):
+    total_offset = len(regs)*8 + additional_offset 
+    if total_offset % 16 != 0:
+        total_offset = ((total_offset // 16) + 1) * 16
+    offset = 0
+    i = 0
+    while i < len(regs):
+        # Check if there's at least one more register after the current one
+        if i + 1 < len(regs):
+            # If yes, store the pair of registers
+            f.write('\tldp %s, %s, [sp, #%d]\n' % (regs[i], regs[i+1], offset))
+            i += 2
+        else:
+            # If no, store the single register
+            f.write('\tldr %s, [sp, #%d]\n' % (regs[i],offset))
+            i += 1
+        offset += 16
+    f.write('\tadd sp, sp, #%d\n' % total_offset)
+
+def new_line(f):
+  f.write('\n')
+
+
+def writeconst(f,n,limbs):
+  assert n >= 0
+
+  nquad = []
+  while n:
+    nquad += [n%(1<<64)]
+    n >>= 64
+
+  while len(nquad) < limbs:
+    nquad += [0]
+  assert len(nquad) == limbs
+
+  while len(nquad) > 0:
+    nquad4,nquad = nquad[:4],nquad[4:]
+    f.write('    .quad %s\n' % ', '.join('%d'%x if x<10 else '0x%016x'%x for x in nquad4))
+  # new_line(f)
+
+## _UINT_BIG_SET ______________________________________________________________
+def write_uintbig_set(f, limbs):
+  comment(f, "A[x0][0] = x1, rest 0")
+  introduce_global_function(f, globals['uintbig_set'])
+  f.write('\tstp x1, xzr, [x0, #0]\n')
+  for i in range(1, int(limbs / 2)):
+    offset = i*16
+    f.write('\tstp xzr, xzr, [x0, #%d]\n' % offset)
+  f.write('\tret\n\n')
+
+## _UINT_BIG_BIT ______________________________________________________________
+def write_uintbig_bit(f):
+  comment(f, "Operation: x0 = x0[x1] == 1")
+  comment(f, "Checks if bit at position x1 is set")
+  introduce_global_function(f, globals['uintbig_bit'])
+  f.write('\tand x2, x1, #0x3F   // x2 = x0 % 64 using bitwise AND\n')
+  f.write('\tlsr x1, x1, #6      // x1 = x1 / 64 by right-shifting\n')
+  f.write('\tlsl x1, x1, #3      // 8 * (x1 / 64) \n')
+  f.write('\tldr x3, [x0, x1]    // Load the limb at: x0 + 8 * (k / 64) \n')
+  f.write('\tlsr x3, x3, x2  // Right shift by x0%64 to bring the bit of interest to the least significant position\n')
+  f.write('\tand x0, x3, #1  // Check if the least significant bit is set\n')
+  f.write('\tret\n\n')
+
+## _UINT_BIG_ADD3 _____________________________________________________________
+def write_uintbig_add3(f, limbs):
+  batch_size = 4
+  half_batch = 2
+  comment(f, "Operation: A[x0] = B[x1] + C[x2] and x0 = carry")
+  introduce_global_function(f, globals['uintbig_add3'])
+  B_REGS = ['x3', 'x4', 'x5', 'x6']
+  C_REGS = ['x7', 'x8', 'x9', 'x10']
+  RESTULT_REGS = ['x11', 'x12', 'x13', 'x14']
+
+  ## we process in batches of 8 words
+  for batch in range(int(limbs / batch_size)):
+    new_line(f)
+    offset = batch*8*batch_size
+    comment(f, "load batch %d" % batch)
+    for word in range(half_batch):
+      f.write('\tldp %s, %s, [x1, #%d]\n' % (B_REGS[word*2], B_REGS[word*2+1], offset + word*16))
+      f.write('\tldp %s, %s, [x2, #%d]\n' % (C_REGS[word*2], C_REGS[word*2+1], offset + word*16))
+    if batch == 0:
+      f.write('\tadds %s, %s, %s\n' % (RESTULT_REGS[0], B_REGS[0], C_REGS[0]))
+    else:
+      f.write('\tadcs %s, %s, %s\n' % (RESTULT_REGS[0], B_REGS[0], C_REGS[0]))
+
+    for word in range(1, batch_size):
+      f.write('\tadcs %s, %s, %s\n' % (RESTULT_REGS[word], B_REGS[word], C_REGS[word]))
+    for word in range(half_batch):
+      f.write('\tstp %s, %s, [x0, #%d]\n' % (RESTULT_REGS[word*2], RESTULT_REGS[word*2+1], offset + word*16))
+  comment(f, "Final Carry into x0")
+  f.write('\tadc x0, xzr, xzr\n')
+  f.write('\tret\n\n')
+
+## _UINTBIG_SUB3 ______________________________________________________________________________________________
+def write_uintbig_sub3(f, limbs):
+  batch_size = 4
+  half_batch = 2
+  comment(f, "Operation: A[x0] = B[x1] - C[x2] and x0 = borrow")
+  introduce_global_function(f, globals['uintbig_sub3'])
+  B_REGS = ['x3', 'x4', 'x5', 'x6']
+  C_REGS = ['x7', 'x8', 'x9', 'x10']
+  RESTULT_REGS = ['x11', 'x12', 'x13', 'x14']
+  for batch in range(int(limbs / batch_size)):
+    new_line(f)
+    offset = batch*8*batch_size
+    comment(f, "load batch %d" % batch)
+    for word in range(half_batch):
+      f.write('\tldp %s, %s, [x1, #%d]\n' % (B_REGS[word*2], B_REGS[word*2+1], offset + word*16))
+      f.write('\tldp %s, %s, [x2, #%d]\n' % (C_REGS[word*2], C_REGS[word*2+1], offset + word*16))
+    if batch == 0:
+      f.write('\tsubs %s, %s, %s\n' % (RESTULT_REGS[0], B_REGS[0], C_REGS[0]))
+    else:
+      f.write('\tsbcs %s, %s, %s\n' % (RESTULT_REGS[0], B_REGS[0], C_REGS[0]))
+
+    for word in range(1, batch_size):
+      f.write('\tsbcs %s, %s, %s\n' % (RESTULT_REGS[word], B_REGS[word], C_REGS[word]))
+    for word in range(half_batch):
+      f.write('\tstp %s, %s, [x0, #%d]\n' % (RESTULT_REGS[word*2], RESTULT_REGS[word*2+1], offset + word*16))
+  comment(f, "Final Carry into x0")
+  f.write('\tsbc x0, xzr, xzr\n')
+  f.write('\tret\n\n')
+
+## _UINTBIG_MUL3_64 ______________________________________________________________________________________________
+def write_uintbig_mul3_64(f, limbs):
+  comment(f, "Operation: A[x0] = B[x1] * C[x2] and C = direct value 64 bit not address")
+  introduce_global_function(f, globals['uintbig_mul3_64'])
+  for i in range(int(limbs/2)):
+    offset = i*16 
+    comment(f, str(i*2) + " Limb")
+    f.write('\tldp x3, x4, [x1, #%d]\n' % (i*16))
+    f.write('\tmul x5, x3, x2 // low mul\n')   
+    if i == 0:
+      f.write('\tumulh x6, x3, x2 // high mul\n')
+      f.write('\tstr x5, [x0, #%d]\n\n' % (i*16))
+      comment(f, str(i*2 + 1) + " Limb")
+      f.write('\tmul x5, x4, x2 // low mul\n')
+      f.write('\tadds x5, x5, x6 // add past higher mul\n')
+      f.write('\tstr x5, [x0, #%d]\n' % (i*16+8))
+      f.write('\tumulh x6, x4, x2 // high mul\n\n')
+    if i > 0:
+      f.write('\tadcs x5, x5, x6 // add past higher mul\n')
+      f.write('\tstr x5, [x0, #%d]\n' % (i*16))
+      f.write('\tumulh x6, x3, x2 // high mul\n') 
+      comment(f, str(i*2 + 1) + " Limb")
+      f.write('\tmul x5, x4, x2 // low mul\n')
+      f.write('\tadcs x5, x5, x6 // add past higher mul\n')
+      f.write('\tstr x5, [x0, #%d]\n' % (i*16+8)) 
+      f.write('\tumulh x6, x4, x2 // high mul \n\n')
+  f.write('\tret\n\n')
+
+## _UINTBIG_MUL3_64_FULL ______________________________________________________________________________________________ 
+def write_uintbig_mul3_64_full(f, limbs):
+  comment(f, "Operation: A[x0] = B[x1] * C[x2] and C = direct value 64 bit not address\n results in 9 words")
+  introduce_global_function(f, globals['uintbig_mul3_64_full'])
+  for i in range(int(limbs/2)):
+    offset = i*16 
+    comment(f, str(i*2) + " Limb")
+    f.write('\tldp x3, x4, [x1, #%d]\n' % (i*16))
+    f.write('\tmul x5, x3, x2 // low mul\n')   
+    if i == 0:
+      f.write('\tumulh x6, x3, x2 // high mul\n')
+      f.write('\tstr x5, [x0, #%d]\n\n' % (i*16))
+      comment(f, str(i*2 + 1) + " Limb")
+      f.write('\tmul x5, x4, x2 // low mul\n')
+      f.write('\tadds x5, x5, x6 // add past higher mul\n')
+      f.write('\tstr x5, [x0, #%d]\n' % (i*16+8))
+      f.write('\tumulh x6, x4, x2 // high mul\n\n')
+    if i > 0:
+      f.write('\tadcs x5, x5, x6 // add past higher mul\n')
+      f.write('\tstr x5, [x0, #%d]\n' % (i*16))
+      f.write('\tumulh x6, x3, x2 // high mul\n') 
+      comment(f, str(i*2 + 1) + " Limb")
+      f.write('\tmul x5, x4, x2 // low mul\n')
+      f.write('\tadcs x5, x5, x6 // add past higher mul\n')
+      f.write('\tstr x5, [x0, #%d]\n' % (i*16+8)) 
+      f.write('\tumulh x6, x4, x2 // high mul \n\n')
+  f.write('\tadc x6, x6, xzr\n')
+  f.write('\tstr x6, [x0, #%d]\n' % (limbs*8))
+  f.write('\tret\n\n')
+
+def introduce_globals(f, p, sqrt16p):
+
+  introduce_global_function(f, globals['uint_big_1'])
+  f.write('\t.quad 1, 0, 0, 0\n')
+  for i in range(int(limbs /4) - 1):
+    f.write('\t.quad 0, 0, 0, 0\n')
+  new_line(f)
+  introduce_global_function(f, globals['uint_big_p'])
+  writeconst(f, p, limbs)
+  introduce_global_function(f, globals['uintbig_four_sqrt_p'])
+  writeconst(f, sqrt16p, limbs)
+
+fns = ["./arm64/p1024/uintbig1024_arm64.S", "./arm64/p2048/uintbig2048_arm64.S"]
+limbs = 0
+p = 0
+for fn in fns:
+  limbs +=16
+  p = 4
+  if limbs == 16:
+    primes = data[0][1]
+  else:
+    primes = data[1][1]
+  for l in primes: p *= l
+  p -= 1
+
+  sqrt16p = 1
+  while True:
+    if sqrt16p**2 <= 16*p and (sqrt16p+1)**2 > 16*p:
+      break
+    sqrt16p = (sqrt16p+(16*p)//sqrt16p)//2
+
+  with open(fn+'.tmp','w') as f:
+    print("Generating %s ..." % fn)
+    comment(f, 'This file is automatically generated by autogen_uintbig1000.py')
+    comment(f, 'DO NOT EDIT!')
+    comment(f, 'This file contains functions for %s-bit unsigned integers' % str(limbs * 64))
+
+    introduce_globals(f,p, sqrt16p)
+    f.write('.text\n')
+    f.write('.align 4\n\n')
+    write_uintbig_set(f, limbs)
+    write_uintbig_bit(f)
+    write_uintbig_add3(f, limbs)
+    write_uintbig_sub3(f, limbs)
+    write_uintbig_mul3_64(f, limbs)
+    write_uintbig_mul3_64_full(f, limbs)
+    maybeupdate(fn) 

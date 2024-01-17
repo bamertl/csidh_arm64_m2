@@ -125,7 +125,6 @@ with open(fn+'.tmp','w') as f:
   f.write('\tlsr x3, x3, x2  // Right shift by x0%64 to bring the bit of interest to the least significant position\n')
   f.write('\tand x0, x3, #1  // Check if the least significant bit is set\n')
   f.write('\tret\n\n')
-  maybeupdate(fn)
 
   ## _UINTBIG_ADD3 ______________________________________________________________________________________________
   comment(f, "Operation: A[x0] = B[x1] + C[x2] and x0 = carry")
@@ -231,7 +230,7 @@ with open(fn+'.tmp','w') as f:
   f.write('\tadc x6, x6, xzr\n')
   f.write('\tstr x6, [x0, #%d]\n' % (8*8))
   f.write('\tret\n\n')
-
+  maybeupdate(fn) 
 
 
 
