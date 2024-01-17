@@ -224,6 +224,73 @@ def write_fp_cmov(f, limbs):
 
     f.write('\tret \n\n')
 
+def write_fp_cswap(f, limbs):
+    comment(f, "A[x0] <-> B[x1] if d[x2], we make it time-constant")
+    introduce_global_function(f, globals['fp_cswap'])
+    # A xor A = 0
+    # A xor 0 = A
+    # x2 -1 = 1->0 and 0 -> 111111
+    # (A xor B ) and 1 xor B = A
+    # (A xor B ) and x2=0 xor B = A into A
+    # (A xor B ) and x2=0 xor A = B into B
+    A_REGS = ['x3', 'x4', 'x5', 'x6']
+    B_REGS = ['x7', 'x8', 'x9', 'x10']
+    RESULT_REGS = ['x11', 'x12', 'x13', 'x14']
+
+    d = 'x15'
+    word_offset = 8
+    per_batch_words = 4
+    num_batches = int(limbs / per_batch_words)
+
+    f.write('\tsubs %s, %s, #1\n' % (d,'x2'))
+    for batch in range(num_batches):
+        comment(f, 'Batch %d' % batch)
+        offset = batch * word_offset * per_batch_words
+        # Load A and B
+        f.write('\tldp %s, %s, [x0, #%d]\n' % (A_REGS[0], A_REGS[1], offset))
+        f.write('\tldp %s, %s, [x1, #%d]\n' % (B_REGS[0], B_REGS[1], offset))
+        f.write('\tldp %s, %s, [x0, #%d]\n' % (A_REGS[2], A_REGS[3], offset + 16))
+        f.write('\tldp %s, %s, [x1, #%d]\n' % (B_REGS[2], B_REGS[3], offset + 16))
+        new_line(f)
+
+        # A xor B
+        f.write('\teor %s, %s, %s // A xor B \n' % (RESULT_REGS[0], A_REGS[0], B_REGS[0]))
+        f.write('\teor %s, %s, %s\n' % (RESULT_REGS[1], A_REGS[1], B_REGS[1]))
+        f.write('\teor %s, %s, %s\n' % (RESULT_REGS[2], A_REGS[2], B_REGS[2]))
+        f.write('\teor %s, %s, %s\n' % (RESULT_REGS[3], A_REGS[3], B_REGS[3]))
+        new_line(f)
+
+        # A xor B and d
+        f.write('\tand %s, %s, %s // A xor B and d \n' % (RESULT_REGS[0], RESULT_REGS[0], d))
+        f.write('\tand %s, %s, %s\n' % (RESULT_REGS[1], RESULT_REGS[1], d))
+        f.write('\tand %s, %s, %s\n' % (RESULT_REGS[2], RESULT_REGS[2], d))
+        f.write('\tand %s, %s, %s\n' % (RESULT_REGS[3], RESULT_REGS[3], d))
+        new_line(f)
+
+        # A xor B and d xor B for A
+        f.write('\teor %s, %s, %s // A xor B and d xor B for A \n' % (B_REGS[0], RESULT_REGS[0], B_REGS[0]))
+        f.write('\teor %s, %s, %s\n' % (B_REGS[1], RESULT_REGS[1], B_REGS[1]))
+        f.write('\teor %s, %s, %s\n' % (B_REGS[2], RESULT_REGS[2], B_REGS[2]))
+        f.write('\teor %s, %s, %s\n' % (B_REGS[3], RESULT_REGS[3], B_REGS[3]))
+        f.write('\tstp %s, %s, [x0, #%d]\n' % (B_REGS[0], B_REGS[1], offset))
+        f.write('\tstp %s, %s, [x0, #%d]\n' % (B_REGS[2], B_REGS[3], offset + 16))
+        new_line(f)
+        # A xor B and d xor A for B
+        f.write('\teor %s, %s, %s // A xor B and d xor A for B \n' % (A_REGS[0], RESULT_REGS[0], A_REGS[0]))
+        f.write('\teor %s, %s, %s\n' % (A_REGS[1], RESULT_REGS[1], A_REGS[1]))
+        f.write('\teor %s, %s, %s\n' % (A_REGS[2], RESULT_REGS[2], A_REGS[2]))
+        f.write('\teor %s, %s, %s\n' % (A_REGS[3], RESULT_REGS[3], A_REGS[3]))
+        f.write('\tstp %s, %s, [x1, #%d]\n' % (A_REGS[0], A_REGS[1], offset))
+        f.write('\tstp %s, %s, [x1, #%d]\n' % (A_REGS[2], A_REGS[3], offset + 16))
+
+    f.write('\tret \n\n')
+
+
+
+
+
+
+
 
 fns = ['./arm64/p1024/fp1024_arm64.S', './arm64/p2048/fp2048_arm64.S']
 limbs = 0
@@ -269,4 +336,5 @@ for fn in fns:
 
         write_fp_copy(f, limbs)
         write_fp_cmov(f, limbs)
+        write_fp_cswap(f, limbs)
         maybeupdate(fn)

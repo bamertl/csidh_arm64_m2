@@ -171,3 +171,125 @@ fp_cmov:
 	stp x13, x14, [x0, #112]
 	ret 
 
+/* A[x0] <-> B[x1] if d[x2], we make it time-constant */
+.global fp_cswap
+fp_cswap: 
+	subs x15, x2, #1
+/* Batch 0 */
+	ldp x3, x4, [x0, #0]
+	ldp x7, x8, [x1, #0]
+	ldp x5, x6, [x0, #16]
+	ldp x9, x10, [x1, #16]
+
+	eor x11, x3, x7 // A xor B 
+	eor x12, x4, x8
+	eor x13, x5, x9
+	eor x14, x6, x10
+
+	and x11, x11, x15 // A xor B and d 
+	and x12, x12, x15
+	and x13, x13, x15
+	and x14, x14, x15
+
+	eor x7, x11, x7 // A xor B and d xor B for A 
+	eor x8, x12, x8
+	eor x9, x13, x9
+	eor x10, x14, x10
+	stp x7, x8, [x0, #0]
+	stp x9, x10, [x0, #16]
+
+	eor x3, x11, x3 // A xor B and d xor A for B 
+	eor x4, x12, x4
+	eor x5, x13, x5
+	eor x6, x14, x6
+	stp x3, x4, [x1, #0]
+	stp x5, x6, [x1, #16]
+/* Batch 1 */
+	ldp x3, x4, [x0, #32]
+	ldp x7, x8, [x1, #32]
+	ldp x5, x6, [x0, #48]
+	ldp x9, x10, [x1, #48]
+
+	eor x11, x3, x7 // A xor B 
+	eor x12, x4, x8
+	eor x13, x5, x9
+	eor x14, x6, x10
+
+	and x11, x11, x15 // A xor B and d 
+	and x12, x12, x15
+	and x13, x13, x15
+	and x14, x14, x15
+
+	eor x7, x11, x7 // A xor B and d xor B for A 
+	eor x8, x12, x8
+	eor x9, x13, x9
+	eor x10, x14, x10
+	stp x7, x8, [x0, #32]
+	stp x9, x10, [x0, #48]
+
+	eor x3, x11, x3 // A xor B and d xor A for B 
+	eor x4, x12, x4
+	eor x5, x13, x5
+	eor x6, x14, x6
+	stp x3, x4, [x1, #32]
+	stp x5, x6, [x1, #48]
+/* Batch 2 */
+	ldp x3, x4, [x0, #64]
+	ldp x7, x8, [x1, #64]
+	ldp x5, x6, [x0, #80]
+	ldp x9, x10, [x1, #80]
+
+	eor x11, x3, x7 // A xor B 
+	eor x12, x4, x8
+	eor x13, x5, x9
+	eor x14, x6, x10
+
+	and x11, x11, x15 // A xor B and d 
+	and x12, x12, x15
+	and x13, x13, x15
+	and x14, x14, x15
+
+	eor x7, x11, x7 // A xor B and d xor B for A 
+	eor x8, x12, x8
+	eor x9, x13, x9
+	eor x10, x14, x10
+	stp x7, x8, [x0, #64]
+	stp x9, x10, [x0, #80]
+
+	eor x3, x11, x3 // A xor B and d xor A for B 
+	eor x4, x12, x4
+	eor x5, x13, x5
+	eor x6, x14, x6
+	stp x3, x4, [x1, #64]
+	stp x5, x6, [x1, #80]
+/* Batch 3 */
+	ldp x3, x4, [x0, #96]
+	ldp x7, x8, [x1, #96]
+	ldp x5, x6, [x0, #112]
+	ldp x9, x10, [x1, #112]
+
+	eor x11, x3, x7 // A xor B 
+	eor x12, x4, x8
+	eor x13, x5, x9
+	eor x14, x6, x10
+
+	and x11, x11, x15 // A xor B and d 
+	and x12, x12, x15
+	and x13, x13, x15
+	and x14, x14, x15
+
+	eor x7, x11, x7 // A xor B and d xor B for A 
+	eor x8, x12, x8
+	eor x9, x13, x9
+	eor x10, x14, x10
+	stp x7, x8, [x0, #96]
+	stp x9, x10, [x0, #112]
+
+	eor x3, x11, x3 // A xor B and d xor A for B 
+	eor x4, x12, x4
+	eor x5, x13, x5
+	eor x6, x14, x6
+	stp x3, x4, [x1, #96]
+	stp x5, x6, [x1, #112]
+	ret 
+
