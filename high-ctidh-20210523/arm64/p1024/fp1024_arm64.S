@@ -5,6 +5,8 @@
 .extern uintbig_p
 .extern uintbig_mul3_64
 .extern uintbig_mul3_64_full
+.extern uintbig_add3
+.extern uintbig_sub3
 
 
 .set pbits, 1020 
@@ -14,7 +16,7 @@
 .global fp_0
 fp_0: 
 	.zero 64
-/* 2^1024 mod p */
+	/* 2^1024 mod p */
 .global fp_1
 fp_1: 
     .quad 0x65e7ee6590e6567d, 0x40a5f2587fef86d4, 0x99f9e607b99d62f2, 0x1089df50f4f8f26d
@@ -22,7 +24,7 @@ fp_1:
     .quad 0x28d37db76b7a1b7f, 0x86d089fa474b4a3f, 0xdbce120cc7a4fff2, 0x08b3f947137340ac
     .quad 0x913f3e7c71b37ce5, 0xc7d1b17b09ec4577, 0x9d834aff6f7956b6, 0x044c4b3e968ec2b8
 
-/* 2^1025 mod p */
+	/* 2^1025 mod p */
 .global fp_2
 fp_2: 
     .quad 0xcbcfdccb21ccacfa, 0x814be4b0ffdf0da8, 0x33f3cc0f733ac5e4, 0x2113bea1e9f1e4db
@@ -30,7 +32,7 @@ fp_2:
     .quad 0x51a6fb6ed6f436fe, 0x0da113f48e96947e, 0xb79c24198f49ffe5, 0x1167f28e26e68159
     .quad 0x227e7cf8e366f9ca, 0x8fa362f613d88aef, 0x3b0695fedef2ad6d, 0x0898967d2d1d8571
 
-/* (2^1024)^2 mod p */
+	/* (2^1024)^2 mod p */
 .r_squared_mod_p: /* (2^1024)^2 mod p */
     .quad 0xd6b8f146ec5055af, 0x68ac5d7707ccb03a, 0x1322c9b9837dca17, 0x4f2940830c1d2b35
     .quad 0x8c1a56e5bf96471a, 0x6cdde00636c4f801, 0x9365ec4fa327c9ac, 0xa0056a67c1de0e82
@@ -51,7 +53,7 @@ fp_addsub_count:
 .text
 .align 4
 
-/* [x1] = [x0]  x0 is being copied to x1 */
+	/* [x1] = [x0]  x0 is being copied to x1 */
 .global fp_copy
 fp_copy: 
 	ldp x3, x4, [x0, #0]
@@ -72,16 +74,16 @@ fp_copy:
 	stp x9, x10, [x1, #112]
 	ret
 
-/* A[x0] = B[x1] if d[x2], we make it time-constant */
+	/* A[x0] = B[x1] if d[x2], we make it time-constant */
 .global fp_cmov
 fp_cmov: 
-/* (AxorB)^d xor A = A */
-/* A xor 0 = A */
-/*  d-1 = 1111 or 0000 that why it is like this */
-/* A xor B and 1 xor B = A */
-/* A xor B and 0 xor B = B */
+	/* (AxorB)^d xor A = A */
+	/* A xor 0 = A */
+	/*  d-1 = 1111 or 0000 that why it is like this */
+	/* A xor B and 1 xor B = A */
+	/* A xor B and 0 xor B = B */
 	subs x15, x2, #1
-/* Batch 0 */
+	/* Batch 0 */
 	ldp x3, x4, [x0, #0]
 	ldp x7, x8, [x1, #0]
 	ldp x5, x6, [x0, #16]
@@ -103,7 +105,7 @@ fp_cmov:
 
 	stp x11, x12, [x0, #0]
 	stp x13, x14, [x0, #16]
-/* Batch 1 */
+	/* Batch 1 */
 	ldp x3, x4, [x0, #32]
 	ldp x7, x8, [x1, #32]
 	ldp x5, x6, [x0, #48]
@@ -125,7 +127,7 @@ fp_cmov:
 
 	stp x11, x12, [x0, #32]
 	stp x13, x14, [x0, #48]
-/* Batch 2 */
+	/* Batch 2 */
 	ldp x3, x4, [x0, #64]
 	ldp x7, x8, [x1, #64]
 	ldp x5, x6, [x0, #80]
@@ -147,7 +149,7 @@ fp_cmov:
 
 	stp x11, x12, [x0, #64]
 	stp x13, x14, [x0, #80]
-/* Batch 3 */
+	/* Batch 3 */
 	ldp x3, x4, [x0, #96]
 	ldp x7, x8, [x1, #96]
 	ldp x5, x6, [x0, #112]
@@ -171,11 +173,11 @@ fp_cmov:
 	stp x13, x14, [x0, #112]
 	ret 
 
-/* A[x0] <-> B[x1] if d[x2], we make it time-constant */
+	/* A[x0] <-> B[x1] if d[x2], we make it time-constant */
 .global fp_cswap
 fp_cswap: 
 	subs x15, x2, #1
-/* Batch 0 */
+	/* Batch 0 */
 	ldp x3, x4, [x0, #0]
 	ldp x7, x8, [x1, #0]
 	ldp x5, x6, [x0, #16]
@@ -204,7 +206,7 @@ fp_cswap:
 	eor x6, x14, x6
 	stp x3, x4, [x1, #0]
 	stp x5, x6, [x1, #16]
-/* Batch 1 */
+	/* Batch 1 */
 	ldp x3, x4, [x0, #32]
 	ldp x7, x8, [x1, #32]
 	ldp x5, x6, [x0, #48]
@@ -233,7 +235,7 @@ fp_cswap:
 	eor x6, x14, x6
 	stp x3, x4, [x1, #32]
 	stp x5, x6, [x1, #48]
-/* Batch 2 */
+	/* Batch 2 */
 	ldp x3, x4, [x0, #64]
 	ldp x7, x8, [x1, #64]
 	ldp x5, x6, [x0, #80]
@@ -262,7 +264,7 @@ fp_cswap:
 	eor x6, x14, x6
 	stp x3, x4, [x1, #64]
 	stp x5, x6, [x1, #80]
-/* Batch 3 */
+	/* Batch 3 */
 	ldp x3, x4, [x0, #96]
 	ldp x7, x8, [x1, #96]
 	ldp x5, x6, [x0, #112]
@@ -292,4 +294,162 @@ fp_cswap:
 	stp x3, x4, [x1, #96]
 	stp x5, x6, [x1, #112]
 	ret 
+
+	/* A[x0] = A[x0] + B[x1] */
+.global fp_add2
+fp_add2: 
+	/* A[x0] = B[x1] + C[x2] */
+.global fp_add3
+fp_add3: 
+	/* Increment add/sub counter */
+	adrp x3, fp_addsub_count @PAGE
+	add x3, x3, fp_addsub_count@PAGEOFF
+	ldr x4, [x3]
+	add x4, x4, #1
+	str x4, [x3]
+
+	sub sp, sp, #32
+	stp x21, x22, [sp, #0]
+	stp x23, lr, [sp, #16]
+	mov x21, x0  
+	adrp x23, uintbig_p @PAGE
+	add x23, x23, uintbig_p@PAGEOFF
+	bl uintbig_add3 // x0 is now the carry 
+	mov x22, x0  
+	ldp x3, x4, [x21, #0]  
+	ldp x7, x8, [x23, #0]  
+	ldp x5, x6, [x21, #16]  
+	ldp x9, x10, [x23, #16]  
+	subs x11, x3, x7  
+	sbcs x12, x4, x8  
+	sbcs x13, x5, x9  
+	sbcs x14, x6, x10  
+	stp x11, x12, [x21, #0]  
+	stp x13, x14, [x21, #16]  
+	ldp x3, x4, [x21, #32]  
+	ldp x7, x8, [x23, #32]  
+	ldp x5, x6, [x21, #48]  
+	ldp x9, x10, [x23, #48]  
+	sbcs x11, x3, x7  
+	sbcs x12, x4, x8  
+	sbcs x13, x5, x9  
+	sbcs x14, x6, x10  
+	stp x11, x12, [x21, #32]  
+	stp x13, x14, [x21, #48]  
+	ldp x3, x4, [x21, #64]  
+	ldp x7, x8, [x23, #64]  
+	ldp x5, x6, [x21, #80]  
+	ldp x9, x10, [x23, #80]  
+	sbcs x11, x3, x7  
+	sbcs x12, x4, x8  
+	sbcs x13, x5, x9  
+	sbcs x14, x6, x10  
+	stp x11, x12, [x21, #64]  
+	stp x13, x14, [x21, #80]  
+	ldp x3, x4, [x21, #96]  
+	ldp x7, x8, [x23, #96]  
+	ldp x5, x6, [x21, #112]  
+	ldp x9, x10, [x23, #112]  
+	sbcs x11, x3, x7  
+	sbcs x12, x4, x8  
+	sbcs x13, x5, x9  
+	sbcs x14, x6, x10  
+	stp x11, x12, [x21, #96]  
+	stp x13, x14, [x21, #112]  
+	sbcs x22, x22, xzr  
+	sbcs x22, xzr, xzr  
+	/* carry again into x22 */
+	ldp x3, x4, [x21, #0]  
+	ldp x7, x8, [x23, #0]  
+	ldp x5, x6, [x21, #16]  
+	ldp x9, x10, [x23, #16]  
+	and x7, x7, x22  
+	and x8, x8, x22  
+	and x9, x9, x22  
+	and x10, x10, x22  
+	adds x11, x3, x7  
+	adcs x12, x4, x8  
+	adcs x13, x5, x9  
+	adcs x14, x6, x10  
+	stp x11, x12, [x21, #0]  
+	stp x13, x14, [x21, #16]  
+	ldp x3, x4, [x21, #32]  
+	ldp x7, x8, [x23, #32]  
+	ldp x5, x6, [x21, #48]  
+	ldp x9, x10, [x23, #48]  
+	and x7, x7, x22  
+	and x8, x8, x22  
+	and x9, x9, x22  
+	and x10, x10, x22  
+	adcs x11, x3, x7  
+	adcs x12, x4, x8  
+	adcs x13, x5, x9  
+	adcs x14, x6, x10  
+	stp x11, x12, [x21, #32]  
+	stp x13, x14, [x21, #48]  
+	ldp x3, x4, [x21, #64]  
+	ldp x7, x8, [x23, #64]  
+	ldp x5, x6, [x21, #80]  
+	ldp x9, x10, [x23, #80]  
+	and x7, x7, x22  
+	and x8, x8, x22  
+	and x9, x9, x22  
+	and x10, x10, x22  
+	adcs x11, x3, x7  
+	adcs x12, x4, x8  
+	adcs x13, x5, x9  
+	adcs x14, x6, x10  
+	stp x11, x12, [x21, #64]  
+	stp x13, x14, [x21, #80]  
+	ldp x3, x4, [x21, #96]  
+	ldp x7, x8, [x23, #96]  
+	ldp x5, x6, [x21, #112]  
+	ldp x9, x10, [x23, #112]  
+	and x7, x7, x22  
+	and x8, x8, x22  
+	and x9, x9, x22  
+	and x10, x10, x22  
+	adcs x11, x3, x7  
+	adcs x12, x4, x8  
+	adcs x13, x5, x9  
+	adcs x14, x6, x10  
+	stp x11, x12, [x21, #96]  
+	stp x13, x14, [x21, #112]  
+	ldp x21, x22, [sp, #0]
+	ldp x23, lr, [sp, #16]
+	add sp, sp, #32
+	ret
+
+	/* A[x0] = A[x0] - B[x1] */
+.global fp_sub2
+fp_sub2: 
+	mov x2, x1
+	mov x1, x0
+	/* A[x0] = A[x0] - B[x1] - C[x2] */
+.global fp_sub3
+fp_sub3: 
+	sub sp, sp, #160
+	stp lr, x19, [sp, #0]
+	stp x20, x21, [sp, #16]
+	/* Increment add/sub counter */
+	adrp x3, fp_addsub_count @PAGE
+	add x3, x3, fp_addsub_count@PAGEOFF
+	ldr x4, [x3]
+	add x4, x4, #1
+	str x4, [x3]
+
+	mov x19, x0
+	mov x20, x1
+	/* stack + 32 = -x2 */
+	mov x1, x2
+	add x0, sp, #32
+	bl _minus_number
+	mov x2, x0
+	mov x0, x19
+	mov x1, x20
+	bl fp_add3
+	ldp lr, x19, [sp, #0]
+	ldp x20, x21, [sp, #16]
+	add sp, sp, #160
+	ret
 

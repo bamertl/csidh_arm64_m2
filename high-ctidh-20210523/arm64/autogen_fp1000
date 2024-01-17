@@ -10,6 +10,8 @@ EXTERN_LABELS = {
     'uintbig_p': 'uintbig_p',
     'uintbig_mul3_64': 'uintbig_mul3_64',
     'uintbig_mul3_64_full': 'uintbig_mul3_64_full',
+    'uintbig_add3': 'uintbig_add3',
+    'uintbig_sub3': 'uintbig_sub3',
 }
 
 data = (
@@ -131,6 +133,70 @@ def add_stack_and_restore_regs_from_stack(f, regs, additional_offset):
 def load_label_address_into_register(f, label, register):
     f.write('\tadrp %s, %s\n' % (register, label+ ' @PAGE'))
     f.write('\tadd %s, %s, %s\n' % (register, register, label+'@PAGEOFF'))
+def mov(f, dst, src, comment=''):
+    if comment:
+        comment = ' // ' + comment
+
+    f.write('\tmov %s, %s %s \n' % (dst, src, comment))
+
+def comment(f, comment):
+    f.write('\t/* %s */\n' % comment)
+
+def eor(f, dst, who, who2):
+    f.write('\teor %s, %s, %s\n' % (dst, who, who2))
+    
+def newlines(f, n=1):
+    for i in range(n):
+        f.write('\n')
+
+def ldr(f, dst, src, offset, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tldr %s, [%s, #%d] %s \n' % (dst, src, offset, comment))
+
+def ldp(f, dst, dst2, src, offset, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tldp %s, %s, [%s, #%d] %s \n' % (dst, dst2, src, offset, comment))
+def mul(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tmul %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def umulh(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tumulh %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def adds(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tadds %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def adcs(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tadcs %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def subs(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tsubs %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def sbcs(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tsbcs %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def andd(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tand %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def stp(f, src, src2, dst, offset, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tstp %s, %s, [%s, #%d] %s \n' % (src, src2, dst, offset, comment))
 
 def add_extern_labels(f):
     for label in EXTERN_LABELS.values():
@@ -285,11 +351,116 @@ def write_fp_cswap(f, limbs):
 
     f.write('\tret \n\n')
 
+def write_fp_add(f, limbs):
+    batch_size = 4
+    num_batches = int(limbs / batch_size)
+    # FP_ADD2 _________________________________________________________________
+    comment(f, "A[x0] = A[x0] + B[x1]")
+    introduce_global_function(f, globals['fp_add2'])
+    # FP_ADD3 _________________________________________________________________
+    comment(f, "A[x0] = B[x1] + C[x2]")
+    introduce_global_function(f, globals['fp_add3'])
+    comment(f, "Increment add/sub counter")
+    load_label_address_into_register(f, globals['fp_addsub_count'], 'x3')
+    f.write('\tldr x4, [x3]\n')
+    f.write('\tadd x4, x4, #1\n')
+    f.write('\tstr x4, [x3]\n\n')
+    regs_to_store = ['x21', 'x22', 'x23', 'lr']
+    sub_stack_and_store_on_stack(f, regs_to_store, 0)
+    result_addr = 'x21'
+    carry_reg = 'x22'
+    p_addr = 'x23'
+    mov(f, result_addr, 'x0')
+    load_label_address_into_register(f, EXTERN_LABELS['uintbig_p'], p_addr)
+    f.write('\tbl %s // x0 is now the carry \n' % EXTERN_LABELS['uintbig_add3'])
+    mov(f, carry_reg, 'x0')
+    A_REGS = ['x3', 'x4', 'x5', 'x6']
+    P_REGS = ['x7', 'x8', 'x9', 'x10']
+    RESULT_REGS = ['x11', 'x12', 'x13', 'x14']
 
+    ## A + B - P
+    for batch in range(num_batches):
+        offset = batch * batch_size * 8
+        ldp(f, A_REGS[0], A_REGS[1], result_addr, offset)
+        ldp(f, P_REGS[0], P_REGS[1], p_addr, offset)
+        ldp(f, A_REGS[2], A_REGS[3], result_addr, offset + 16)
+        ldp(f, P_REGS[2], P_REGS[3], p_addr, offset + 16)
+        if batch == 0:
+            subs(f, RESULT_REGS[0], A_REGS[0], P_REGS[0])
+        else:
+            sbcs(f, RESULT_REGS[0], A_REGS[0], P_REGS[0])
+        sbcs(f, RESULT_REGS[1], A_REGS[1], P_REGS[1])
+        sbcs(f, RESULT_REGS[2], A_REGS[2], P_REGS[2])
+        sbcs(f, RESULT_REGS[3], A_REGS[3], P_REGS[3])
+        stp(f, RESULT_REGS[0], RESULT_REGS[1], result_addr, offset)
+        stp(f, RESULT_REGS[2], RESULT_REGS[3], result_addr, offset + 16)
 
+    sbcs(f, carry_reg, carry_reg, 'xzr')
+    sbcs(f, carry_reg, 'xzr', 'xzr')
+    comment(f, "carry again into %s" % carry_reg)
 
+    ## A + B - P + masked(P)
+    for batch in range(num_batches):
+        offset = batch * batch_size * 8
+        ldp(f, A_REGS[0], A_REGS[1], result_addr, offset)
+        ldp(f, P_REGS[0], P_REGS[1], p_addr, offset)
+        ldp(f, A_REGS[2], A_REGS[3], result_addr, offset + 16)
+        ldp(f, P_REGS[2], P_REGS[3], p_addr, offset + 16)
 
+        # Mask P with carry
+        for i in range(4):
+            andd(f, P_REGS[i], P_REGS[i], carry_reg)
 
+        if batch == 0:
+            adds(f, RESULT_REGS[0], A_REGS[0], P_REGS[0])
+        else:
+            adcs(f, RESULT_REGS[0], A_REGS[0], P_REGS[0])
+
+        for i in range(1,4):
+            adcs(f, RESULT_REGS[i], A_REGS[i], P_REGS[i])
+
+        for i in range(2):
+            stp(f, RESULT_REGS[i*2], RESULT_REGS[i*2+1], result_addr, offset + i*16)
+
+    add_stack_and_restore_regs_from_stack(f, regs_to_store, 0)
+    f.write('\tret\n\n')
+
+def write_fp_sub(f, limbs):
+    #_FP_SUB2, just straight to _fp_sub3 _____________________________________________________________________________________
+    comment(f, "A[x0] = A[x0] - B[x1]")
+    introduce_global_function(f, globals['fp_sub2'])
+    f.write('\tmov x2, x1\n')
+    f.write('\tmov x1, x0\n')
+    #_FP_SUB3
+    comment(f, "A[x0] = A[x0] - B[x1] - C[x2]")
+    introduce_global_function(f, globals['fp_sub3'])
+    REGS_TO_STORE = ["lr", "x19", "x20", "x21"]
+    extra_stack = limbs * 8
+    sub_stack_and_store_on_stack(f, REGS_TO_STORE, extra_stack)
+    comment(f, "Increment add/sub counter")
+    load_label_address_into_register(f, globals['fp_addsub_count'], 'x3')
+    f.write('\tldr x4, [x3]\n')
+    f.write('\tadd x4, x4, #1\n')
+    f.write('\tstr x4, [x3]\n\n')
+    f.write('\tmov x19, x0\n')
+    f.write('\tmov x20, x1\n')
+    comment(f, 'stack + 32 = -x2')
+    f.write('\tmov x1, x2\n')
+    f.write('\tadd x0, sp, #32\n')
+    f.write('\tbl _minus_number\n')
+    f.write('\tmov x2, x0\n')
+    f.write('\tmov x0, x19\n')
+    f.write('\tmov x1, x20\n')
+    f.write('\tbl %s\n' % globals['fp_add3'])
+
+    add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, extra_stack)
+    f.write('\tret\n\n')
+
+def write_minus_number(f, limbs):
+    comment(f, "x0 = -x1") 
+    f.write('_minus_number: \n')
+    REGS_TO_STORE = ["x19", "x20"]
+    sub_stack_and_store_on_stack(f, REGS_TO_STORE, 0)
 
 
 fns = ['./arm64/p1024/fp1024_arm64.S', './arm64/p2048/fp2048_arm64.S']
@@ -337,4 +508,7 @@ for fn in fns:
         write_fp_copy(f, limbs)
         write_fp_cmov(f, limbs)
         write_fp_cswap(f, limbs)
+        write_fp_add(f, limbs)
+        write_fp_sub(f, limbs)
+        write_minus_number(f, limbs)
         maybeupdate(fn)
