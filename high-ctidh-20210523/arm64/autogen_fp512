@@ -37,7 +37,6 @@ globals = {
 
 sys.setrecursionlimit(10000)
 
-print("Generating fp512_arm.S this is fancy...")
 
 def maybeupdate(fn):
   if os.access(fn,os.F_OK):

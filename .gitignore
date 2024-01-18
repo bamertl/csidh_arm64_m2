@@ -1,4 +1,14 @@
 # Compiled binaries
+high-ctidh-20210523/bench1024untuned
+high-ctidh-20210523/checkct1024untuned
+high-ctidh-20210523/costpoly1024
+high-ctidh-20210523/test1024
+high-ctidh-20210523/bench1024mults
+high-ctidh-20210523/checkct1024mults
+high-ctidh-20210523/tunemults1024
+high-ctidh-20210523/tunecycles1024
+high-ctidh-20210523/steps_tunemults1024.c
+high-ctidh-20210523/steps_tunecycles1024.c
 *.out
 *.bin
 *.exe
