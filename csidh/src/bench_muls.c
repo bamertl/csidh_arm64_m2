@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <inttypes.h>
 #include "csidh.h"
+#include "fp.h"
 
 int cmp_uint64_t(const void *x, const void *y) { return *(uint64_t *)x - *(uint64_t *)y; }
 void fp_mul3(fp *x, fp const *y, fp const *z);
@@ -15,6 +16,13 @@ uint64_t median(uint64_t *vals, int its)
     return vals[its / 2];
 }
 
+// Clock ticks
+static inline uint64_t rdtsc(void) {
+    uint64_t ticks;
+    __asm__ __volatile__("mrs %0, CNTVCT_EL0" : "=r" (ticks));
+    return ticks;
+}
+
 double mean(uint64_t *vals, int its)
 {
     uint64_t sum = 0;
@@ -23,6 +31,14 @@ double mean(uint64_t *vals, int its)
     return sum / (double)its;
 }
 
+double mean_double(double *vals, int its) {
+    double sum = 0.0;
+    for (int i = 0; i < its; ++i)
+        sum += vals[i];
+    return sum / (double)its;
+}
+
+
 // Clock frequency. Indicates the system counter clock frequency, in Hz
 static inline uint64_t freq_clock(void) {
     uint64_t freq_clock;
@@ -30,6 +46,7 @@ static inline uint64_t freq_clock(void) {
     return freq_clock;
 }
 
+// Should get time in ns
 static inline unsigned long long cpucycles(void) {
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
@@ -55,38 +72,49 @@ double ticks_to_milliseconds(uint64_t ticks) {
 
 typedef void (*Operation)(fp *x, fp const *y, fp const *z);
 
-void benchmark_operation(Operation op, int total_instruction, int num_experiments){
+void benchmark_operation(Operation op, int num_experiments){
 
-    int num_ops_per_experiment = 50000;
+    int num_ops_per_experiment = 10000;
 
-
-    fp a = {{1,2,3,4,5,6,7,8}};
+    fp a;
+    fp_random(&a);
     // Generate random fp b
     fp b = {{1,2,3,4,5,6,7,8}};
     
     fp c = {{0}};
     // allocate uint64_t array for num experiments
-    uint64_t *cycless = calloc(num_experiments, sizeof(uint64_t));
+    uint64_t *times_ns = calloc(num_experiments, sizeof(uint64_t));
+    double *time_ns_from_ticks_arr = calloc(num_experiments, sizeof(double));
 
     for (int i = 0; i < num_experiments; i++){
         uint64_t c0 = cpucycles();
+        uint64_t ticks0 = rdtsc();
         
         for (int j = 0; j < num_ops_per_experiment; j++){
             op(&c, &a, &b);
         }
 
         uint64_t c1 = cpucycles();
+        uint64_t ticks1 = rdtsc();
 
-        uint64_t cycles = c1 - c0;
-        cycless[i] = cycles / num_ops_per_experiment ;
+        uint64_t time_ns = c1 - c0;
+        uint64_t ticks = ticks1 - ticks0;
+        times_ns[i] = time_ns / num_ops_per_experiment;
+        uint64_t freq = freq_clock();
+
+        double time_ns_from_ticks = ((double)ticks * 1e9) / (freq * num_ops_per_experiment);
+        time_ns_from_ticks_arr[i] = time_ns_from_ticks;
     }
 
     // calculate mean and median
-    double mean_cycles = mean(cycless, num_experiments);
-    uint64_t median_cycles = median(cycless, num_experiments);
-    printf("Mean cycles: %f\n", mean_cycles);
-    printf("Median cycles: %llu\n", median_cycles);
-    printf("total instructions in this mul: %d\n", total_instruction);
+    double mean_time_ns = mean(times_ns, num_experiments);
+    uint64_t median_time_ns = median(times_ns, num_experiments);
+
+    double mean_time_ns_from_ticks = mean_double(time_ns_from_ticks_arr, num_experiments);
+    printf("Mean time per operation: %f ns\n", mean_time_ns);
+    printf("Median time per operation: %llu ns\n", median_time_ns);
+    printf("Mean time per operation from ticks: %f ns\n", mean_time_ns_from_ticks);
+
     // calculate instructions per cycle
     //printf("Instructions per cycle: %f\n", ipc);
 
@@ -94,9 +122,8 @@ void benchmark_operation(Operation op, int total_instruction, int num_experiment
 
 int main(void)
 { 
-    int instructions_for_mul = 100000; // we actually need to count them
     int num_experiments = 1000;
 
-    benchmark_operation(fp_mul3, instructions_for_mul, num_experiments); 
+    benchmark_operation(fp_mul3, num_experiments); 
     return 0;
 }

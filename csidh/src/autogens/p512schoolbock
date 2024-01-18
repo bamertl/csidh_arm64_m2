@@ -1,0 +1,243 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+limbs = 8
+
+fn = './src/p512/ARM64/mul/fp_mul_schoolbook.s'
+
+sys.setrecursionlimit(10000)
+
+print("Generating interleaved mul p512...")
+
+stack_offset_a = 8
+stack_offset_b = 16    
+stack_offest_dest = 0
+
+def maybeupdate(fn):
+  if os.access(fn,os.F_OK):
+    with open(fn) as f:
+      x = f.read()
+    with open(fn+'.tmp') as f:
+      y = f.read()
+    if x == y:
+      os.unlink(fn+'.tmp')
+      return
+  os.rename(fn+'.tmp',fn)
+
+  def comment(f, comment):
+    f.write('/* %s */\n' % comment)
+
+def init_data_var(f, name):
+    f.write('.global %s\n' % name)
+    f.write('%s: \n' % name)
+    f.write('\t.quad 0\n')
+
+def introduce_global_function(f, name):
+    f.write('.global %s\n' % name)
+    f.write('%s: \n' % name)
+
+
+def sub_stack_and_store_on_stack(f, regs, additional_offset):
+    total_offset = len(regs)*8 + additional_offset 
+    if total_offset % 16 != 0:
+        total_offset = ((total_offset // 16) + 1) * 16
+    f.write('\tsub sp, sp, #%d\n' % total_offset)
+    offset = 0
+    i = 0
+    while i < len(regs):
+        # Check if there's at least one more register after the current one
+        if i + 1 < len(regs):
+            # If yes, store the pair of registers
+            f.write('\tstp %s, %s, [sp, #%d]\n' % (regs[i], regs[i+1], offset))
+            i += 2
+        else:
+            # If no, store the single register
+            f.write('\tstr %s, [sp, #%d]\n' % (regs[i],offset))
+            i += 1
+        offset += 16
+
+def add_stack_and_restore_regs_from_stack(f, regs, additional_offset):
+    total_offset = len(regs)*8 + additional_offset 
+    if total_offset % 16 != 0:
+        total_offset = ((total_offset // 16) + 1) * 16
+    offset = 0
+    i = 0
+    while i < len(regs):
+        # Check if there's at least one more register after the current one
+        if i + 1 < len(regs):
+            # If yes, store the pair of registers
+            f.write('\tldp %s, %s, [sp, #%d]\n' % (regs[i], regs[i+1], offset))
+            i += 2
+        else:
+            # If no, store the single register
+            f.write('\tldr %s, [sp, #%d]\n' % (regs[i],offset))
+            i += 1
+        offset += 16
+    f.write('\tadd sp, sp, #%d\n' % total_offset)
+
+def load_label_address_into_register(f, label, register):
+    f.write('\tadrp %s, %s\n' % (register, label+ '@PAGE'))
+    f.write('\tadd %s, %s, %s\n' % (register, register, label+'@PAGEOFF'))
+
+
+def mov(f, dst, src, comment=''):
+    if comment:
+        comment = ' // ' + comment
+
+    f.write('\tmov %s, %s %s \n' % (dst, src, comment))
+
+def comment(f, comment):
+    f.write('\t/* %s */\n' % comment)
+
+def eor(f, dst, who, who2):
+    f.write('\teor %s, %s, %s\n' % (dst, who, who2))
+    
+def newlines(f, n=1):
+    for i in range(n):
+        f.write('\n')
+
+def ldr(f, dst, src, offset, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tldr %s, [%s, #%d] %s \n' % (dst, src, offset, comment))
+
+def strr(f, src, dst, offset, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tstr %s, [%s, #%d] %s \n' % (src, dst, offset, comment))
+
+
+def ldp(f, dst, dst2, src, offset, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tldp %s, %s, [%s, #%d] %s \n' % (dst, dst2, src, offset, comment))
+def mul(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tmul %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def umulh(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tumulh %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def adds(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tadds %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def adcs(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tadcs %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def subs(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tsubs %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def sbcs(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tsbcs %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def andd(f, dst, src, src2, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tand %s, %s, %s %s \n' % (dst, src, src2, comment))
+
+def stp(f, src, src2, dst, offset, comment=''):
+    if comment:
+        comment = ' // ' + comment
+    f.write('\tstp %s, %s, [%s, #%d] %s \n' % (src, src2, dst, offset, comment))
+
+
+limbs = 8
+result_limbs = 2*limbs
+
+
+
+RESULT_REG = 'x28'
+CARRY_REG = 'x30'
+xzr = 'xzr'
+RESULT_ADR = 'x2'
+FREE_REGS = ['x20', 'x21', 'x22', 'x23', 'x24', 'x25', 'x26', 'x27']
+
+
+def sum_up_registers(start_current_limb_reg_index, current_reg_index):
+    i = start_current_limb_reg_index
+    while i != current_reg_index:
+        adcs(f, RESULT_REG, RESULT_REG, FREE_REGS[i])
+        adcs(f, CARRY_REG, CARRY_REG, xzr)
+        i = (i + 1) % limbs 
+    adcs(f, RESULT_REG, RESULT_REG, FREE_REGS[i])
+    adcs(f, CARRY_REG, CARRY_REG, xzr)
+
+def sum_up_rest(start_current_limb_reg_index, current_reg_index):
+    i = start_current_limb_reg_index
+    while i != current_reg_index:
+        adcs(f, RESULT_REG, RESULT_REG, FREE_REGS[i])
+        adcs(f, CARRY_REG, CARRY_REG, xzr)
+        i = (i + 1) % limbs
+
+def write_mul_big(f):
+    comment(f, '[x0] = [x1]*[x2]')    
+    introduce_global_function(f, '_uint_mul_512x512')
+    REGS_TO_STORE = ['x19', 'x20', 'x21', 'x22', 'x23', 'x24', 'x25', 'x26', 'x27', 'x28', 'x30']
+
+    A_REGS = ['x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9', 'x10']
+    B_REGS = ['x11', 'x12', 'x13', 'x14', 'x15', 'x16', 'x17', 'x19']
+    A_ADR = 'x0'
+    B_ADR = 'x1'
+
+    sub_stack_and_store_on_stack(f, REGS_TO_STORE, 0)
+    
+    comment(f,"Load A and B")
+    for i in range(int(limbs /2)):
+        ldp(f, A_REGS[i*2], A_REGS[i*2+1], A_ADR, i*16)
+        ldp(f, B_REGS[i*2], B_REGS[i*2+1], B_ADR, i*16)
+
+
+    mov(f, RESULT_REG, xzr)
+    adds(f, CARRY_REG, xzr, xzr) 
+    current_reg_index = 0
+    for limb in range(limbs*2):
+        start_current_limb_reg_index = current_reg_index
+
+        comment(f, "C%d" % limb)    
+        is_first = True
+        for i in range(limbs):
+            for j in range(limbs):
+                if i+j == limb:
+                    mul(f, FREE_REGS[current_reg_index], A_REGS[i], B_REGS[j], "FREE_REGS[%d] = A_REGS[%d] mul B_REGS[%d]" % (current_reg_index, i, j))
+                    current_reg_index = (current_reg_index + 1) % limbs
+                    is_first = False
+                elif i+j == limb-1:
+                    umulh(f, FREE_REGS[current_reg_index], A_REGS[i], B_REGS[j], " FREE_REGS[%d] = A_REGS[%d] umulh B_REGS[%d]" % (current_reg_index, i, j))
+                    current_reg_index = (current_reg_index + 1) % limbs
+                    is_first = False
+
+                # Check how many registers where used in this limb by using start_current_lim_regex and current_reg_index
+                if current_reg_index == start_current_limb_reg_index and not is_first: 
+                    sum_up_registers(start_current_limb_reg_index, (current_reg_index - 1) % limbs)
+                    start_current_limb_reg_index = current_reg_index 
+                    is_first = True
+            
+        sum_up_rest(start_current_limb_reg_index, current_reg_index)
+        strr(f, RESULT_REG, RESULT_ADR, limb*8)
+        mov(f, RESULT_REG, CARRY_REG)
+        mov(f, CARRY_REG, xzr)
+        newlines(f, 2)
+    add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, 0)
+    f.write('\tret\n\n')
+
+with open(fn+'.tmp','w') as f:
+    f.write('/* DO Not edit generated by autogen */\n\n')
+
+    f.write('.extern _fp_mul_counter')
+    f.write('.text\n\n')
+    f.write('.align 4\n\n')
+
+    write_mul_big(f)
+    maybeupdate(fn)
