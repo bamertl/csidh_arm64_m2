@@ -16,6 +16,11 @@ make bench512custom
 ./bench512custom 10
 ```
 
+## Make 1024
+```bash
+make BITS=1024 1024
+```
+
 ## Unchanged README
 
 Prerequisites: Intel or AMD CPU with `adcx`/`adox`: i.e., Broadwell,

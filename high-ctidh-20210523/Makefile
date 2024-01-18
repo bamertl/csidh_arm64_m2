@@ -32,6 +32,7 @@ clean:
 	@rm -rf *.dSYM *.o *.a *.out 
 	@rm -f bench512cycles bench512mults bench512untuned test512 tunemults512 ubench512 tunecycles512 testrandom checkct512cycles checkct512mults checkct512untuned umults512
 	@rm -f bench1024cycles bench1024mults bench1024untuned test1024 tunemults1024 ubench1024 tunecycles1024 testrandom checkct1024cycles checkct1024mults checkct1024untuned umults1024
+	@rm -f bench2048cycles bench2048mults bench2048untuned test2048 tunemults2048 ubench2048 tunecycles2048 testrandom checkct2048cycles checkct2048mults checkct2048untuned umults2048
 
 generic: testrandom.out
 
@@ -735,9 +736,9 @@ fp2048.o: fp2048.S fp.h fp_namespace.h uintbig.h uintbig_namespace.h Makefile
 	$(SCC) -DBITS=2048 -D'NAMESPACEBITS(x)=highctidh_2048_##x' -D'NAMESPACEGENERIC(x)=highctidh_##x' \
 		-c fp2048.S
 
-fp2048_arm64.o: ./arm64/p2048/fp2048_arm64.S fp.h fp_namespace.h uintbig.h uintbig_namespace.h Makefile
+fp2048_arm64.o: ./arm64/p2048/fp2048_arm64.s fp.h fp_namespace.h uintbig.h uintbig_namespace.h Makefile
 	$(SCC) -DBITS=2048 -D'NAMESPACEBITS(x)=_highctidh_2048_##x' -D'NAMESPACEGENERIC(x)=_highctidh_##x' \
-		-c ./arm64/p2048/fp2048_arm64.S -o fp2048_arm64.o
+		-c ./arm64/p2048/fp2048_arm64.s -o fp2048_arm64.o
 
 fp2048_mul_file.o: ${MUL_FILE} fp.h fp_namespace.h uintbig.h uintbig_namespace.h Makefile
 	$(SCC) -DBITS=2048 -D'NAMESPACEBITS(x)=_highctidh_2048_##x' -D'NAMESPACEGENERIC(x)=_highctidh_##x' \
@@ -764,7 +765,7 @@ uintbig2048.o: uintbig2048.S uintbig.h uintbig_namespace.h Makefile
 	$(SCC) -DBITS=2048 -D'NAMESPACEBITS(x)=highctidh_2048_##x' -D'NAMESPACEGENERIC(x)=highctidh_##x' \
 		-c uintbig2048.S
 
-uintbig2048_arm64.o: ./arm64/p2048/uintbit2048_arm64.S uintbig.h uintbig_namespace.h Makefile
+uintbig2048_arm64.o: ./arm64/p2048/uintbig2048_arm64.S uintbig.h uintbig_namespace.h Makefile
 	$(SCC) -DBITS=2048 -D'NAMESPACEBITS(x)=_highctidh_2048_##x' -D'NAMESPACEGENERIC(x)=_highctidh_##x' \
 		-c ./arm64/p2048/uintbig2048_arm64.S
 
