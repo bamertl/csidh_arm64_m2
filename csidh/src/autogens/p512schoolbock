@@ -158,19 +158,20 @@ result_limbs = 2*limbs
 
 
 
+
 RESULT_REG = 'x28'
 CARRY_REG = 'x30'
 xzr = 'xzr'
 RESULT_ADR = 'x2'
 FREE_REGS = ['x20', 'x21', 'x22', 'x23', 'x24', 'x25', 'x26', 'x27']
-
+max_regs = 4
 
 def sum_up_registers(start_current_limb_reg_index, current_reg_index):
     i = start_current_limb_reg_index
     while i != current_reg_index:
         adcs(f, RESULT_REG, RESULT_REG, FREE_REGS[i])
         adcs(f, CARRY_REG, CARRY_REG, xzr)
-        i = (i + 1) % limbs 
+        i = (i + 1) % max_regs 
     adcs(f, RESULT_REG, RESULT_REG, FREE_REGS[i])
     adcs(f, CARRY_REG, CARRY_REG, xzr)
 
@@ -179,7 +180,7 @@ def sum_up_rest(start_current_limb_reg_index, current_reg_index):
     while i != current_reg_index:
         adcs(f, RESULT_REG, RESULT_REG, FREE_REGS[i])
         adcs(f, CARRY_REG, CARRY_REG, xzr)
-        i = (i + 1) % limbs
+        i = (i + 1) % max_regs
 
 def write_mul_big(f):
     comment(f, '[x0] = [x1]*[x2]')    
@@ -211,16 +212,16 @@ def write_mul_big(f):
             for j in range(limbs):
                 if i+j == limb:
                     mul(f, FREE_REGS[current_reg_index], A_REGS[i], B_REGS[j], "FREE_REGS[%d] = A_REGS[%d] mul B_REGS[%d]" % (current_reg_index, i, j))
-                    current_reg_index = (current_reg_index + 1) % limbs
+                    current_reg_index = (current_reg_index + 1) % max_regs
                     is_first = False
                 elif i+j == limb-1:
                     umulh(f, FREE_REGS[current_reg_index], A_REGS[i], B_REGS[j], " FREE_REGS[%d] = A_REGS[%d] umulh B_REGS[%d]" % (current_reg_index, i, j))
-                    current_reg_index = (current_reg_index + 1) % limbs
+                    current_reg_index = (current_reg_index + 1) % max_regs
                     is_first = False
 
                 # Check how many registers where used in this limb by using start_current_lim_regex and current_reg_index
                 if current_reg_index == start_current_limb_reg_index and not is_first: 
-                    sum_up_registers(start_current_limb_reg_index, (current_reg_index - 1) % limbs)
+                    sum_up_registers(start_current_limb_reg_index, (current_reg_index - 1) % max_regs)
                     start_current_limb_reg_index = current_reg_index 
                     is_first = True
             

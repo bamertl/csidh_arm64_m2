@@ -76,11 +76,13 @@ void benchmark_operation(Operation op, int num_experiments){
 
     int num_ops_per_experiment = 10000;
 
-    fp a;
-    fp_random(&a);
-    // Generate random fp b
-    fp b = {{1,2,3,4,5,6,7,8}};
-    
+    fp *a_arr = calloc(num_ops_per_experiment, sizeof(fp));
+    fp *b_arr = calloc(num_ops_per_experiment, sizeof(fp));
+    for (int i = 0; i < num_ops_per_experiment; i++){
+        fp_random(&a_arr[i]);
+        fp_random(&b_arr[i]);
+    }    
+
     fp c = {{0}};
     // allocate uint64_t array for num experiments
     uint64_t *times_ns = calloc(num_experiments, sizeof(uint64_t));
@@ -91,7 +93,7 @@ void benchmark_operation(Operation op, int num_experiments){
         uint64_t ticks0 = rdtsc();
         
         for (int j = 0; j < num_ops_per_experiment; j++){
-            op(&c, &a, &b);
+            op(&c, &a_arr[j], &b_arr[j]);
         }
 
         uint64_t c1 = cpucycles();
