@@ -198,6 +198,10 @@ B_ADR = '\\B_ADR'
 AI = '\\AI'
 CARRY_REG = '\\CARRY_REG'
 
+
+batch_size = 2
+num_batches = int(limbs/batch_size)
+
 def WRITE_MUL_16x1(f):
     f.write('/*\n [C_ADR]+1 = [C_ADR] + [B_ADR] * AI   \n*/ \n')
     f.write('.macro %s, %s, %s, %s, %s, %s, %s \n' % (
@@ -210,34 +214,39 @@ def WRITE_MUL_16x1(f):
                                         ', '.join(T_REGS).replace('\\','')
                                         ))
     adds(f, CARRY_REG, 'xzr', 'xzr', 'CARRY_REG = 0')   
-    for i in range(int(limbs/4)):
+
+    ldp(f, T_REGS[0], T_REGS[1], B_ADR, 0, 'Load B')
+    ldp(f, C_REGS[0], C_REGS[1], C_ADR, 0, 'Load C')
+
+    for i in range(num_batches):
+        offset = i * batch_size * 8
         newlines(f,1)
-        comment(f, "LIMBS C%d-C%d" % (i*4, i*4+3))
-        offset = i*16*2
-        for j in range(2):
-            ldp(f, T_REGS[j*2], T_REGS[2*j+1], B_ADR, offset + j*16, 'Load B')
-            ldp(f, C_REGS[2*j], C_REGS[2*j+1], C_ADR, offset + j*16, 'Load C')
+        comment(f, "LIMBS C%d-C%d" % (i*batch_size, i*batch_size+1))
+        mul(f, T_REGS[2], T_REGS[0], AI)
+        umulh(f, T_REGS[3], T_REGS[0], AI)
+        mul(f, T_REGS[4], T_REGS[1], AI)
+        umulh(f, T_REGS[5], T_REGS[1], AI)
+        if i != num_batches - 1:
+            ldp(f, T_REGS[0], T_REGS[1], B_ADR, offset + 16, 'Load next B already')
         newlines(f,1)
-        for j in range(4):
-            mul(f, T_REGS[8 + 2*j], T_REGS[j], AI)
-            umulh(f, T_REGS[8 + 2*j + 1], T_REGS[j], AI)
+        adcs(f, C_REGS[3], C_REGS[0], CARRY_REG, 'add carry')
+        adcs(f, CARRY_REG, 'xzr', 'xzr')            
+        adcs(f, C_REGS[3], C_REGS[3], T_REGS[2])
+
+        # add t3 and t4
+        adcs(f, T_REGS[6], C_REGS[1], CARRY_REG, 'add carry')
+        if i != num_batches - 1:
+            ldp(f, C_REGS[0], C_REGS[1], C_ADR, offset + 16, 'Load next C already')
+        adcs(f, CARRY_REG, 'xzr', 'xzr')    
+        adcs(f, T_REGS[6], T_REGS[6], T_REGS[3])
+        adcs(f, CARRY_REG, CARRY_REG, 'xzr')
+        adcs(f, T_REGS[6], T_REGS[6], T_REGS[4], 'add T')
+        stp(f, C_REGS[3], T_REGS[6], C_ADR, offset, 'Store C')
+
+        adcs(f, CARRY_REG, CARRY_REG, T_REGS[5])
         newlines(f,1)
-        # The thing below should be packed into a loop 
-        for j in range(4):
-            if j == 0:
-                adcs(f, C_REGS[j], C_REGS[j], CARRY_REG, 'add carry')
-                adcs(f, CARRY_REG, 'xzr', 'xzr')            
-                adcs(f, C_REGS[j], C_REGS[0], T_REGS[8], 'add C%d' % (i*4+j))
-            else:
-                adcs(f, C_REGS[j], C_REGS[j], CARRY_REG, 'add carry')
-                adcs(f, CARRY_REG, 'xzr', 'xzr')
-                adcs(f, C_REGS[j], C_REGS[j], T_REGS[8+2*j-1], 'add C%d' % (i*4+j))
-                adcs(f, CARRY_REG, CARRY_REG, 'xzr')
-                adcs(f, C_REGS[j], C_REGS[j], T_REGS[8+2*j], 'add T')
-            newlines(f,1)
-        adcs(f, CARRY_REG, CARRY_REG, T_REGS[15])
-        stp(f, C_REGS[0], C_REGS[1], C_ADR, offset, 'Store C')
-        stp(f, C_REGS[2], C_REGS[3], C_ADR, offset+16)
+
+
     comment(f,"Store last C at [C_ADR]+1, which means offset: %d" % (limbs*8))
     #load last c
     ldr(f, C_REGS[0], C_ADR, limbs*8)
@@ -246,46 +255,6 @@ def WRITE_MUL_16x1(f):
     f.write('\tstr %s, [%s, #%d] \n' % (C_REGS[0], C_ADR, limbs*8))
     newlines(f,1)
     f.write('.endm \n\n')
-
-
-def write_16x1_function(f):
-    introduce_global_function(f, '_fp_mul16x1', 'C[x0] 17 words = C[x0] + B[x1] 16 words * x2(ai)  8x1 Montgomery multiplication')
-    c_adr = 'x0'
-    b_adr = 'x1'
-    ai = 'x2'
-    carry_reg = 'x11'
-    t_regs = ['x7', 'x8', 'x9', 'x10', 'x11', 'x12', 'x13', 'x14']
-    c_regs = ['x3', 'x4', 'x5', 'x6']
-    adds(f, carry_reg, 'xzr', 'xzr', 'carry_reg = 0')   
-    for i in range(int(limbs/4)):
-        newlines(f,1)
-        comment(f, "LIMBS C%d-C%d" % (i*4, i*4+3))
-        offset = i*16*2
-        for j in range(2):
-            ldp(f, T_REGS[j*2], T_REGS[j*2+1], b_adr, offset + j*16, 'Load B')
-            ldp(f, c_regs[j*2], c_regs[j*2+1], c_adr, offset + j*16, 'Load C')
-        newlines(f,1)
-        for j in range(4):
-            mul(f, T_REGS[j*2], T_REGS[j], AI)
-            umulh(f, T_REGS[j*2+1], T_REGS[j], AI)
-        newlines(f,1)
-        # The thing below should be packed into a loop 
-        for j in range(4):
-            if j == 0:
-                adcs(f, c_regs[j], c_regs[j], carry_reg, 'add carry')
-                adcs(f, carry_reg, 'xzr', 'xzr')            
-                adcs(f, c_regs[j], c_regs[j], T_REGS[j], 'add C%d' % (i*4+j))
-            else:
-                adcs(f, c_regs[j], c_regs[j], carry_reg, 'add carry')
-                adcs(f, CARRY_REG, 'xzr', 'xzr')
-                adcs(f, C_REGS[j], c_regs[j], T_REGS[2*j-1], 'add C%d' % (i*4+j))
-                adcs(f, carry_reg, carry_reg, 'xzr')
-                adcs(f, c_regs[j], c_regs[j], T_REGS[2*j], 'add T')
-            newlines(f,1)
-        adcs(f, carry_reg, carry_reg, T_REGS[15])
-        stp(f, c_regs[0], c_regs[1], c_adr, offset, 'Store C')
-        stp(f, T_REGS[2], T_REGS[3], c_adr, offset+16)
-    comment(f,"Store last C at [C_ADR]+1, which means offset: %d" % (limbs*8))
 
 def call_mul_8x1_macro(f, b_addr):
     f.write('\t%s %s, %s, %s, %s, %s, %s \n' % (MUL16x1, 

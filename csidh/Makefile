@@ -117,6 +117,7 @@ bench_custom: ${includes} ${sources} src/bench_custom.c
 		$(sources) \
 		src/bench_custom.c \
 		-o bench_custom
+	./bench_custom
 
 bench_cycles: ${includes} ${sources} src/bench_cycles.c
 	@cc \
