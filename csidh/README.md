@@ -39,18 +39,23 @@ make ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SUB_KARATSUBA | MONTE_MUL | MONTE_REDUC
 make ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SUB_KARATSUBA test_bigmul
 ```
 
-## Bench pipelining
+## Bench csidh 512 BITS
 ```bash
+make ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_KARATSUBA bench_custom BENCH_ITS=150
+make ARCH=ARM64 MUL_TYPE=MONTE_MUL bench_custom BENCH_ITS=150
+make bench_custom=150
+```
 
+## Bench csidh 1024 BITS
+```bash
+make ARCH=ARM64 MUL_TYPE=MONTE_MUL bench_custom BENCH_ITS=20 BITS=1024
+make bench_custom BITS=1024 BENCH_ITS=20
 ```
 
 ## Bench muls
 ```bash
-make bench_muls ARCH=ARM64 MUL_TYPE=MONTE_MUL
-make bench_muls ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SUB_KARATSUBA
-make bench_muls ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_KARATSUBA
-make bench_muls ARCH=ARM64 MUL_TYPE=MONTE_REDUCTION_SCHOOLBOOK
-./bench_muls
+sh bench_muls.sh 
+sh bench_muls_1024.sh
 ```
 
 # 1024 Bit

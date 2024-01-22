@@ -126,6 +126,8 @@ int main(int argc,char **argv)
       for (long long b = 0;b < primes_batches;++b)
         assert(csidh_statsucceeded[b] == primes_batchbound[b]);
     }
+    // print i
+    printf("last i: %d\n",i);
     fflush(stdout);
   }
  

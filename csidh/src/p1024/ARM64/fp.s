@@ -247,7 +247,6 @@ _fp_sub3:
 	add sp, sp, #160
 	ret
 
-
 /*
  [x0] = [x0] * [x0] mod [p]  
 */

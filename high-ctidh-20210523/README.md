@@ -14,6 +14,10 @@ make 512 MUL_TYPE=MONTE_REDUCTION_SCHOOLBOOK
 ```bash
 make bench512custom
 ./bench512custom 10
+make bench1024custom BITS=1024
+./bench1024custom 5    
+make bench2048custom BITS=2048
+.bench2048custom 5
 ```
 
 ## Make 1024

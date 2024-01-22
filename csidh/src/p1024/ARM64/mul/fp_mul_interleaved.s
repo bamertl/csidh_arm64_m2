@@ -10,170 +10,166 @@
 */ 
 .macro MUL_16x1, AI, B_ADR, C_ADR, CARRY_REG, C0, C1, C2, C3, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15 
 	adds \CARRY_REG, xzr, xzr  // CARRY_REG = 0 
-
-	/* LIMBS C0-C3 */
 	ldp \T0, \T1, [\B_ADR, #0]  // Load B 
 	ldp \C0, \C1, [\C_ADR, #0]  // Load C 
-	ldp \T2, \T3, [\B_ADR, #16]  // Load B 
-	ldp \C2, \C3, [\C_ADR, #16]  // Load C 
 
-	mul \T8, \T0, \AI  
-	umulh \T9, \T0, \AI  
-	mul \T10, \T1, \AI  
-	umulh \T11, \T1, \AI  
-	mul \T12, \T2, \AI  
-	umulh \T13, \T2, \AI  
-	mul \T14, \T3, \AI  
-	umulh \T15, \T3, \AI  
+	/* LIMBS C0-C1 */
+	mul \T2, \T0, \AI  
+	umulh \T3, \T0, \AI  
+	mul \T4, \T1, \AI  
+	umulh \T5, \T1, \AI  
+	ldp \T0, \T1, [\B_ADR, #16]  // Load next B already 
 
-	adcs \C0, \C0, \CARRY_REG  // add carry 
+	adcs \C3, \C0, \CARRY_REG  // add carry 
 	adcs \CARRY_REG, xzr, xzr  
-	adcs \C0, \C0, \T8  // add C0 
-
-	adcs \C1, \C1, \CARRY_REG  // add carry 
+	adcs \C3, \C3, \T2  
+	adcs \T6, \C1, \CARRY_REG  // add carry 
+	ldp \C0, \C1, [\C_ADR, #16]  // Load next C already 
 	adcs \CARRY_REG, xzr, xzr  
-	adcs \C1, \C1, \T9  // add C1 
+	adcs \T6, \T6, \T3  
 	adcs \CARRY_REG, \CARRY_REG, xzr  
-	adcs \C1, \C1, \T10  // add T 
+	adcs \T6, \T6, \T4  // add T 
+	stp \C3, \T6, [\C_ADR, #0]  // Store C 
+	adcs \CARRY_REG, \CARRY_REG, \T5  
 
-	adcs \C2, \C2, \CARRY_REG  // add carry 
+
+	/* LIMBS C2-C3 */
+	mul \T2, \T0, \AI  
+	umulh \T3, \T0, \AI  
+	mul \T4, \T1, \AI  
+	umulh \T5, \T1, \AI  
+	ldp \T0, \T1, [\B_ADR, #32]  // Load next B already 
+
+	adcs \C3, \C0, \CARRY_REG  // add carry 
 	adcs \CARRY_REG, xzr, xzr  
-	adcs \C2, \C2, \T11  // add C2 
+	adcs \C3, \C3, \T2  
+	adcs \T6, \C1, \CARRY_REG  // add carry 
+	ldp \C0, \C1, [\C_ADR, #32]  // Load next C already 
+	adcs \CARRY_REG, xzr, xzr  
+	adcs \T6, \T6, \T3  
 	adcs \CARRY_REG, \CARRY_REG, xzr  
-	adcs \C2, \C2, \T12  // add T 
+	adcs \T6, \T6, \T4  // add T 
+	stp \C3, \T6, [\C_ADR, #16]  // Store C 
+	adcs \CARRY_REG, \CARRY_REG, \T5  
 
-	adcs \C3, \C3, \CARRY_REG  // add carry 
+
+	/* LIMBS C4-C5 */
+	mul \T2, \T0, \AI  
+	umulh \T3, \T0, \AI  
+	mul \T4, \T1, \AI  
+	umulh \T5, \T1, \AI  
+	ldp \T0, \T1, [\B_ADR, #48]  // Load next B already 
+
+	adcs \C3, \C0, \CARRY_REG  // add carry 
 	adcs \CARRY_REG, xzr, xzr  
-	adcs \C3, \C3, \T13  // add C3 
+	adcs \C3, \C3, \T2  
+	adcs \T6, \C1, \CARRY_REG  // add carry 
+	ldp \C0, \C1, [\C_ADR, #48]  // Load next C already 
+	adcs \CARRY_REG, xzr, xzr  
+	adcs \T6, \T6, \T3  
 	adcs \CARRY_REG, \CARRY_REG, xzr  
-	adcs \C3, \C3, \T14  // add T 
+	adcs \T6, \T6, \T4  // add T 
+	stp \C3, \T6, [\C_ADR, #32]  // Store C 
+	adcs \CARRY_REG, \CARRY_REG, \T5  
 
-	adcs \CARRY_REG, \CARRY_REG, \T15  
-	stp \C0, \C1, [\C_ADR, #0]  // Store C 
-	stp \C2, \C3, [\C_ADR, #16]  
 
-	/* LIMBS C4-C7 */
-	ldp \T0, \T1, [\B_ADR, #32]  // Load B 
-	ldp \C0, \C1, [\C_ADR, #32]  // Load C 
-	ldp \T2, \T3, [\B_ADR, #48]  // Load B 
-	ldp \C2, \C3, [\C_ADR, #48]  // Load C 
+	/* LIMBS C6-C7 */
+	mul \T2, \T0, \AI  
+	umulh \T3, \T0, \AI  
+	mul \T4, \T1, \AI  
+	umulh \T5, \T1, \AI  
+	ldp \T0, \T1, [\B_ADR, #64]  // Load next B already 
 
-	mul \T8, \T0, \AI  
-	umulh \T9, \T0, \AI  
-	mul \T10, \T1, \AI  
-	umulh \T11, \T1, \AI  
-	mul \T12, \T2, \AI  
-	umulh \T13, \T2, \AI  
-	mul \T14, \T3, \AI  
-	umulh \T15, \T3, \AI  
-
-	adcs \C0, \C0, \CARRY_REG  // add carry 
+	adcs \C3, \C0, \CARRY_REG  // add carry 
 	adcs \CARRY_REG, xzr, xzr  
-	adcs \C0, \C0, \T8  // add C4 
-
-	adcs \C1, \C1, \CARRY_REG  // add carry 
+	adcs \C3, \C3, \T2  
+	adcs \T6, \C1, \CARRY_REG  // add carry 
+	ldp \C0, \C1, [\C_ADR, #64]  // Load next C already 
 	adcs \CARRY_REG, xzr, xzr  
-	adcs \C1, \C1, \T9  // add C5 
+	adcs \T6, \T6, \T3  
 	adcs \CARRY_REG, \CARRY_REG, xzr  
-	adcs \C1, \C1, \T10  // add T 
+	adcs \T6, \T6, \T4  // add T 
+	stp \C3, \T6, [\C_ADR, #48]  // Store C 
+	adcs \CARRY_REG, \CARRY_REG, \T5  
 
-	adcs \C2, \C2, \CARRY_REG  // add carry 
+
+	/* LIMBS C8-C9 */
+	mul \T2, \T0, \AI  
+	umulh \T3, \T0, \AI  
+	mul \T4, \T1, \AI  
+	umulh \T5, \T1, \AI  
+	ldp \T0, \T1, [\B_ADR, #80]  // Load next B already 
+
+	adcs \C3, \C0, \CARRY_REG  // add carry 
 	adcs \CARRY_REG, xzr, xzr  
-	adcs \C2, \C2, \T11  // add C6 
+	adcs \C3, \C3, \T2  
+	adcs \T6, \C1, \CARRY_REG  // add carry 
+	ldp \C0, \C1, [\C_ADR, #80]  // Load next C already 
+	adcs \CARRY_REG, xzr, xzr  
+	adcs \T6, \T6, \T3  
 	adcs \CARRY_REG, \CARRY_REG, xzr  
-	adcs \C2, \C2, \T12  // add T 
+	adcs \T6, \T6, \T4  // add T 
+	stp \C3, \T6, [\C_ADR, #64]  // Store C 
+	adcs \CARRY_REG, \CARRY_REG, \T5  
 
-	adcs \C3, \C3, \CARRY_REG  // add carry 
+
+	/* LIMBS C10-C11 */
+	mul \T2, \T0, \AI  
+	umulh \T3, \T0, \AI  
+	mul \T4, \T1, \AI  
+	umulh \T5, \T1, \AI  
+	ldp \T0, \T1, [\B_ADR, #96]  // Load next B already 
+
+	adcs \C3, \C0, \CARRY_REG  // add carry 
 	adcs \CARRY_REG, xzr, xzr  
-	adcs \C3, \C3, \T13  // add C7 
+	adcs \C3, \C3, \T2  
+	adcs \T6, \C1, \CARRY_REG  // add carry 
+	ldp \C0, \C1, [\C_ADR, #96]  // Load next C already 
+	adcs \CARRY_REG, xzr, xzr  
+	adcs \T6, \T6, \T3  
 	adcs \CARRY_REG, \CARRY_REG, xzr  
-	adcs \C3, \C3, \T14  // add T 
+	adcs \T6, \T6, \T4  // add T 
+	stp \C3, \T6, [\C_ADR, #80]  // Store C 
+	adcs \CARRY_REG, \CARRY_REG, \T5  
 
-	adcs \CARRY_REG, \CARRY_REG, \T15  
-	stp \C0, \C1, [\C_ADR, #32]  // Store C 
-	stp \C2, \C3, [\C_ADR, #48]  
 
-	/* LIMBS C8-C11 */
-	ldp \T0, \T1, [\B_ADR, #64]  // Load B 
-	ldp \C0, \C1, [\C_ADR, #64]  // Load C 
-	ldp \T2, \T3, [\B_ADR, #80]  // Load B 
-	ldp \C2, \C3, [\C_ADR, #80]  // Load C 
+	/* LIMBS C12-C13 */
+	mul \T2, \T0, \AI  
+	umulh \T3, \T0, \AI  
+	mul \T4, \T1, \AI  
+	umulh \T5, \T1, \AI  
+	ldp \T0, \T1, [\B_ADR, #112]  // Load next B already 
 
-	mul \T8, \T0, \AI  
-	umulh \T9, \T0, \AI  
-	mul \T10, \T1, \AI  
-	umulh \T11, \T1, \AI  
-	mul \T12, \T2, \AI  
-	umulh \T13, \T2, \AI  
-	mul \T14, \T3, \AI  
-	umulh \T15, \T3, \AI  
-
-	adcs \C0, \C0, \CARRY_REG  // add carry 
+	adcs \C3, \C0, \CARRY_REG  // add carry 
 	adcs \CARRY_REG, xzr, xzr  
-	adcs \C0, \C0, \T8  // add C8 
-
-	adcs \C1, \C1, \CARRY_REG  // add carry 
+	adcs \C3, \C3, \T2  
+	adcs \T6, \C1, \CARRY_REG  // add carry 
+	ldp \C0, \C1, [\C_ADR, #112]  // Load next C already 
 	adcs \CARRY_REG, xzr, xzr  
-	adcs \C1, \C1, \T9  // add C9 
+	adcs \T6, \T6, \T3  
 	adcs \CARRY_REG, \CARRY_REG, xzr  
-	adcs \C1, \C1, \T10  // add T 
+	adcs \T6, \T6, \T4  // add T 
+	stp \C3, \T6, [\C_ADR, #96]  // Store C 
+	adcs \CARRY_REG, \CARRY_REG, \T5  
 
-	adcs \C2, \C2, \CARRY_REG  // add carry 
+
+	/* LIMBS C14-C15 */
+	mul \T2, \T0, \AI  
+	umulh \T3, \T0, \AI  
+	mul \T4, \T1, \AI  
+	umulh \T5, \T1, \AI  
+
+	adcs \C3, \C0, \CARRY_REG  // add carry 
 	adcs \CARRY_REG, xzr, xzr  
-	adcs \C2, \C2, \T11  // add C10 
+	adcs \C3, \C3, \T2  
+	adcs \T6, \C1, \CARRY_REG  // add carry 
+	adcs \CARRY_REG, xzr, xzr  
+	adcs \T6, \T6, \T3  
 	adcs \CARRY_REG, \CARRY_REG, xzr  
-	adcs \C2, \C2, \T12  // add T 
+	adcs \T6, \T6, \T4  // add T 
+	stp \C3, \T6, [\C_ADR, #112]  // Store C 
+	adcs \CARRY_REG, \CARRY_REG, \T5  
 
-	adcs \C3, \C3, \CARRY_REG  // add carry 
-	adcs \CARRY_REG, xzr, xzr  
-	adcs \C3, \C3, \T13  // add C11 
-	adcs \CARRY_REG, \CARRY_REG, xzr  
-	adcs \C3, \C3, \T14  // add T 
-
-	adcs \CARRY_REG, \CARRY_REG, \T15  
-	stp \C0, \C1, [\C_ADR, #64]  // Store C 
-	stp \C2, \C3, [\C_ADR, #80]  
-
-	/* LIMBS C12-C15 */
-	ldp \T0, \T1, [\B_ADR, #96]  // Load B 
-	ldp \C0, \C1, [\C_ADR, #96]  // Load C 
-	ldp \T2, \T3, [\B_ADR, #112]  // Load B 
-	ldp \C2, \C3, [\C_ADR, #112]  // Load C 
-
-	mul \T8, \T0, \AI  
-	umulh \T9, \T0, \AI  
-	mul \T10, \T1, \AI  
-	umulh \T11, \T1, \AI  
-	mul \T12, \T2, \AI  
-	umulh \T13, \T2, \AI  
-	mul \T14, \T3, \AI  
-	umulh \T15, \T3, \AI  
-
-	adcs \C0, \C0, \CARRY_REG  // add carry 
-	adcs \CARRY_REG, xzr, xzr  
-	adcs \C0, \C0, \T8  // add C12 
-
-	adcs \C1, \C1, \CARRY_REG  // add carry 
-	adcs \CARRY_REG, xzr, xzr  
-	adcs \C1, \C1, \T9  // add C13 
-	adcs \CARRY_REG, \CARRY_REG, xzr  
-	adcs \C1, \C1, \T10  // add T 
-
-	adcs \C2, \C2, \CARRY_REG  // add carry 
-	adcs \CARRY_REG, xzr, xzr  
-	adcs \C2, \C2, \T11  // add C14 
-	adcs \CARRY_REG, \CARRY_REG, xzr  
-	adcs \C2, \C2, \T12  // add T 
-
-	adcs \C3, \C3, \CARRY_REG  // add carry 
-	adcs \CARRY_REG, xzr, xzr  
-	adcs \C3, \C3, \T13  // add C15 
-	adcs \CARRY_REG, \CARRY_REG, xzr  
-	adcs \C3, \C3, \T14  // add T 
-
-	adcs \CARRY_REG, \CARRY_REG, \T15  
-	stp \C0, \C1, [\C_ADR, #96]  // Store C 
-	stp \C2, \C3, [\C_ADR, #112]  
 	/* Store last C at [C_ADR]+1, which means offset: 128 */
 	ldr \C0, [\C_ADR, #128]  
 	adcs \C0, \C0, \CARRY_REG  // add carry 

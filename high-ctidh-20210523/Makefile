@@ -198,10 +198,22 @@ libhighctidh_1024.a libhighctidh_base.a libhighctidh_tunemults1024.a libtest.a
 		-o bench1024mults bench.c \
 		libhighctidh_1024.a libhighctidh_base.a libhighctidh_tunemults1024.a libtest.a
 
+bench1024custom: bench_custom.c \
+libhighctidh_1024.a libhighctidh_base.a libhighctidh_tunemults1024.a libtest.a
+	$(CC) -DBITS=1024 -D'NAMESPACEBITS(x)=highctidh_1024_##x' -D'NAMESPACEGENERIC(x)=highctidh_##x' \
+		-o bench1024custom bench_custom.c \
+		libhighctidh_1024.a libhighctidh_base.a libhighctidh_tunemults1024.a libtest.a
+
 bench2048mults: bench.c \
 libhighctidh_2048.a libhighctidh_base.a libhighctidh_tunemults2048.a libtest.a
 	$(CC) -DBITS=2048 -D'NAMESPACEBITS(x)=highctidh_2048_##x' -D'NAMESPACEGENERIC(x)=highctidh_##x' \
 		-o bench2048mults bench.c \
+		libhighctidh_2048.a libhighctidh_base.a libhighctidh_tunemults2048.a libtest.a
+
+bench2048custom: bench_custom.c \
+libhighctidh_2048.a libhighctidh_base.a libhighctidh_tunemults2048.a libtest.a
+	$(CC) -DBITS=2048 -D'NAMESPACEBITS(x)=highctidh_2048_##x' -D'NAMESPACEGENERIC(x)=highctidh_##x' \
+		-o bench2048custom bench_custom.c \
 		libhighctidh_2048.a libhighctidh_base.a libhighctidh_tunemults2048.a libtest.a
 
 bench511untuned: bench.c \
