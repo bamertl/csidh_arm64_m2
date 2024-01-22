@@ -104,6 +104,20 @@ bench_muls: ${includes} ${sources} src/bench_muls.c
 		src/bench_muls.c \
 		-o bench_muls
 
+bench_custom: ${includes} ${sources} src/bench_custom.c
+	@CC \
+		$(if ${BENCH_ITS},-DBENCH_ITS=${BENCH_ITS}) \
+		$(if ${BENCH_VERBOSE},-DBENCH_VERBOSE=${BENCH_VERBOSE}) \
+		-I ./src \
+		-I src/p${BITS}/ \
+		-std=c99 -pedantic \
+		-Wall -Wextra \
+		-march=native -O3 \
+		-DNDEBUG \
+		$(sources) \
+		src/bench_custom.c \
+		-o bench_custom
+
 bench_cycles: ${includes} ${sources} src/bench_cycles.c
 	@cc \
 		$(if ${BENCH_ITS},-DBENCH_ITS=${BENCH_ITS}) \
@@ -160,6 +174,7 @@ clean:
 	@rm -rf ./tests/test_reduction.DSYM
 	@rm -rf ./bench_pipeline pipeline.o
 	@rm -rf ./bench_muls
+	@rm -rf ./bench_custom
 
 
 

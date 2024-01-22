@@ -348,20 +348,30 @@ void uint_random(uint *x, uint const *m)
 _uint_random:
 
     sub sp, sp, #48
-    stp lr, x0, [sp, #0]
-    str x1, [sp, #16]
+    stp lr, x0, [sp, #0] // Save lr and x0 on the stack
+    str x1, [sp, #16]    // Save x1 (m) on the stack
     mov x0, x1
-    bl _uint_len //get the number of valid bits in m
+    bl _uint_len // Call _uint_len to get the number of valid bits in m
 
-    mov x1, x0 // save result in x1
-    lsr x3, x1, #3        // x3 = total bits / 8 = Bytes
-    and x4, x1, #0x3f      // x4 = remainder bits % 64
+    mov x1, x0 // Save result in x1 (total valid bits)
+    lsr x3, x1, #3     // x3 = total bits / 8 = Number of Full Bytes
+    and x4, x1, #7     // x4 = remaining bits % 8
 
-    mov x1, x3
+    add x1, x3, x4, LSR #3 // Calculate the number of bytes, including the extra byte for remaining bits
+
     ldr x0, [sp, #8]
-    bl _randombytes
+    bl _randombytes    // Generate random bytes, including the extra byte if needed
+    // Always perform the operations for remaining bits
+    ldr x2, [sp, #8]    // Load the address of the buffer
+    add x2, x2, x3      // Move x2 to point to the byte after the last full byte
+    mov x0, #1          // Set x0 to 1
+    lsl x0, x0, x4      // Shift x0 left by x4 bits, x0 = 2^x4
+    sub x0, x0, #1      // Subtract 1 from x0, x0 = 2^x4 - 1
+    ldr x1, [x2]       // Load the extra byte
+    and x0, x1, x0      // AND the extra byte with the mask to get only the needed bits
+    str x0, [x2]       // Store the masked bits back in the buffer
 
-    ldr x0, [sp, #8] // the function does return some different value in x0
-    ldr lr, [sp, #0]
-    add sp, sp, #48
+    ldr x0, [sp, #8] // Load the original x0
+    ldr lr, [sp, #0] // Restore lr
+    add sp, sp, #48  // Adjust the stack pointer back
     ret

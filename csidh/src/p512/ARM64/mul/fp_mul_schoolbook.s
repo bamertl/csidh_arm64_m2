@@ -485,9 +485,3 @@ _add2_16_words:
     umulh   \T0, \A1, \B1
     adcs     \C3, \C3, \T0
 .endm
-
-
-
-
-
-   

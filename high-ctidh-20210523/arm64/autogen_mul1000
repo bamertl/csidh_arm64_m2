@@ -295,7 +295,7 @@ def WRITE_MUL_STEP(f, limbs):
 
     call_mul_limbsx1_macro(f, P_ADR)
     comment(f, "We shift C ")
-    ldr(f, C_REGS[0], C_ADR, 128)
+    ldr(f, C_REGS[0], C_ADR, limbs*8)
     # make a loop that counts backwards from 8 to 0 
     
     # make for i in range(num_batches go backwards))
