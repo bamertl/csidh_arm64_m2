@@ -83,6 +83,7 @@ void benchmark_operation(Operation op, int num_experiments){
         fp_random(&b_arr[i]);
     }    
 
+    fp a;
     fp c = {{0}};
     // allocate uint64_t array for num experiments
     uint64_t *times_ns = calloc(num_experiments, sizeof(uint64_t));

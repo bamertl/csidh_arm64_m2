@@ -8,6 +8,14 @@
 #include "csidh.h"
 #include "cpucycles.h"
 
+// gets current time in ns
+static inline unsigned long long get_time_ns(void) {
+    struct timespec time;
+    clock_gettime(CLOCK_REALTIME, &time);
+    return (int64_t)(time.tv_sec*1e9 + time.tv_nsec);
+}
+
+
 int cmp_uint64_t(const void *x, const void *y) { return * (uint64_t *) x - * (uint64_t *) y; }
 
 uint64_t median(uint64_t *vals, unsigned long its)
@@ -55,20 +63,32 @@ public_key action_output[KEYS];
 
 int main(int argc,char **argv)
 {
-  clock_t t0, t1;
+  uint64_t t0_private, t1_private, t0_csidh, t1_csidh;
   long long target = -1;
   if (argc >= 2) target = atoll(argv[1]);
   unsigned char *stack;
   unsigned long its = KEYS*target;
 
   printf("its %lu\n",its);
-  uint64_t *times = calloc(its, sizeof(uint64_t));
-     
+  uint64_t *times_csidh = calloc(its, sizeof(uint64_t));
+  uint64_t *times_private = calloc(KEYS, sizeof(uint64_t));  
+
    __asm__ __volatile__ ("mov %0, sp" : "=r"(stack));
   stack -= stacksz;
+
   for (long long key = 0;key < KEYS;++key) {
+    t0_private = get_time_ns();
     csidh_private(&priv_alice[key]);
+    t1_private = get_time_ns();
+    times_private[key] = t1_private - t0_private;
+  }
+
+  for (long long key = 0;key < KEYS;++key) {
     csidh_private(&priv_bob[key]);
+  }
+
+
+  for (long long key = 0;key < KEYS;++key) {
     action(&pub_bob[key],&base,&priv_bob[key]);
   }
 
@@ -82,26 +102,14 @@ int main(int argc,char **argv)
     if (key&1)
       pub_bob[key] = base;
 
-  long long pos = 0;
-  for (long long b = 0;b < primes_batches;++b) {
-    long long p = primes[pos];
-    pos += primes_batchsize[b];
-  }
-  int total = KEYS*target;    
-  printf("Total %d\n",total );
+
+  //int total = KEYS*target;    
   int i = 0;
   for (long long loop = 0;loop != target;++loop) {
 
     test_nike_1();
     for (long long key = 0;key < KEYS;++key) {
-      if (total < 100 || i % (total / 100) == 0) {
-            printf("%2lld%%", 100 * i / total);
-            fflush(stdout);
-            printf("\r\x1b[K");
-        }
-      
       fp_mulsq_count = fp_sq_count = fp_addsub_count = 0;
-      long long cycles = cpucycles();
       bool ok = validate(&pub_bob[key]);
       //cycles = cpucycles()-cycles;
       assert(ok);
@@ -109,10 +117,10 @@ int main(int argc,char **argv)
       for (long long b = 0;b < primes_batches;++b)
         csidh_statsucceeded[b] = csidh_stattried[b] = 0;
       fp_mulsq_count = fp_sq_count = fp_addsub_count = 0;
-      t0 = clock();   /* uses stack, but not too much */
+      t0_csidh = get_time_ns();
       action(&action_output[key],&pub_bob[key],&priv_alice[key]);
-      t1 = clock();
-      times[i] = t1-t0;
+      t1_csidh = get_time_ns();
+      times_csidh[i] = t1_csidh - t0_csidh;
       //set loop*key element of timing to cycles
       i = i + 1;
       for (long long b = 0;b < primes_batches;++b)
@@ -120,8 +128,14 @@ int main(int argc,char **argv)
     }
     fflush(stdout);
   }
-  printf("mean wall-clock time: \x1b[34m%6.3lf ms\x1b[0m\n", 1000. * mean(times, its)  / CLOCKS_PER_SEC);
-  printf("median wall-clock time: \x1b[34m%6.3lf ms\x1b[0m\n", 1000. * median(times, its)  / CLOCKS_PER_SEC);
+ 
+  printf("Mean private Key gen in ns: %lf\n",mean(times_private,KEYS));
+  printf("Mediam private Key gen in ns: %llu\n",median(times_private,KEYS));
+  printf("Mean private Key gen in ms: %lf\n",mean(times_private,KEYS)/1000000);
+
+  printf("Mean ctidh in ns: %lf\n",mean(times_csidh,its));
+  printf("Mediam ctidh in ns: %llu\n",median(times_csidh,its));
+  printf("Mean ctidh in ms: %lf\n",mean(times_csidh,its)/1000000);
 
   fflush(stdout);
   return 0;
