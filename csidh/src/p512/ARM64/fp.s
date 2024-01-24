@@ -390,17 +390,10 @@ we want to override a[x0] only at the very end
 */
 .global _fp_inv
 _fp_inv:
-/*
-    // load mul count pointer
-    adrp x3, _fp_mul_counter@PAGE
-    add x3, x3, _fp_mul_counter@PAGEOFF
-    ldr x4, [x3] // pointer_value in x4
-    sub sp, sp, #16
-    stp lr, x4, [sp, #0] // store lr and pointer_value on stack
-    str xzr, [x3] // set pointer_value to 0
 
     // add to inv counter
     adrp x3, _fp_inv_counter@PAGE
+<<<<<<< Updated upstream
     add x3, x3, _fp_inv_counter@PAGEOFF
     ldr x3, [x3]
     cbz x3, 0f
@@ -427,6 +420,14 @@ _fp_inv:
     ldr x4, [x3]
     add x4, x4, #1
     str x4, [x3]
+=======
+	add x3, x3, _fp_inv_counter@PAGEOFF
+	ldr x3, [x3, #0]  // load counter pointer 
+	cbz x3, 0f // skip to 0f if pointer to mul_counter is 0 
+	ldr x4, [x3, #0]  // load counter value 
+	adds x4, x4, #1  // increase counter value 
+	str x4, [x3, #0]
+>>>>>>> Stashed changes
 
 
    B _fp_inv_hardcoded

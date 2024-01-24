@@ -306,7 +306,7 @@ _fp_inv:
 
 	0: // skip label
 	/* We use the hardcoded inverse by djb */
-	 B _fp_inv_hardcoded
+	B _fp_inv_hardcoded
 
 /*
  [x0] = [x0] ^ [x1] mod [p] 
