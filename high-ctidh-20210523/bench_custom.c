@@ -195,8 +195,13 @@ int main(int argc,char **argv)
   printf("Median ctidh in ns: %llu\n",median(times_csidh,its));
   printf("Median ctidh in ms: %llu\n",median(times_csidh,its)/1000000);
 
-  printf("Mean Multiplications and Squarings: %lf\n",mean_long(mulss,its));
-  printf("Median Multiplications and Squarings: %f\n",median_long(mulss,its));
+  double mean_squarings = mean_long(sqss,its);
+  double median_squaring = median_long(sqss,its);
+  printf("Mean squarings: %lf\n",mean_squarings);
+  printf("Median Squarings: %f\n",median_squaring);
+  printf("Mean Multiplications: %lf\n",(mean_long(mulss,its) - mean_squarings));
+  printf("Median Multiplications: %f\n",(median_long(mulss,its) - median_squaring));
+
 
   printf("Mean Additions/subtractions: %lf\n",mean_long(addsubs,its));
   printf("Median Additions/subtractions: %f\n",median_long(addsubs,its));
