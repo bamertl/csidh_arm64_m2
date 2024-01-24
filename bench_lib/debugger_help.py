@@ -11,7 +11,7 @@ def write_commands(debugger, command, result, internal_dict):
     command_return_object = lldb.SBCommandReturnObject()
 
     # Save the output to a file
-    filename = "csidh/instruction_outputs.txt"
+    filename = "instruction_outputs.txt"
 
     try:
         with open(filename, "w") as file:
