@@ -12,6 +12,7 @@
 .extern _uint_sub3
 .extern _uint_len
 .extern _uint_random
+.extern _fp_inv_hardcoded
 
 .align 4
 .data
@@ -23,6 +24,8 @@ _fp_mul_counter: .quad 0
 _fp_inv_counter: .quad 0
 .global _fp_sqt_counter
 _fp_sqt_counter: .quad 0
+.global _fp_addsub_counter
+_fp_addsub_counter: .quad 0
 
 .text
 /*
@@ -83,6 +86,15 @@ _fp_add2:
 */
 .global _fp_add3
 _fp_add3: 
+	adrp x3, _fp_addsub_counter@PAGE
+	add x3, x3, _fp_addsub_counter@PAGEOFF
+	ldr x3, [x3, #0]  // load counter pointer 
+	cbz x3, 0f // skip to 0f if pointer to mul_counter is 0 
+	ldr x4, [x3, #0]  // load counter value 
+	adds x4, x4, #1  // increase counter value 
+	str x4, [x3, #0]
+
+	0: // skip label
 	sub sp, sp, #16
 	stp x0, lr, [sp, #0]
 	bl _uint_add3 // this returns the carry in x0
@@ -427,15 +439,6 @@ _fp_pow_end:
 */
 .global _fp_issquare
 _fp_issquare: 
-	/* First we set the mul counter pointer to 0, so it doesnt get updated, later we restore it */
-	adrp x3, _fp_mul_counter@PAGE
-	add x3, x3, _fp_mul_counter@PAGEOFF
-	ldr x4, [x3, #0]  // load counter pointer 
-	sub sp, sp, #32
-	stp lr, x3, [sp, #0]
-	str x4, [sp, #16]
-	str xzr, [x3, #0]
-
 	adrp x3, _fp_sqt_counter@PAGE
 	add x3, x3, _fp_sqt_counter@PAGEOFF
 	ldr x3, [x3, #0]  // load counter pointer 
@@ -455,11 +458,6 @@ _fp_issquare:
 	bl _fp_eq // x0 = [x0] == [x1] 
 	/* If equal (1) it is a quadratic residue!! */
 
-	/* Restore Mul Counter */
-	ldp lr, x3, [sp, #0]
-	ldr x4, [sp, #16]
-	add sp, sp, #32
-	str x4, [x3, #0]
 	ret
 
 .global _fp_random

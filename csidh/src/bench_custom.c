@@ -38,6 +38,7 @@ extern uint64_t *fp_inv_counter;
 extern uint64_t *fp_sqt_counter;
 extern uint64_t *xmul_counters;
 extern uint64_t *isog_counters;
+extern uint64_t *fp_addsub_counter;
 
 uint64_t median(uint64_t *vals)
 {
@@ -65,7 +66,8 @@ int main(void)
              *mulss = calloc(its, sizeof(uint64_t)),
              *sqss = calloc(its, sizeof(uint64_t)),
              *invss = calloc(its, sizeof(uint64_t)),
-             *sqtss = calloc(its, sizeof(uint64_t));
+             *sqtss = calloc(its, sizeof(uint64_t)),
+             *addsubs = calloc(its, sizeof(uint64_t));
 
     private_key priv;
     public_key pub = base;
@@ -97,6 +99,8 @@ int main(void)
         fp_sq_counter = &sqss[i];
         fp_inv_counter = &invss[i];
         fp_sqt_counter = &sqtss[i];
+        fp_addsub_counter = &addsubs[i];
+
 
         // print the unsigned long long value of fp_mul_counter
 
@@ -112,11 +116,11 @@ int main(void)
 
         times_csidh[i] = t1_csidh - t0_csidh;
 
-
         fp_mul_counter = NULL;
         fp_sq_counter = NULL;
         fp_inv_counter = NULL;
         fp_sqt_counter = NULL;
+        fp_addsub_counter = NULL;
 
         /* check stack */
         if (*stack != canary) { /* make sure we sprayed enough */
@@ -127,7 +131,6 @@ int main(void)
             if (stack[j] != canary)
                 bytes = stacksz - j;
     }
-
 
     printf("median private keygen:  %8" PRIu64 " ns\n", median(times_private));
     printf("mean private keygen:    %10.1lf ns\n", mean(times_private));
@@ -145,6 +148,9 @@ int main(void)
 
     printf("median squarings:       %8" PRIu64 "\n", median(sqss));
     printf("mean squarings:         %10.1lf\n", mean(sqss));
+
+    printf("mean additions/subs:    %10.1lf\n", mean(addsubs));
+    printf("median additions/subs:  %8" PRIu64 "\n", median(addsubs));
 
     printf("median inversions:      %8" PRIu64 "\n", median(invss));
     printf("mean inversions:        %10.1lf\n", mean(invss));

@@ -2,9 +2,11 @@
 
 #include "fp.h"
 
+
 // 97 mults, 507 squarings
 void fp_inv(fp *x)
 {
+  fp_inv_count++;
   fp r0;
   r0 = *x; // 1
   fp r1;

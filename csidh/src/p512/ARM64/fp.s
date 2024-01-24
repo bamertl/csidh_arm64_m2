@@ -17,6 +17,9 @@ _fp_inv_counter: .quad 0
 _fp_mul_counter: .quad 0
 .global _fp_sqt_counter
 _fp_sqt_counter: .quad 0
+.global _fp_addsub_counter
+_fp_addsub_counter: .quad 0
+
 
 .text
 .align 4
@@ -172,7 +175,15 @@ void fp_add3(fp *x, fp const *y, fp const *z)
 */ 
 .global _fp_add3
 _fp_add3:
-
+    /* Increment addsub counter */
+	adrp x3, _fp_addsub_counter@PAGE
+	add x3, x3, _fp_addsub_counter@PAGEOFF
+	ldr x3, [x3]
+	cbz x3, 0f
+	ldr x4, [x3]
+	add x4, x4, #1
+	str x4, [x3]
+	0:
     sub sp, sp, #48
     str x17, [sp, #0] 
     stp x19, x20, [sp, #16]
@@ -429,7 +440,7 @@ _fp_inv:
     str x4, [x3]
 
 
-   B _fp_inv_hardcoded
+    B _fp_inv_hardcoded
 
 /*
 c[x0] = a[x0]^b[x1] mod p
@@ -538,14 +549,6 @@ bool fp_issquare(fp *x)
 */
 .global _fp_issquare
 _fp_issquare:
-        // load mul count pointer
-    adrp x3, _fp_mul_counter@PAGE
-    add x3, x3, _fp_mul_counter@PAGEOFF
-    ldr x4, [x3] // pointer_value in x4
-    sub sp, sp, #16
-    stp lr, x4, [sp, #0] // store lr and pointer_value on stack
-    str xzr, [x3] // set pointer_value to 0
-
     // update square counter
     adrp x3, _fp_sqt_counter@PAGE
     add x3, x3, _fp_sqt_counter@PAGEOFF
@@ -575,13 +578,6 @@ _not_square:
 _issquare_end:
     ldr lr, [sp, #0]
     add sp, sp, #16
-    
-    ldp lr, x4, [sp, #0] // load back lr and pointer_value
-    add sp, sp, #16
-    adrp x3, _fp_mul_counter@PAGE
-    add x3, x3, _fp_mul_counter@PAGEOFF
-    str x4, [x3] // restore pointer_value
-
     ret
 
 /*
