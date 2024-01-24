@@ -12,6 +12,7 @@
 .extern _uint_sub3
 .extern _uint_len
 .extern _uint_random
+.extern _fp_inv_hardcoded
 
 .align 4
 .data
@@ -23,6 +24,8 @@ _fp_mul_counter: .quad 0
 _fp_inv_counter: .quad 0
 .global _fp_sqt_counter
 _fp_sqt_counter: .quad 0
+.global _fp_addsub_counter
+_fp_addsub_counter: .quad 0
 
 .text
 /*
@@ -83,6 +86,15 @@ _fp_add2:
 */
 .global _fp_add3
 _fp_add3: 
+	adrp x3, _fp_addsub_counter@PAGE
+	add x3, x3, _fp_addsub_counter@PAGEOFF
+	ldr x3, [x3, #0]  // load counter pointer 
+	cbz x3, 0f // skip to 0f if pointer to mul_counter is 0 
+	ldr x4, [x3, #0]  // load counter value 
+	adds x4, x4, #1  // increase counter value 
+	str x4, [x3, #0]
+
+	0: // skip label
 	sub sp, sp, #16
 	stp x0, lr, [sp, #0]
 	bl _uint_add3 // this returns the carry in x0

@@ -11,6 +11,7 @@ uint64_t *fp_mul_counter = NULL;
 uint64_t *fp_sq_counter = NULL;
 uint64_t *fp_inv_counter = NULL;
 uint64_t *fp_sqt_counter = NULL;
+uint64_t *fp_addsub_counter = NULL;
 
 
 /*
@@ -43,6 +44,7 @@ static void reduce_once(uint *x)
 
 void fp_add3(fp *x, fp const *y, fp const *z)
 {
+    if (fp_addsub_counter) ++*fp_addsub_counter;
     bool c = uint_add3((uint *) x, (uint *) y, (uint *) z);
     (void) c; assert(!c);
     reduce_once((uint *) x);

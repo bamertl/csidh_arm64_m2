@@ -11,6 +11,7 @@ counter_variables = {
     '_fp_mul_counter':'_fp_mul_counter',
     '_fp_inv_counter':'_fp_inv_counter',
     '_fp_sqt_counter':'_fp_sqt_counter',
+    '_fp_addsub_counter':'_fp_addsub_counter',
 }
 
 extern_variables = {
@@ -263,6 +264,8 @@ def write_fp_add2(f):
 def write_fp_add3(f):
     introduce_global_function(f, global_functions['_fp_add3'],
                               '[x0] = [x1] + [x2] mod [p]')
+
+    increase_counter(f, counter_variables['_fp_addsub_counter'])
     REGS_TO_STORE = ['x0', 'lr']
     sub_stack_and_store_on_stack(f, REGS_TO_STORE, 0)
     

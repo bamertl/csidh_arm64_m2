@@ -12,6 +12,7 @@ extern_variables = {'_inv_min_p_mod_r': '_inv_min_p_mod_r',
                     }
 
 
+
 sys.setrecursionlimit(10000)
 
 print("Generating %s..." % fn)
@@ -323,8 +324,26 @@ def call_mul_step_macro(f, number_k):
                                                             ', '.join(T_REAL))
                                                             )
 
+
+
+def increase_counter(f, countername):
+    skip_label = '0f'
+    x3 = 'x3'
+    x4 = 'x4'
+    load_label_address_into_register(f, countername, x3)
+    ldr(f, x3, x3, 0, 'load counter pointer')
+    f.write('\tcbz x3, %s // skip to 0f if pointer to mul_counter is 0 \n' % skip_label)
+    ldr(f, x4, x3, 0, 'load counter value')
+    adds(f, x4, x4, '#1', 'increase counter value')
+    f.write('\tstr %s, [%s, #0]\n' % (x4, x3))
+    newlines(f,1)
+    f.write('\t0: // skip label\n')
+
+
 def write_interleaved_mul_macro(f):
     introduce_global_function(f, '_fp_mul3', '[x0] = [x1] * [x2] mod [p] Interleaved Montgomery multiplication')
+    increase_counter(f, '_fp_mul_counter')
+
     REGS_TO_STORE = ['lr', 'x0','x19', 'x20', 'x21', 'x22', 'x23', 'x24', 'x25', 'x26', 'x27', 'x28', 'x30']
 
     PLACE_FOR_C = limbs * 8 + 8
