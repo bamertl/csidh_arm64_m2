@@ -14,10 +14,6 @@ ifndef MUL_TYPE
 	MUL_TYPE = MONTE_MUL
 endif
 
-ifndef INV_TYPE
-	INV_TYPE = HARDCODED 
-endif
-
 
 ifeq "$(MUL_TYPE)" "MONTE_MUL"
 	MUL_FILE = fp_mul_interleaved.s
@@ -39,15 +35,8 @@ else ifeq "$(ARCH)" "x86"
     FP_IMPL+=$(wildcard src/p${BITS}/X86/inv/*.c src/p${BITS}/X86/inv/*.s)
 else ifeq "$(ARCH)" "ARM64"
     UINT_IMPL=$(wildcard src/p${BITS}/ARM64/uint.*)
-	ifeq "$(INV_TYPE)" "HARDCODED"
     FP_IMPL=$(wildcard src/p${BITS}/ARM64/fp.*)
 	FP_IMPL+=$(wildcard  src/p${BITS}/ARM64/fp_hardcoded_inverse.c)
-	else ifeq "$(INV_TYPE)" "CALCULATED"
-	FP_IMPL=$(wildcard src/p${BITS}/ARM64/fp_old.*)
-	else 
-	FP_IMPL=$(wildcard src/p${BITS}/ARM64/fp.*)
-	FP_IMPL+=$(wildcard  src/p${BITS}/ARM64/fp_hardcoded_inverse.c)
-	endif
     FP_IMPL+=$(wildcard  src/p${BITS}/ARM64/inv/*.s)
 	FP_IMPL+= ./src/p${BITS}/ARM64/mul/${MUL_FILE}
 endif
