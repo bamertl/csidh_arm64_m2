@@ -26,7 +26,8 @@ extern_variables = {
     '_uint_add3':'_uint_add3',
     '_uint_sub3':'_uint_sub3',
     '_uint_len':'_uint_len',
-    '_uint_random':'_uint_random'
+    '_uint_random':'_uint_random',
+    '_fp_inv_hardcoded':'_fp_inv_hardcoded'
 }
 
 global_functions = {
@@ -424,14 +425,16 @@ def write_fp_sq2(f):
 def write_fp_inv(f):
     introduce_global_function(f, global_functions['_fp_inv'],
                               '[x0] = [x0] ^ [p] - 2 mod [p] = [x1] ^ -1 mod [p] ')
-    presave_mul_counter(f)
+    #presave_mul_counter(f)
     comment(f,"Count up inv_counter")
     increase_counter(f, counter_variables['_fp_inv_counter'])
-    p_minus_2 = 'x1'
-    load_label_address_into_register(f, extern_variables['_p_minus_2'], p_minus_2)
-    f.write('\tbl %s\n' % global_functions['_fp_pow'])
-    restore_mul_counter(f)
-    f.write('\tret\n\n')
+    #p_minus_2 = 'x1'
+    #load_label_address_into_register(f, extern_variables['_p_minus_2'], p_minus_2)
+    #f.write('\tbl %s\n' % global_functions['_fp_pow'])
+    #restore_mul_counter(f)
+    comment(f, "We use the hardcoded inverse by djb")
+    f.write('\t B %s\n\n' % extern_variables['_fp_inv_hardcoded'])
+
 
 
 _fp_pow_word_loop = '_fp_pow_word_loop'

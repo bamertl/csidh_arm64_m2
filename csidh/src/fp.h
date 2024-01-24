@@ -36,4 +36,7 @@ void fp_pow(fp *x, uint const *e); // x = x^e mod p
 
 void fp_random(fp *x);
 
+//addition due to optimization in inverse calculation
+void fp_inv_hardcoded(fp *x);
+
 #endif
