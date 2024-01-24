@@ -20,9 +20,10 @@ make bench2048custom BITS=2048
 ./bench2048custom 5
 ```
 
-## Make 1024
+## Make 1024&2048
 ```bash
 make BITS=1024 1024
+
 ```
 
 ## Unchanged README

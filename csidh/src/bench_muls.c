@@ -74,7 +74,7 @@ typedef void (*Operation)(fp *x, fp const *y, fp const *z);
 
 void benchmark_operation(Operation op, int num_experiments){
 
-    int num_ops_per_experiment = 10000;
+    int num_ops_per_experiment = 80000;
 
     fp *a_arr = calloc(num_ops_per_experiment, sizeof(fp));
     fp *b_arr = calloc(num_ops_per_experiment, sizeof(fp));
@@ -124,7 +124,7 @@ void benchmark_operation(Operation op, int num_experiments){
 
 int main(void)
 { 
-    int num_experiments = 1000;
+    int num_experiments = 3000;
 
     benchmark_operation(fp_mul3, num_experiments); 
     return 0;

@@ -29,6 +29,7 @@ globals = {
     'fp_add2': 'fp_add2',
     'fp_add3': 'fp_add3',
     'fp_addsub_count': 'fp_addsub_count',
+    'fp_inv_count': 'fp_inv_count',
     'fp_cmov': 'fp_cmov',
     'fp_copy': 'fp_copy',
     'fp_cswap': 'fp_cswap',
@@ -578,6 +579,7 @@ for fn in fns:
         init_data_var(f, globals['fp_mulsq_count'])
         init_data_var(f, globals['fp_sq_count'])
         init_data_var(f, globals['fp_addsub_count'])
+        init_data_var(f, globals['fp_inv_count'])
         new_line(f)
         f.write('.text\n')
         f.write('.align 4\n')
