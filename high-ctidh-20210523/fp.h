@@ -33,6 +33,7 @@ void fp_sq2(fp *x, fp const *y);
 extern long long fp_mulsq_count;
 extern long long fp_sq_count;
 extern long long fp_addsub_count;
+extern long long fp_inv_count;
 
 static inline void fp_sq1_rep(fp *x,long long n)
 {

@@ -32,6 +32,21 @@ double mean(uint64_t *vals, unsigned long its)
     return sum / (double) its;
 }
 
+
+double mean_long(long long *vals, unsigned long its)
+{
+    long long sum = 0;
+    for (size_t i = 0; i < its; ++i)
+        sum += vals[i];
+    return sum / (double) its;
+}
+
+double median_long(long long *vals, unsigned long its)
+{
+    qsort(vals, its, sizeof(*vals), cmp_uint64_t);
+    return vals[its / 2];
+}
+
 void test_nike_1(void)
 {
   private_key priv_alice, priv_bob;
@@ -70,6 +85,12 @@ int main(int argc,char **argv)
   unsigned long its = KEYS*target;
 
   printf("its %lu\n",its);
+
+  long long *invs = calloc(its, sizeof(long long)),
+            *mulss = calloc(its, sizeof(long long)),
+            *sqss = calloc(its, sizeof(long long)),
+            *addsubs = calloc(its, sizeof(long long));
+
   uint64_t *times_csidh = calloc(its, sizeof(uint64_t));
   uint64_t *times_private = calloc(KEYS, sizeof(uint64_t));  
 
@@ -109,7 +130,6 @@ int main(int argc,char **argv)
 
     test_nike_1();
     for (long long key = 0;key < KEYS;++key) {
-      fp_mulsq_count = fp_sq_count = fp_addsub_count = 0;
       bool ok = validate(&pub_bob[key]);
       //cycles = cpucycles()-cycles;
       assert(ok);
@@ -117,10 +137,15 @@ int main(int argc,char **argv)
       for (long long b = 0;b < primes_batches;++b)
         csidh_statsucceeded[b] = csidh_stattried[b] = 0;
       fp_mulsq_count = fp_sq_count = fp_addsub_count = 0;
+      fp_inv_count = 0;
       t0_csidh = get_time_ns();
       action(&action_output[key],&pub_bob[key],&priv_alice[key]);
       t1_csidh = get_time_ns();
       times_csidh[i] = t1_csidh - t0_csidh;
+      invs[i] = fp_inv_count;
+      mulss[i] = fp_mulsq_count;
+      sqss[i] = fp_sq_count;
+      addsubs[i] = fp_addsub_count;
       //set loop*key element of timing to cycles
       i = i + 1;
       for (long long b = 0;b < primes_batches;++b)
@@ -132,15 +157,22 @@ int main(int argc,char **argv)
   }
  
   printf("Mean private Key gen in ns: %lf\n",mean(times_private,KEYS));
-  printf("Mediam private Key gen in ns: %llu\n",median(times_private,KEYS));
+  printf("Median private Key gen in ns: %llu\n",median(times_private,KEYS));
   printf("Mean private Key gen in ms: %lf\n",mean(times_private,KEYS)/1000000);
-
+  printf("Median private Key gen in ms: %llu\n",median(times_private,KEYS)/1000000);
   printf("Mean ctidh in ns: %lf\n",mean(times_csidh,its));
-  printf("Mediam ctidh in ns: %llu\n",median(times_csidh,its));
   printf("Mean ctidh in ms: %lf\n",mean(times_csidh,its)/1000000);
-  printf("Multiplications: %lld\n",fp_mulsq_count);  
-  printf("Squarings: %lld\n",fp_sq_count);
-  printf("Additions/subtractions: %lld\n",fp_addsub_count);
+  printf("Median ctidh in ns: %llu\n",median(times_csidh,its));
+  printf("Median ctidh in ms: %llu\n",median(times_csidh,its)/1000000);
+
+  printf("Mean Multiplications and Squarings: %lf\n",mean_long(mulss,its));
+  printf("Median Multiplications and Squarings: %f\n",median_long(mulss,its));
+
+  printf("Mean Additions/subtractions: %lf\n",mean_long(addsubs,its));
+  printf("Median Additions/subtractions: %f\n",median_long(addsubs,its));
+  printf("Mean Inversions: %lf\n",mean_long(invs,its));
+  printf("Median Inversions: %f\n",median_long(invs,its));
+  
 
   fflush(stdout);
   return 0;

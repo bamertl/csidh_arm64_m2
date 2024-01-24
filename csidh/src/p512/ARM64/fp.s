@@ -440,7 +440,7 @@ _fp_inv:
     str x4, [x3]
 
 
-   B _fp_inv_hardcoded
+    B _fp_inv_hardcoded
 
 /*
 c[x0] = a[x0]^b[x1] mod p
@@ -549,14 +549,6 @@ bool fp_issquare(fp *x)
 */
 .global _fp_issquare
 _fp_issquare:
-        // load mul count pointer
-    adrp x3, _fp_mul_counter@PAGE
-    add x3, x3, _fp_mul_counter@PAGEOFF
-    ldr x4, [x3] // pointer_value in x4
-    sub sp, sp, #16
-    stp lr, x4, [sp, #0] // store lr and pointer_value on stack
-    str xzr, [x3] // set pointer_value to 0
-
     // update square counter
     adrp x3, _fp_sqt_counter@PAGE
     add x3, x3, _fp_sqt_counter@PAGEOFF
@@ -586,13 +578,6 @@ _not_square:
 _issquare_end:
     ldr lr, [sp, #0]
     add sp, sp, #16
-    
-    ldp lr, x4, [sp, #0] // load back lr and pointer_value
-    add sp, sp, #16
-    adrp x3, _fp_mul_counter@PAGE
-    add x3, x3, _fp_mul_counter@PAGEOFF
-    str x4, [x3] // restore pointer_value
-
     ret
 
 /*

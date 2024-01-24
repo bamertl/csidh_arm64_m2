@@ -5,6 +5,7 @@
 // 174 mults, 1014 squarings
 void fp_inv(fp *x)
 {
+  fp_inv_count++;
   fp r0;
   r0 = *x; // 1
   fp r1;

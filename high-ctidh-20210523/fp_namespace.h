@@ -4,6 +4,7 @@
 #define fp_add2 NAMESPACEBITS(fp_add2)
 #define fp_add3 NAMESPACEBITS(fp_add3)
 #define fp_addsub_count NAMESPACEBITS(fp_addsub_count)
+#define fp_inv_count NAMESPACEBITS(fp_inv_count)
 #define fp_cmov NAMESPACEBITS(fp_cmov)
 #define fp_copy NAMESPACEBITS(fp_copy)
 #define fp_cswap NAMESPACEBITS(fp_cswap)

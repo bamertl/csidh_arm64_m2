@@ -39,6 +39,9 @@ fp_sq_count:
 .global fp_addsub_count
 fp_addsub_count: 
 	.quad 0
+.global fp_inv_count
+fp_inv_count: 
+	.quad 0
 
 .text
 .align 4
