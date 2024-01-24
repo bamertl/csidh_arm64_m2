@@ -247,6 +247,7 @@ _fp_sub3:
 	add sp, sp, #160
 	ret
 
+
 /*
  [x0] = [x0] * [x0] mod [p]  
 */
@@ -294,15 +295,6 @@ _fp_sq2:
 */
 .global _fp_inv
 _fp_inv: 
-	/* First we set the mul counter pointer to 0, so it doesnt get updated, later we restore it */
-	adrp x3, _fp_mul_counter@PAGE
-	add x3, x3, _fp_mul_counter@PAGEOFF
-	ldr x4, [x3, #0]  // load counter pointer 
-	sub sp, sp, #32
-	stp lr, x3, [sp, #0]
-	str x4, [sp, #16]
-	str xzr, [x3, #0]
-
 	/* Count up inv_counter */
 	adrp x3, _fp_inv_counter@PAGE
 	add x3, x3, _fp_inv_counter@PAGEOFF
@@ -313,15 +305,8 @@ _fp_inv:
 	str x4, [x3, #0]
 
 	0: // skip label
-	adrp x1, _p_minus_2@PAGE
-	add x1, x1, _p_minus_2@PAGEOFF
-	bl _fp_pow
-	/* Restore Mul Counter */
-	ldp lr, x3, [sp, #0]
-	ldr x4, [sp, #16]
-	add sp, sp, #32
-	str x4, [x3, #0]
-	ret
+	/* We use the hardcoded inverse by djb */
+	 B _fp_inv_hardcoded
 
 /*
  [x0] = [x0] ^ [x1] mod [p] 

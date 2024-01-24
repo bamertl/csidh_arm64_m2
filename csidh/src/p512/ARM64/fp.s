@@ -7,6 +7,7 @@
 .extern _mu
 .extern _fp_mul3
 
+
 .data
 .global _fp_sq_counter
 _fp_sq_counter: .quad 0
@@ -389,6 +390,7 @@ we want to override a[x0] only at the very end
 */
 .global _fp_inv
 _fp_inv:
+/*
     // load mul count pointer
     adrp x3, _fp_mul_counter@PAGE
     add x3, x3, _fp_mul_counter@PAGEOFF
@@ -416,7 +418,18 @@ _fp_inv:
     adrp x3, _fp_mul_counter@PAGE
     add x3, x3, _fp_mul_counter@PAGEOFF
     str x4, [x3] // restore pointer_value
-    ret
+*/
+    // add to inv counter
+    adrp x3, _fp_inv_counter@PAGE
+    add x3, x3, _fp_inv_counter@PAGEOFF
+    ldr x3, [x3]
+    cbz x3, 0f
+    ldr x4, [x3]
+    add x4, x4, #1
+    str x4, [x3]
+
+
+   B _fp_inv_hardcoded
 
 /*
 c[x0] = a[x0]^b[x1] mod p
