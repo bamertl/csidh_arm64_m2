@@ -433,7 +433,7 @@ def write_fp_inv(f):
     #f.write('\tbl %s\n' % global_functions['_fp_pow'])
     #restore_mul_counter(f)
     comment(f, "We use the hardcoded inverse by djb")
-    f.write('\t B %s\n\n' % extern_variables['_fp_inv_hardcoded'])
+    f.write('\tB %s\n\n' % extern_variables['_fp_inv_hardcoded'])
 
 
 
