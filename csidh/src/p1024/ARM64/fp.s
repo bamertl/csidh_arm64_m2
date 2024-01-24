@@ -448,6 +448,8 @@ _fp_issquare:
 	str x4, [x3, #0]
 
 	0: // skip label
+	sub sp, sp, #16
+	str lr, [sp, #0]
 	adrp x1, _p_minus_1_halves@PAGE
 	add x1, x1, _p_minus_1_halves@PAGEOFF
 	bl _fp_pow // [x0] = [x0] ^ [p_minus1_halves] mod [p] 
@@ -458,6 +460,8 @@ _fp_issquare:
 	bl _fp_eq // x0 = [x0] == [x1] 
 	/* If equal (1) it is a quadratic residue!! */
 
+	ldr lr, [sp, #0]
+	add sp, sp, #16
 	ret
 
 .global _fp_random

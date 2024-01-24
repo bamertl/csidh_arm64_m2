@@ -550,6 +550,9 @@ def write_fp_issquare(f):
     introduce_global_function(f, global_functions['_fp_issquare'],
                               'return 1 if [x0] is a square, 0 otherwise')
     increase_counter(f, counter_variables['_fp_sqt_counter']) 
+    REGS_TO_STORE = ['lr']
+    sub_stack_and_store_on_stack(f, REGS_TO_STORE, 0)
+
     p_minus1_halves = 'x1'
     load_label_address_into_register(f, extern_variables['_p_minus_1_halves'], p_minus1_halves)
     f.write('\tbl %s // [x0] = [x0] ^ [p_minus1_halves] mod [p] \n\n' % global_functions['_fp_pow'])
@@ -558,6 +561,7 @@ def write_fp_issquare(f):
     f.write('\tbl %s // x0 = [x0] == [x1] \n' % global_functions['_fp_eq'])
     comment(f, "If equal (1) it is a quadratic residue!!")
     newlines(f,1)
+    add_stack_and_restore_regs_from_stack(f, REGS_TO_STORE, 0)
     f.write('\tret\n\n')
 
 def write_fp_random(f):
