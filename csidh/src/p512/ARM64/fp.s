@@ -391,46 +391,18 @@ we want to override a[x0] only at the very end
 .global _fp_inv
 _fp_inv:
 
+
     // add to inv counter
     adrp x3, _fp_inv_counter@PAGE
-<<<<<<< Updated upstream
-    add x3, x3, _fp_inv_counter@PAGEOFF
-    ldr x3, [x3]
-    cbz x3, 0f
-    ldr x4, [x3]
-    add x4, x4, #1
-    str x4, [x3]
-
-    0:
-    adrp x1, _p_minus_2@PAGE  //get _p_minus_2 address into x1 for the fp_pow function
-    add x1, x1, _p_minus_2@PAGEOFF //add offset of _p_minus_2 to x1
-    bl _fp_pow //use the power of fermat
-
-    ldp lr, x4, [sp, #0] // load back lr and pointer_value
-    add sp, sp, #16
-    adrp x3, _fp_mul_counter@PAGE
-    add x3, x3, _fp_mul_counter@PAGEOFF
-    str x4, [x3] // restore pointer_value
-*/
-    // add to inv counter
-    adrp x3, _fp_inv_counter@PAGE
-    add x3, x3, _fp_inv_counter@PAGEOFF
-    ldr x3, [x3]
-    cbz x3, 0f
-    ldr x4, [x3]
-    add x4, x4, #1
-    str x4, [x3]
-=======
 	add x3, x3, _fp_inv_counter@PAGEOFF
 	ldr x3, [x3, #0]  // load counter pointer 
 	cbz x3, 0f // skip to 0f if pointer to mul_counter is 0 
 	ldr x4, [x3, #0]  // load counter value 
 	adds x4, x4, #1  // increase counter value 
 	str x4, [x3, #0]
->>>>>>> Stashed changes
 
-
-   B _fp_inv_hardcoded
+    0: //skip label
+    B _fp_inv_hardcoded
 
 /*
 c[x0] = a[x0]^b[x1] mod p
