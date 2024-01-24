@@ -1,0 +1,1466 @@
+ 33m > 0m 0x100004704 < 4>: add x3 x3 0x14
+ 33m > 0m 0x100004708 < 8>: ldr x3 x3 
+ 33m > 0m 0x10000470c < 12>: cbz x3 0x10000471c ; < 28>
+ 33m > 0m 0x10000471c < 28>: sub sp sp 0xe0
+ 33m > 0m 0x100004720 < 32>: stp x30 x0 sp 
+ 33m > 0m 0x100004724 < 36>: stp x19 x20 sp 0x10 
+ 33m > 0m 0x100004728 < 40>: stp x21 x22 sp 0x20 
+ 33m > 0m 0x10000472c < 44>: mov x0 x2
+ 33m > 0m 0x100004730 < 48>: add x2 sp 0x40
+ 33m > 0m 0x100004734 < 52>: bl 0x100004954 ; uint mul 512x512
+ 33m > 0m 0x100004954 < 0>: sub sp sp 0x70
+ 33m > 0m 0x100004958 < 4>: stp x30 x0 sp 
+ 33m > 0m 0x10000495c < 8>: stp x1 x2 sp 0x10 
+ 33m > 0m 0x100004960 < 12>: stp x19 x20 sp 0x20 
+ 33m > 0m 0x100004964 < 16>: stp x21 x22 sp 0x30 
+ 33m > 0m 0x100004968 < 20>: stp x23 x24 sp 0x40 
+ 33m > 0m 0x10000496c < 24>: stp x25 x26 sp 0x50 
+ 33m > 0m 0x100004970 < 28>: stp x27 x28 sp 0x60 
+ 33m > 0m 0x100004974 < 32>: ldp x3 x4 x0 
+ 33m > 0m 0x100004978 < 36>: ldp x5 x6 x0 0x10 
+ 33m > 0m 0x10000497c < 40>: ldp x7 x8 x1 
+ 33m > 0m 0x100004980 < 44>: ldp x9 x10 x1 0x10 
+ 33m > 0m 0x100004984 < 48>: mul x11 x3 x7
+ 33m > 0m 0x100004988 < 52>: umulh x12 x3 x7
+ 33m > 0m 0x10000498c < 56>: mul x20 x3 x8
+ 33m > 0m 0x100004990 < 60>: mul x21 x4 x7
+ 33m > 0m 0x100004994 < 64>: adds x12 x12 x20
+ 33m > 0m 0x100004998 < 68>: adcs x13 xzr xzr
+ 33m > 0m 0x10000499c < 72>: adds x12 x12 x21
+ 33m > 0m 0x1000049a0 < 76>: adcs x13 x13 xzr
+ 33m > 0m 0x1000049a4 < 80>: adcs x14 xzr xzr
+ 33m > 0m 0x1000049a8 < 84>: umulh x20 x3 x8
+ 33m > 0m 0x1000049ac < 88>: umulh x21 x4 x7
+ 33m > 0m 0x1000049b0 < 92>: adds x13 x20 x13
+ 33m > 0m 0x1000049b4 < 96>: adcs x14 x14 xzr
+ 33m > 0m 0x1000049b8 < 100>: adds x13 x13 x21
+ 33m > 0m 0x1000049bc < 104>: adcs x14 x14 xzr
+ 33m > 0m 0x1000049c0 < 108>: mul x20 x4 x8
+ 33m > 0m 0x1000049c4 < 112>: umulh x21 x4 x8
+ 33m > 0m 0x1000049c8 < 116>: adds x13 x13 x20
+ 33m > 0m 0x1000049cc < 120>: adcs x14 x14 xzr
+ 33m > 0m 0x1000049d0 < 124>: adcs x14 x14 x21
+ 33m > 0m 0x1000049d4 < 128>: mul x15 x5 x9
+ 33m > 0m 0x1000049d8 < 132>: umulh x16 x5 x9
+ 33m > 0m 0x1000049dc < 136>: mul x20 x5 x10
+ 33m > 0m 0x1000049e0 < 140>: mul x21 x6 x9
+ 33m > 0m 0x1000049e4 < 144>: adds x16 x16 x20
+ 33m > 0m 0x1000049e8 < 148>: adcs x17 xzr xzr
+ 33m > 0m 0x1000049ec < 152>: adds x16 x16 x21
+ 33m > 0m 0x1000049f0 < 156>: adcs x17 x17 xzr
+ 33m > 0m 0x1000049f4 < 160>: adcs x19 xzr xzr
+ 33m > 0m 0x1000049f8 < 164>: umulh x20 x5 x10
+ 33m > 0m 0x1000049fc < 168>: umulh x21 x6 x9
+ 33m > 0m 0x100004a00 < 172>: adds x17 x20 x17
+ 33m > 0m 0x100004a04 < 176>: adcs x19 x19 xzr
+ 33m > 0m 0x100004a08 < 180>: adds x17 x17 x21
+ 33m > 0m 0x100004a0c < 184>: adcs x19 x19 xzr
+ 33m > 0m 0x100004a10 < 188>: mul x20 x6 x10
+ 33m > 0m 0x100004a14 < 192>: umulh x21 x6 x10
+ 33m > 0m 0x100004a18 < 196>: adds x17 x17 x20
+ 33m > 0m 0x100004a1c < 200>: adcs x19 x19 xzr
+ 33m > 0m 0x100004a20 < 204>: adcs x19 x19 x21
+ 33m > 0m 0x100004a24 < 208>: adds x20 x13 x11
+ 33m > 0m 0x100004a28 < 212>: adcs x21 x14 x12
+ 33m > 0m 0x100004a2c < 216>: adcs x22 x15 x13
+ 33m > 0m 0x100004a30 < 220>: adcs x23 x16 x14
+ 33m > 0m 0x100004a34 < 224>: adc x30 xzr xzr
+ 33m > 0m 0x100004a38 < 228>: adds x13 x20 x15
+ 33m > 0m 0x100004a3c < 232>: adcs x14 x21 x16
+ 33m > 0m 0x100004a40 < 236>: adcs x15 x22 x17
+ 33m > 0m 0x100004a44 < 240>: adcs x16 x23 x19
+ 33m > 0m 0x100004a48 < 244>: adcs x17 x30 x17
+ 33m > 0m 0x100004a4c < 248>: adcs x19 xzr x19
+ 33m > 0m 0x100004a50 < 252>: subs x3 x5 x3
+ 33m > 0m 0x100004a54 < 256>: sbcs x4 x6 x4
+ 33m > 0m 0x100004a58 < 260>: cinv x3 x3 lo
+ 33m > 0m 0x100004a5c < 264>: cinv x4 x4 lo
+ 33m > 0m 0x100004a60 < 268>: cset x5 lo
+ 33m > 0m 0x100004a64 < 272>: adds x3 x3 x5
+ 33m > 0m 0x100004a68 < 276>: adc x4 x4 xzr
+ 33m > 0m 0x100004a6c < 280>: subs x7 x9 x7
+ 33m > 0m 0x100004a70 < 284>: sbcs x8 x10 x8
+ 33m > 0m 0x100004a74 < 288>: cinv x7 x7 lo
+ 33m > 0m 0x100004a78 < 292>: cinv x8 x8 lo
+ 33m > 0m 0x100004a7c < 296>: cset x9 lo
+ 33m > 0m 0x100004a80 < 300>: adds x7 x7 x9
+ 33m > 0m 0x100004a84 < 304>: adc x8 x8 xzr
+ 33m > 0m 0x100004a88 < 308>: eor x5 x5 x9
+ 33m > 0m 0x100004a8c < 312>: sub x5 x5 0x1
+ 33m > 0m 0x100004a90 < 316>: mul x20 x3 x7
+ 33m > 0m 0x100004a94 < 320>: umulh x21 x3 x7
+ 33m > 0m 0x100004a98 < 324>: mul x30 x3 x8
+ 33m > 0m 0x100004a9c < 328>: mul x9 x4 x7
+ 33m > 0m 0x100004aa0 < 332>: adds x21 x21 x30
+ 33m > 0m 0x100004aa4 < 336>: adcs x22 xzr xzr
+ 33m > 0m 0x100004aa8 < 340>: adds x21 x21 x9
+ 33m > 0m 0x100004aac < 344>: adcs x22 x22 xzr
+ 33m > 0m 0x100004ab0 < 348>: adcs x23 xzr xzr
+ 33m > 0m 0x100004ab4 < 352>: umulh x30 x3 x8
+ 33m > 0m 0x100004ab8 < 356>: umulh x9 x4 x7
+ 33m > 0m 0x100004abc < 360>: adds x22 x30 x22
+ 33m > 0m 0x100004ac0 < 364>: adcs x23 x23 xzr
+ 33m > 0m 0x100004ac4 < 368>: adds x22 x22 x9
+ 33m > 0m 0x100004ac8 < 372>: adcs x23 x23 xzr
+ 33m > 0m 0x100004acc < 376>: mul x30 x4 x8
+ 33m > 0m 0x100004ad0 < 380>: umulh x9 x4 x8
+ 33m > 0m 0x100004ad4 < 384>: adds x22 x22 x30
+ 33m > 0m 0x100004ad8 < 388>: adcs x23 x23 xzr
+ 33m > 0m 0x100004adc < 392>: adcs x23 x23 x9
+ 33m > 0m 0x100004ae0 < 396>: eor x20 x20 x5
+ 33m > 0m 0x100004ae4 < 400>: eor x21 x21 x5
+ 33m > 0m 0x100004ae8 < 404>: eor x22 x22 x5
+ 33m > 0m 0x100004aec < 408>: eor x23 x23 x5
+ 33m > 0m 0x100004af0 < 412>: and x30 x5 0x1
+ 33m > 0m 0x100004af4 < 416>: adds x20 x20 x30
+ 33m > 0m 0x100004af8 < 420>: adcs x21 x21 xzr
+ 33m > 0m 0x100004afc < 424>: adcs x22 x22 xzr
+ 33m > 0m 0x100004b00 < 428>: adcs x23 x23 xzr
+ 33m > 0m 0x100004b04 < 432>: adcs x30 x5 xzr
+ 33m > 0m 0x100004b08 < 436>: adds x13 x13 x20
+ 33m > 0m 0x100004b0c < 440>: adcs x14 x14 x21
+ 33m > 0m 0x100004b10 < 444>: adcs x15 x15 x22
+ 33m > 0m 0x100004b14 < 448>: adcs x16 x16 x23
+ 33m > 0m 0x100004b18 < 452>: adcs x17 x17 x30
+ 33m > 0m 0x100004b1c < 456>: adcs x17 x17 x30
+ 33m > 0m 0x100004b20 < 460>: stp x11 x12 x2 
+ 33m > 0m 0x100004b24 < 464>: stp x13 x14 x2 0x10 
+ 33m > 0m 0x100004b28 < 468>: ldp x3 x4 x0 0x20 
+ 33m > 0m 0x100004b2c < 472>: ldp x5 x6 x0 0x30 
+ 33m > 0m 0x100004b30 < 476>: ldp x7 x8 x1 0x20 
+ 33m > 0m 0x100004b34 < 480>: ldp x9 x10 x1 0x30 
+ 33m > 0m 0x100004b38 < 484>: mul x20 x3 x7
+ 33m > 0m 0x100004b3c < 488>: umulh x21 x3 x7
+ 33m > 0m 0x100004b40 < 492>: mul x28 x3 x8
+ 33m > 0m 0x100004b44 < 496>: mul x30 x4 x7
+ 33m > 0m 0x100004b48 < 500>: adds x21 x21 x28
+ 33m > 0m 0x100004b4c < 504>: adcs x22 xzr xzr
+ 33m > 0m 0x100004b50 < 508>: adds x21 x21 x30
+ 33m > 0m 0x100004b54 < 512>: adcs x22 x22 xzr
+ 33m > 0m 0x100004b58 < 516>: adcs x23 xzr xzr
+ 33m > 0m 0x100004b5c < 520>: umulh x28 x3 x8
+ 33m > 0m 0x100004b60 < 524>: umulh x30 x4 x7
+ 33m > 0m 0x100004b64 < 528>: adds x22 x28 x22
+ 33m > 0m 0x100004b68 < 532>: adcs x23 x23 xzr
+ 33m > 0m 0x100004b6c < 536>: adds x22 x22 x30
+ 33m > 0m 0x100004b70 < 540>: adcs x23 x23 xzr
+ 33m > 0m 0x100004b74 < 544>: mul x28 x4 x8
+ 33m > 0m 0x100004b78 < 548>: umulh x30 x4 x8
+ 33m > 0m 0x100004b7c < 552>: adds x22 x22 x28
+ 33m > 0m 0x100004b80 < 556>: adcs x23 x23 xzr
+ 33m > 0m 0x100004b84 < 560>: adcs x23 x23 x30
+ 33m > 0m 0x100004b88 < 564>: mul x24 x5 x9
+ 33m > 0m 0x100004b8c < 568>: umulh x25 x5 x9
+ 33m > 0m 0x100004b90 < 572>: mul x28 x5 x10
+ 33m > 0m 0x100004b94 < 576>: mul x30 x6 x9
+ 33m > 0m 0x100004b98 < 580>: adds x25 x25 x28
+ 33m > 0m 0x100004b9c < 584>: adcs x26 xzr xzr
+ 33m > 0m 0x100004ba0 < 588>: adds x25 x25 x30
+ 33m > 0m 0x100004ba4 < 592>: adcs x26 x26 xzr
+ 33m > 0m 0x100004ba8 < 596>: adcs x27 xzr xzr
+ 33m > 0m 0x100004bac < 600>: umulh x28 x5 x10
+ 33m > 0m 0x100004bb0 < 604>: umulh x30 x6 x9
+ 33m > 0m 0x100004bb4 < 608>: adds x26 x28 x26
+ 33m > 0m 0x100004bb8 < 612>: adcs x27 x27 xzr
+ 33m > 0m 0x100004bbc < 616>: adds x26 x26 x30
+ 33m > 0m 0x100004bc0 < 620>: adcs x27 x27 xzr
+ 33m > 0m 0x100004bc4 < 624>: mul x28 x6 x10
+ 33m > 0m 0x100004bc8 < 628>: umulh x30 x6 x10
+ 33m > 0m 0x100004bcc < 632>: adds x26 x26 x28
+ 33m > 0m 0x100004bd0 < 636>: adcs x27 x27 xzr
+ 33m > 0m 0x100004bd4 < 640>: adcs x27 x27 x30
+ 33m > 0m 0x100004bd8 < 644>: adds x28 x22 x20
+ 33m > 0m 0x100004bdc < 648>: adcs x30 x23 x21
+ 33m > 0m 0x100004be0 < 652>: adcs x11 x24 x22
+ 33m > 0m 0x100004be4 < 656>: adcs x12 x25 x23
+ 33m > 0m 0x100004be8 < 660>: adc x13 xzr xzr
+ 33m > 0m 0x100004bec < 664>: adds x22 x28 x24
+ 33m > 0m 0x100004bf0 < 668>: adcs x23 x30 x25
+ 33m > 0m 0x100004bf4 < 672>: adcs x24 x11 x26
+ 33m > 0m 0x100004bf8 < 676>: adcs x25 x12 x27
+ 33m > 0m 0x100004bfc < 680>: adcs x26 x13 x26
+ 33m > 0m 0x100004c00 < 684>: adcs x27 xzr x27
+ 33m > 0m 0x100004c04 < 688>: subs x3 x5 x3
+ 33m > 0m 0x100004c08 < 692>: sbcs x4 x6 x4
+ 33m > 0m 0x100004c0c < 696>: cinv x3 x3 lo
+ 33m > 0m 0x100004c10 < 700>: cinv x4 x4 lo
+ 33m > 0m 0x100004c14 < 704>: cset x5 lo
+ 33m > 0m 0x100004c18 < 708>: adds x3 x3 x5
+ 33m > 0m 0x100004c1c < 712>: adc x4 x4 xzr
+ 33m > 0m 0x100004c20 < 716>: subs x7 x9 x7
+ 33m > 0m 0x100004c24 < 720>: sbcs x8 x10 x8
+ 33m > 0m 0x100004c28 < 724>: cinv x7 x7 lo
+ 33m > 0m 0x100004c2c < 728>: cinv x8 x8 lo
+ 33m > 0m 0x100004c30 < 732>: cset x9 lo
+ 33m > 0m 0x100004c34 < 736>: adds x7 x7 x9
+ 33m > 0m 0x100004c38 < 740>: adc x8 x8 xzr
+ 33m > 0m 0x100004c3c < 744>: eor x5 x5 x9
+ 33m > 0m 0x100004c40 < 748>: sub x5 x5 0x1
+ 33m > 0m 0x100004c44 < 752>: mul x28 x3 x7
+ 33m > 0m 0x100004c48 < 756>: umulh x30 x3 x7
+ 33m > 0m 0x100004c4c < 760>: mul x13 x3 x8
+ 33m > 0m 0x100004c50 < 764>: mul x9 x4 x7
+ 33m > 0m 0x100004c54 < 768>: adds x30 x30 x13
+ 33m > 0m 0x100004c58 < 772>: adcs x11 xzr xzr
+ 33m > 0m 0x100004c5c < 776>: adds x30 x30 x9
+ 33m > 0m 0x100004c60 < 780>: adcs x11 x11 xzr
+ 33m > 0m 0x100004c64 < 784>: adcs x12 xzr xzr
+ 33m > 0m 0x100004c68 < 788>: umulh x13 x3 x8
+ 33m > 0m 0x100004c6c < 792>: umulh x9 x4 x7
+ 33m > 0m 0x100004c70 < 796>: adds x11 x13 x11
+ 33m > 0m 0x100004c74 < 800>: adcs x12 x12 xzr
+ 33m > 0m 0x100004c78 < 804>: adds x11 x11 x9
+ 33m > 0m 0x100004c7c < 808>: adcs x12 x12 xzr
+ 33m > 0m 0x100004c80 < 812>: mul x13 x4 x8
+ 33m > 0m 0x100004c84 < 816>: umulh x9 x4 x8
+ 33m > 0m 0x100004c88 < 820>: adds x11 x11 x13
+ 33m > 0m 0x100004c8c < 824>: adcs x12 x12 xzr
+ 33m > 0m 0x100004c90 < 828>: adcs x12 x12 x9
+ 33m > 0m 0x100004c94 < 832>: eor x28 x28 x5
+ 33m > 0m 0x100004c98 < 836>: eor x30 x30 x5
+ 33m > 0m 0x100004c9c < 840>: eor x11 x11 x5
+ 33m > 0m 0x100004ca0 < 844>: eor x12 x12 x5
+ 33m > 0m 0x100004ca4 < 848>: and x13 x5 0x1
+ 33m > 0m 0x100004ca8 < 852>: adds x28 x28 x13
+ 33m > 0m 0x100004cac < 856>: adcs x30 x30 xzr
+ 33m > 0m 0x100004cb0 < 860>: adcs x11 x11 xzr
+ 33m > 0m 0x100004cb4 < 864>: adcs x12 x12 xzr
+ 33m > 0m 0x100004cb8 < 868>: adcs x13 x5 xzr
+ 33m > 0m 0x100004cbc < 872>: adds x22 x22 x28
+ 33m > 0m 0x100004cc0 < 876>: adcs x23 x23 x30
+ 33m > 0m 0x100004cc4 < 880>: adcs x24 x24 x11
+ 33m > 0m 0x100004cc8 < 884>: adcs x25 x25 x12
+ 33m > 0m 0x100004ccc < 888>: adcs x26 x26 x13
+ 33m > 0m 0x100004cd0 < 892>: adcs x26 x26 x13
+ 33m > 0m 0x100004cd4 < 896>: ldp x11 x12 x2 
+ 33m > 0m 0x100004cd8 < 900>: ldp x13 x14 x2 0x10 
+ 33m > 0m 0x100004cdc < 904>: adds x3 x15 x11
+ 33m > 0m 0x100004ce0 < 908>: adcs x4 x16 x12
+ 33m > 0m 0x100004ce4 < 912>: adcs x5 x17 x13
+ 33m > 0m 0x100004ce8 < 916>: adcs x6 x19 x14
+ 33m > 0m 0x100004cec < 920>: adcs x7 x20 x15
+ 33m > 0m 0x100004cf0 < 924>: adcs x8 x21 x16
+ 33m > 0m 0x100004cf4 < 928>: adcs x9 x22 x17
+ 33m > 0m 0x100004cf8 < 932>: adcs x10 x23 x19
+ 33m > 0m 0x100004cfc < 936>: adcs x30 xzr xzr
+ 33m > 0m 0x100004d00 < 940>: adds x15 x3 x20
+ 33m > 0m 0x100004d04 < 944>: adcs x16 x4 x21
+ 33m > 0m 0x100004d08 < 948>: adcs x17 x5 x22
+ 33m > 0m 0x100004d0c < 952>: adcs x19 x6 x23
+ 33m > 0m 0x100004d10 < 956>: adcs x20 x7 x24
+ 33m > 0m 0x100004d14 < 960>: adcs x21 x8 x25
+ 33m > 0m 0x100004d18 < 964>: adcs x22 x9 x26
+ 33m > 0m 0x100004d1c < 968>: adcs x23 x10 x27
+ 33m > 0m 0x100004d20 < 972>: adcs x24 x30 x24
+ 33m > 0m 0x100004d24 < 976>: adcs x25 x25 xzr
+ 33m > 0m 0x100004d28 < 980>: adcs x26 x26 xzr
+ 33m > 0m 0x100004d2c < 984>: adcs x27 x27 xzr
+ 33m > 0m 0x100004d30 < 988>: stp x24 x25 x2 0x60 
+ 33m > 0m 0x100004d34 < 992>: stp x26 x27 x2 0x70 
+ 33m > 0m 0x100004d38 < 996>: ldp x3 x4 x0 
+ 33m > 0m 0x100004d3c < 1000>: ldp x5 x6 x0 0x10 
+ 33m > 0m 0x100004d40 < 1004>: ldp x7 x8 x0 0x20 
+ 33m > 0m 0x100004d44 < 1008>: ldp x9 x10 x0 0x30 
+ 33m > 0m 0x100004d48 < 1012>: subs x3 x3 x7
+ 33m > 0m 0x100004d4c < 1016>: sbcs x4 x4 x8
+ 33m > 0m 0x100004d50 < 1020>: sbcs x5 x5 x9
+ 33m > 0m 0x100004d54 < 1024>: sbcs x6 x6 x10
+ 33m > 0m 0x100004d58 < 1028>: cinv x3 x3 lo
+ 33m > 0m 0x100004d5c < 1032>: cinv x4 x4 lo
+ 33m > 0m 0x100004d60 < 1036>: cinv x5 x5 lo
+ 33m > 0m 0x100004d64 < 1040>: cinv x6 x6 lo
+ 33m > 0m 0x100004d68 < 1044>: cset x30 lo
+ 33m > 0m 0x100004d6c < 1048>: adds x3 x3 x30
+ 33m > 0m 0x100004d70 < 1052>: adcs x4 x4 xzr
+ 33m > 0m 0x100004d74 < 1056>: adcs x5 x5 xzr
+ 33m > 0m 0x100004d78 < 1060>: adcs x6 x6 xzr
+ 33m > 0m 0x100004d7c < 1064>: ldp x7 x8 x1 
+ 33m > 0m 0x100004d80 < 1068>: ldp x9 x10 x1 0x10 
+ 33m > 0m 0x100004d84 < 1072>: ldp x11 x12 x1 0x20 
+ 33m > 0m 0x100004d88 < 1076>: ldp x13 x14 x1 0x30 
+ 33m > 0m 0x100004d8c < 1080>: subs x7 x7 x11
+ 33m > 0m 0x100004d90 < 1084>: sbcs x8 x8 x12
+ 33m > 0m 0x100004d94 < 1088>: sbcs x9 x9 x13
+ 33m > 0m 0x100004d98 < 1092>: sbcs x10 x10 x14
+ 33m > 0m 0x100004d9c < 1096>: cinv x7 x7 lo
+ 33m > 0m 0x100004da0 < 1100>: cinv x8 x8 lo
+ 33m > 0m 0x100004da4 < 1104>: cinv x9 x9 lo
+ 33m > 0m 0x100004da8 < 1108>: cinv x10 x10 lo
+ 33m > 0m 0x100004dac < 1112>: cset x11 lo
+ 33m > 0m 0x100004db0 < 1116>: adds x7 x7 x11
+ 33m > 0m 0x100004db4 < 1120>: adcs x8 x8 xzr
+ 33m > 0m 0x100004db8 < 1124>: adcs x9 x9 xzr
+ 33m > 0m 0x100004dbc < 1128>: adcs x10 x10 xzr
+ 33m > 0m 0x100004dc0 < 1132>: eor x30 x30 x11
+ 33m > 0m 0x100004dc4 < 1136>: sub x30 x30 0x1
+ 33m > 0m 0x100004dc8 < 1140>: str x19 x2 0x38 
+ 33m > 0m 0x100004dcc < 1144>: stp x20 x21 x2 0x40 
+ 33m > 0m 0x100004dd0 < 1148>: stp x22 x23 x2 0x50 
+ 33m > 0m 0x100004dd4 < 1152>: mul x11 x3 x7
+ 33m > 0m 0x100004dd8 < 1156>: umulh x12 x3 x7
+ 33m > 0m 0x100004ddc < 1160>: mul x19 x3 x8
+ 33m > 0m 0x100004de0 < 1164>: mul x20 x4 x7
+ 33m > 0m 0x100004de4 < 1168>: adds x12 x12 x19
+ 33m > 0m 0x100004de8 < 1172>: adcs x13 xzr xzr
+ 33m > 0m 0x100004dec < 1176>: adds x12 x12 x20
+ 33m > 0m 0x100004df0 < 1180>: adcs x13 x13 xzr
+ 33m > 0m 0x100004df4 < 1184>: adcs x14 xzr xzr
+ 33m > 0m 0x100004df8 < 1188>: umulh x19 x3 x8
+ 33m > 0m 0x100004dfc < 1192>: umulh x20 x4 x7
+ 33m > 0m 0x100004e00 < 1196>: adds x13 x19 x13
+ 33m > 0m 0x100004e04 < 1200>: adcs x14 x14 xzr
+ 33m > 0m 0x100004e08 < 1204>: adds x13 x13 x20
+ 33m > 0m 0x100004e0c < 1208>: adcs x14 x14 xzr
+ 33m > 0m 0x100004e10 < 1212>: mul x19 x4 x8
+ 33m > 0m 0x100004e14 < 1216>: umulh x20 x4 x8
+ 33m > 0m 0x100004e18 < 1220>: adds x13 x13 x19
+ 33m > 0m 0x100004e1c < 1224>: adcs x14 x14 xzr
+ 33m > 0m 0x100004e20 < 1228>: adcs x14 x14 x20
+ 33m > 0m 0x100004e24 < 1232>: mul x25 x5 x9
+ 33m > 0m 0x100004e28 < 1236>: umulh x26 x5 x9
+ 33m > 0m 0x100004e2c < 1240>: mul x19 x5 x10
+ 33m > 0m 0x100004e30 < 1244>: mul x20 x6 x9
+ 33m > 0m 0x100004e34 < 1248>: adds x26 x26 x19
+ 33m > 0m 0x100004e38 < 1252>: adcs x27 xzr xzr
+ 33m > 0m 0x100004e3c < 1256>: adds x26 x26 x20
+ 33m > 0m 0x100004e40 < 1260>: adcs x27 x27 xzr
+ 33m > 0m 0x100004e44 < 1264>: adcs x28 xzr xzr
+ 33m > 0m 0x100004e48 < 1268>: umulh x19 x5 x10
+ 33m > 0m 0x100004e4c < 1272>: umulh x20 x6 x9
+ 33m > 0m 0x100004e50 < 1276>: adds x27 x19 x27
+ 33m > 0m 0x100004e54 < 1280>: adcs x28 x28 xzr
+ 33m > 0m 0x100004e58 < 1284>: adds x27 x27 x20
+ 33m > 0m 0x100004e5c < 1288>: adcs x28 x28 xzr
+ 33m > 0m 0x100004e60 < 1292>: mul x19 x6 x10
+ 33m > 0m 0x100004e64 < 1296>: umulh x20 x6 x10
+ 33m > 0m 0x100004e68 < 1300>: adds x27 x27 x19
+ 33m > 0m 0x100004e6c < 1304>: adcs x28 x28 xzr
+ 33m > 0m 0x100004e70 < 1308>: adcs x28 x28 x20
+ 33m > 0m 0x100004e74 < 1312>: adds x19 x13 x11
+ 33m > 0m 0x100004e78 < 1316>: adcs x20 x14 x12
+ 33m > 0m 0x100004e7c < 1320>: adcs x21 x25 x13
+ 33m > 0m 0x100004e80 < 1324>: adcs x22 x26 x14
+ 33m > 0m 0x100004e84 < 1328>: adc x23 xzr xzr
+ 33m > 0m 0x100004e88 < 1332>: adds x13 x19 x25
+ 33m > 0m 0x100004e8c < 1336>: adcs x14 x20 x26
+ 33m > 0m 0x100004e90 < 1340>: adcs x25 x21 x27
+ 33m > 0m 0x100004e94 < 1344>: adcs x26 x22 x28
+ 33m > 0m 0x100004e98 < 1348>: adcs x27 x23 x27
+ 33m > 0m 0x100004e9c < 1352>: adcs x28 xzr x28
+ 33m > 0m 0x100004ea0 < 1356>: subs x3 x5 x3
+ 33m > 0m 0x100004ea4 < 1360>: sbcs x4 x6 x4
+ 33m > 0m 0x100004ea8 < 1364>: cinv x3 x3 lo
+ 33m > 0m 0x100004eac < 1368>: cinv x4 x4 lo
+ 33m > 0m 0x100004eb0 < 1372>: cset x5 lo
+ 33m > 0m 0x100004eb4 < 1376>: adds x3 x3 x5
+ 33m > 0m 0x100004eb8 < 1380>: adc x4 x4 xzr
+ 33m > 0m 0x100004ebc < 1384>: subs x7 x9 x7
+ 33m > 0m 0x100004ec0 < 1388>: sbcs x8 x10 x8
+ 33m > 0m 0x100004ec4 < 1392>: cinv x7 x7 lo
+ 33m > 0m 0x100004ec8 < 1396>: cinv x8 x8 lo
+ 33m > 0m 0x100004ecc < 1400>: cset x9 lo
+ 33m > 0m 0x100004ed0 < 1404>: adds x7 x7 x9
+ 33m > 0m 0x100004ed4 < 1408>: adc x8 x8 xzr
+ 33m > 0m 0x100004ed8 < 1412>: eor x5 x5 x9
+ 33m > 0m 0x100004edc < 1416>: sub x5 x5 0x1
+ 33m > 0m 0x100004ee0 < 1420>: mul x19 x3 x7
+ 33m > 0m 0x100004ee4 < 1424>: umulh x20 x3 x7
+ 33m > 0m 0x100004ee8 < 1428>: mul x23 x3 x8
+ 33m > 0m 0x100004eec < 1432>: mul x9 x4 x7
+ 33m > 0m 0x100004ef0 < 1436>: adds x20 x20 x23
+ 33m > 0m 0x100004ef4 < 1440>: adcs x21 xzr xzr
+ 33m > 0m 0x100004ef8 < 1444>: adds x20 x20 x9
+ 33m > 0m 0x100004efc < 1448>: adcs x21 x21 xzr
+ 33m > 0m 0x100004f00 < 1452>: adcs x22 xzr xzr
+ 33m > 0m 0x100004f04 < 1456>: umulh x23 x3 x8
+ 33m > 0m 0x100004f08 < 1460>: umulh x9 x4 x7
+ 33m > 0m 0x100004f0c < 1464>: adds x21 x23 x21
+ 33m > 0m 0x100004f10 < 1468>: adcs x22 x22 xzr
+ 33m > 0m 0x100004f14 < 1472>: adds x21 x21 x9
+ 33m > 0m 0x100004f18 < 1476>: adcs x22 x22 xzr
+ 33m > 0m 0x100004f1c < 1480>: mul x23 x4 x8
+ 33m > 0m 0x100004f20 < 1484>: umulh x9 x4 x8
+ 33m > 0m 0x100004f24 < 1488>: adds x21 x21 x23
+ 33m > 0m 0x100004f28 < 1492>: adcs x22 x22 xzr
+ 33m > 0m 0x100004f2c < 1496>: adcs x22 x22 x9
+ 33m > 0m 0x100004f30 < 1500>: eor x19 x19 x5
+ 33m > 0m 0x100004f34 < 1504>: eor x20 x20 x5
+ 33m > 0m 0x100004f38 < 1508>: eor x21 x21 x5
+ 33m > 0m 0x100004f3c < 1512>: eor x22 x22 x5
+ 33m > 0m 0x100004f40 < 1516>: and x23 x5 0x1
+ 33m > 0m 0x100004f44 < 1520>: adds x19 x19 x23
+ 33m > 0m 0x100004f48 < 1524>: adcs x20 x20 xzr
+ 33m > 0m 0x100004f4c < 1528>: adcs x21 x21 xzr
+ 33m > 0m 0x100004f50 < 1532>: adcs x22 x22 xzr
+ 33m > 0m 0x100004f54 < 1536>: adcs x23 x5 xzr
+ 33m > 0m 0x100004f58 < 1540>: adds x13 x13 x19
+ 33m > 0m 0x100004f5c < 1544>: adcs x14 x14 x20
+ 33m > 0m 0x100004f60 < 1548>: adcs x25 x25 x21
+ 33m > 0m 0x100004f64 < 1552>: adcs x26 x26 x22
+ 33m > 0m 0x100004f68 < 1556>: adcs x27 x27 x23
+ 33m > 0m 0x100004f6c < 1560>: adcs x27 x27 x23
+ 33m > 0m 0x100004f70 < 1564>: ldr x19 x2 0x38 
+ 33m > 0m 0x100004f74 < 1568>: ldp x20 x21 x2 0x40 
+ 33m > 0m 0x100004f78 < 1572>: ldp x22 x23 x2 0x50 
+ 33m > 0m 0x100004f7c < 1576>: eor x3 x11 x30
+ 33m > 0m 0x100004f80 < 1580>: eor x4 x12 x30
+ 33m > 0m 0x100004f84 < 1584>: eor x5 x13 x30
+ 33m > 0m 0x100004f88 < 1588>: eor x6 x14 x30
+ 33m > 0m 0x100004f8c < 1592>: eor x7 x25 x30
+ 33m > 0m 0x100004f90 < 1596>: eor x8 x26 x30
+ 33m > 0m 0x100004f94 < 1600>: eor x9 x27 x30
+ 33m > 0m 0x100004f98 < 1604>: eor x10 x28 x30
+ 33m > 0m 0x100004f9c < 1608>: and x28 x30 0x1
+ 33m > 0m 0x100004fa0 < 1612>: adds x3 x3 x28
+ 33m > 0m 0x100004fa4 < 1616>: adcs x4 x4 xzr
+ 33m > 0m 0x100004fa8 < 1620>: adcs x5 x5 xzr
+ 33m > 0m 0x100004fac < 1624>: adcs x6 x6 xzr
+ 33m > 0m 0x100004fb0 < 1628>: adcs x7 x7 xzr
+ 33m > 0m 0x100004fb4 < 1632>: adcs x8 x8 xzr
+ 33m > 0m 0x100004fb8 < 1636>: adcs x9 x9 xzr
+ 33m > 0m 0x100004fbc < 1640>: adcs x10 x10 xzr
+ 33m > 0m 0x100004fc0 < 1644>: adcs x30 x30 xzr
+ 33m > 0m 0x100004fc4 < 1648>: ldp x24 x25 x2 0x60 
+ 33m > 0m 0x100004fc8 < 1652>: ldp x26 x27 x2 0x70 
+ 33m > 0m 0x100004fcc < 1656>: adds x15 x15 x3
+ 33m > 0m 0x100004fd0 < 1660>: adcs x16 x16 x4
+ 33m > 0m 0x100004fd4 < 1664>: stp x15 x16 x2 0x20 
+ 33m > 0m 0x100004fd8 < 1668>: adcs x17 x17 x5
+ 33m > 0m 0x100004fdc < 1672>: adcs x19 x19 x6
+ 33m > 0m 0x100004fe0 < 1676>: stp x17 x19 x2 0x30 
+ 33m > 0m 0x100004fe4 < 1680>: adcs x20 x20 x7
+ 33m > 0m 0x100004fe8 < 1684>: adcs x21 x21 x8
+ 33m > 0m 0x100004fec < 1688>: stp x20 x21 x2 0x40 
+ 33m > 0m 0x100004ff0 < 1692>: adcs x22 x22 x9
+ 33m > 0m 0x100004ff4 < 1696>: adcs x23 x23 x10
+ 33m > 0m 0x100004ff8 < 1700>: stp x22 x23 x2 0x50 
+ 33m > 0m 0x100004ffc < 1704>: adcs x24 x24 x30
+ 33m > 0m 0x100005000 < 1708>: adcs x25 x25 x30
+ 33m > 0m 0x100005004 < 1712>: stp x24 x25 x2 0x60 
+ 33m > 0m 0x100005008 < 1716>: adcs x26 x26 x30
+ 33m > 0m 0x10000500c < 1720>: adcs x27 x27 x30
+ 33m > 0m 0x100005010 < 1724>: stp x26 x27 x2 0x70 
+ 33m > 0m 0x100005014 < 1728>: ldp x30 x0 sp 
+ 33m > 0m 0x100005018 < 1732>: ldp x1 x2 sp 0x10 
+ 33m > 0m 0x10000501c < 1736>: ldp x19 x20 sp 0x20 
+ 33m > 0m 0x100005020 < 1740>: ldp x21 x22 sp 0x30 
+ 33m > 0m 0x100005024 < 1744>: ldp x23 x24 sp 0x40 
+ 33m > 0m 0x100005028 < 1748>: ldp x25 x26 sp 0x50 
+ 33m > 0m 0x10000502c < 1752>: ldp x27 x28 sp 0x60 
+ 33m > 0m 0x100005030 < 1756>: add sp sp 0x70
+ 33m > 0m 0x100005034 < 1760>: ret 
+ 33m > 0m 0x100004738 < 56>: mov x0 x2
+ 33m > 0m 0x10000473c < 60>: ldr x1 sp 0x8 
+ 33m > 0m 0x100004740 < 64>: bl 0x100004760 ; monte reduce
+ 33m > 0m 0x100004760 < 0>: sub sp sp 0x200
+ 33m > 0m 0x100004764 < 4>: stp x30 x1 sp 
+ 33m > 0m 0x100004768 < 8>: str x0 sp 0x10 
+ 33m > 0m 0x10000476c < 12>: adrp x1 3
+ 33m > 0m 0x100004770 < 16>: add x1 x1 0xaf8
+ 33m > 0m 0x100004774 < 20>: add x2 sp 0x18
+ 33m > 0m 0x100004778 < 24>: bl 0x100004954 ; uint mul 512x512
+ 33m > 0m 0x100004954 < 0>: sub sp sp 0x70
+ 33m > 0m 0x100004958 < 4>: stp x30 x0 sp 
+ 33m > 0m 0x10000495c < 8>: stp x1 x2 sp 0x10 
+ 33m > 0m 0x100004960 < 12>: stp x19 x20 sp 0x20 
+ 33m > 0m 0x100004964 < 16>: stp x21 x22 sp 0x30 
+ 33m > 0m 0x100004968 < 20>: stp x23 x24 sp 0x40 
+ 33m > 0m 0x10000496c < 24>: stp x25 x26 sp 0x50 
+ 33m > 0m 0x100004970 < 28>: stp x27 x28 sp 0x60 
+ 33m > 0m 0x100004974 < 32>: ldp x3 x4 x0 
+ 33m > 0m 0x100004978 < 36>: ldp x5 x6 x0 0x10 
+ 33m > 0m 0x10000497c < 40>: ldp x7 x8 x1 
+ 33m > 0m 0x100004980 < 44>: ldp x9 x10 x1 0x10 
+ 33m > 0m 0x100004984 < 48>: mul x11 x3 x7
+ 33m > 0m 0x100004988 < 52>: umulh x12 x3 x7
+ 33m > 0m 0x10000498c < 56>: mul x20 x3 x8
+ 33m > 0m 0x100004990 < 60>: mul x21 x4 x7
+ 33m > 0m 0x100004994 < 64>: adds x12 x12 x20
+ 33m > 0m 0x100004998 < 68>: adcs x13 xzr xzr
+ 33m > 0m 0x10000499c < 72>: adds x12 x12 x21
+ 33m > 0m 0x1000049a0 < 76>: adcs x13 x13 xzr
+ 33m > 0m 0x1000049a4 < 80>: adcs x14 xzr xzr
+ 33m > 0m 0x1000049a8 < 84>: umulh x20 x3 x8
+ 33m > 0m 0x1000049ac < 88>: umulh x21 x4 x7
+ 33m > 0m 0x1000049b0 < 92>: adds x13 x20 x13
+ 33m > 0m 0x1000049b4 < 96>: adcs x14 x14 xzr
+ 33m > 0m 0x1000049b8 < 100>: adds x13 x13 x21
+ 33m > 0m 0x1000049bc < 104>: adcs x14 x14 xzr
+ 33m > 0m 0x1000049c0 < 108>: mul x20 x4 x8
+ 33m > 0m 0x1000049c4 < 112>: umulh x21 x4 x8
+ 33m > 0m 0x1000049c8 < 116>: adds x13 x13 x20
+ 33m > 0m 0x1000049cc < 120>: adcs x14 x14 xzr
+ 33m > 0m 0x1000049d0 < 124>: adcs x14 x14 x21
+ 33m > 0m 0x1000049d4 < 128>: mul x15 x5 x9
+ 33m > 0m 0x1000049d8 < 132>: umulh x16 x5 x9
+ 33m > 0m 0x1000049dc < 136>: mul x20 x5 x10
+ 33m > 0m 0x1000049e0 < 140>: mul x21 x6 x9
+ 33m > 0m 0x1000049e4 < 144>: adds x16 x16 x20
+ 33m > 0m 0x1000049e8 < 148>: adcs x17 xzr xzr
+ 33m > 0m 0x1000049ec < 152>: adds x16 x16 x21
+ 33m > 0m 0x1000049f0 < 156>: adcs x17 x17 xzr
+ 33m > 0m 0x1000049f4 < 160>: adcs x19 xzr xzr
+ 33m > 0m 0x1000049f8 < 164>: umulh x20 x5 x10
+ 33m > 0m 0x1000049fc < 168>: umulh x21 x6 x9
+ 33m > 0m 0x100004a00 < 172>: adds x17 x20 x17
+ 33m > 0m 0x100004a04 < 176>: adcs x19 x19 xzr
+ 33m > 0m 0x100004a08 < 180>: adds x17 x17 x21
+ 33m > 0m 0x100004a0c < 184>: adcs x19 x19 xzr
+ 33m > 0m 0x100004a10 < 188>: mul x20 x6 x10
+ 33m > 0m 0x100004a14 < 192>: umulh x21 x6 x10
+ 33m > 0m 0x100004a18 < 196>: adds x17 x17 x20
+ 33m > 0m 0x100004a1c < 200>: adcs x19 x19 xzr
+ 33m > 0m 0x100004a20 < 204>: adcs x19 x19 x21
+ 33m > 0m 0x100004a24 < 208>: adds x20 x13 x11
+ 33m > 0m 0x100004a28 < 212>: adcs x21 x14 x12
+ 33m > 0m 0x100004a2c < 216>: adcs x22 x15 x13
+ 33m > 0m 0x100004a30 < 220>: adcs x23 x16 x14
+ 33m > 0m 0x100004a34 < 224>: adc x30 xzr xzr
+ 33m > 0m 0x100004a38 < 228>: adds x13 x20 x15
+ 33m > 0m 0x100004a3c < 232>: adcs x14 x21 x16
+ 33m > 0m 0x100004a40 < 236>: adcs x15 x22 x17
+ 33m > 0m 0x100004a44 < 240>: adcs x16 x23 x19
+ 33m > 0m 0x100004a48 < 244>: adcs x17 x30 x17
+ 33m > 0m 0x100004a4c < 248>: adcs x19 xzr x19
+ 33m > 0m 0x100004a50 < 252>: subs x3 x5 x3
+ 33m > 0m 0x100004a54 < 256>: sbcs x4 x6 x4
+ 33m > 0m 0x100004a58 < 260>: cinv x3 x3 lo
+ 33m > 0m 0x100004a5c < 264>: cinv x4 x4 lo
+ 33m > 0m 0x100004a60 < 268>: cset x5 lo
+ 33m > 0m 0x100004a64 < 272>: adds x3 x3 x5
+ 33m > 0m 0x100004a68 < 276>: adc x4 x4 xzr
+ 33m > 0m 0x100004a6c < 280>: subs x7 x9 x7
+ 33m > 0m 0x100004a70 < 284>: sbcs x8 x10 x8
+ 33m > 0m 0x100004a74 < 288>: cinv x7 x7 lo
+ 33m > 0m 0x100004a78 < 292>: cinv x8 x8 lo
+ 33m > 0m 0x100004a7c < 296>: cset x9 lo
+ 33m > 0m 0x100004a80 < 300>: adds x7 x7 x9
+ 33m > 0m 0x100004a84 < 304>: adc x8 x8 xzr
+ 33m > 0m 0x100004a88 < 308>: eor x5 x5 x9
+ 33m > 0m 0x100004a8c < 312>: sub x5 x5 0x1
+ 33m > 0m 0x100004a90 < 316>: mul x20 x3 x7
+ 33m > 0m 0x100004a94 < 320>: umulh x21 x3 x7
+ 33m > 0m 0x100004a98 < 324>: mul x30 x3 x8
+ 33m > 0m 0x100004a9c < 328>: mul x9 x4 x7
+ 33m > 0m 0x100004aa0 < 332>: adds x21 x21 x30
+ 33m > 0m 0x100004aa4 < 336>: adcs x22 xzr xzr
+ 33m > 0m 0x100004aa8 < 340>: adds x21 x21 x9
+ 33m > 0m 0x100004aac < 344>: adcs x22 x22 xzr
+ 33m > 0m 0x100004ab0 < 348>: adcs x23 xzr xzr
+ 33m > 0m 0x100004ab4 < 352>: umulh x30 x3 x8
+ 33m > 0m 0x100004ab8 < 356>: umulh x9 x4 x7
+ 33m > 0m 0x100004abc < 360>: adds x22 x30 x22
+ 33m > 0m 0x100004ac0 < 364>: adcs x23 x23 xzr
+ 33m > 0m 0x100004ac4 < 368>: adds x22 x22 x9
+ 33m > 0m 0x100004ac8 < 372>: adcs x23 x23 xzr
+ 33m > 0m 0x100004acc < 376>: mul x30 x4 x8
+ 33m > 0m 0x100004ad0 < 380>: umulh x9 x4 x8
+ 33m > 0m 0x100004ad4 < 384>: adds x22 x22 x30
+ 33m > 0m 0x100004ad8 < 388>: adcs x23 x23 xzr
+ 33m > 0m 0x100004adc < 392>: adcs x23 x23 x9
+ 33m > 0m 0x100004ae0 < 396>: eor x20 x20 x5
+ 33m > 0m 0x100004ae4 < 400>: eor x21 x21 x5
+ 33m > 0m 0x100004ae8 < 404>: eor x22 x22 x5
+ 33m > 0m 0x100004aec < 408>: eor x23 x23 x5
+ 33m > 0m 0x100004af0 < 412>: and x30 x5 0x1
+ 33m > 0m 0x100004af4 < 416>: adds x20 x20 x30
+ 33m > 0m 0x100004af8 < 420>: adcs x21 x21 xzr
+ 33m > 0m 0x100004afc < 424>: adcs x22 x22 xzr
+ 33m > 0m 0x100004b00 < 428>: adcs x23 x23 xzr
+ 33m > 0m 0x100004b04 < 432>: adcs x30 x5 xzr
+ 33m > 0m 0x100004b08 < 436>: adds x13 x13 x20
+ 33m > 0m 0x100004b0c < 440>: adcs x14 x14 x21
+ 33m > 0m 0x100004b10 < 444>: adcs x15 x15 x22
+ 33m > 0m 0x100004b14 < 448>: adcs x16 x16 x23
+ 33m > 0m 0x100004b18 < 452>: adcs x17 x17 x30
+ 33m > 0m 0x100004b1c < 456>: adcs x17 x17 x30
+ 33m > 0m 0x100004b20 < 460>: stp x11 x12 x2 
+ 33m > 0m 0x100004b24 < 464>: stp x13 x14 x2 0x10 
+ 33m > 0m 0x100004b28 < 468>: ldp x3 x4 x0 0x20 
+ 33m > 0m 0x100004b2c < 472>: ldp x5 x6 x0 0x30 
+ 33m > 0m 0x100004b30 < 476>: ldp x7 x8 x1 0x20 
+ 33m > 0m 0x100004b34 < 480>: ldp x9 x10 x1 0x30 
+ 33m > 0m 0x100004b38 < 484>: mul x20 x3 x7
+ 33m > 0m 0x100004b3c < 488>: umulh x21 x3 x7
+ 33m > 0m 0x100004b40 < 492>: mul x28 x3 x8
+ 33m > 0m 0x100004b44 < 496>: mul x30 x4 x7
+ 33m > 0m 0x100004b48 < 500>: adds x21 x21 x28
+ 33m > 0m 0x100004b4c < 504>: adcs x22 xzr xzr
+ 33m > 0m 0x100004b50 < 508>: adds x21 x21 x30
+ 33m > 0m 0x100004b54 < 512>: adcs x22 x22 xzr
+ 33m > 0m 0x100004b58 < 516>: adcs x23 xzr xzr
+ 33m > 0m 0x100004b5c < 520>: umulh x28 x3 x8
+ 33m > 0m 0x100004b60 < 524>: umulh x30 x4 x7
+ 33m > 0m 0x100004b64 < 528>: adds x22 x28 x22
+ 33m > 0m 0x100004b68 < 532>: adcs x23 x23 xzr
+ 33m > 0m 0x100004b6c < 536>: adds x22 x22 x30
+ 33m > 0m 0x100004b70 < 540>: adcs x23 x23 xzr
+ 33m > 0m 0x100004b74 < 544>: mul x28 x4 x8
+ 33m > 0m 0x100004b78 < 548>: umulh x30 x4 x8
+ 33m > 0m 0x100004b7c < 552>: adds x22 x22 x28
+ 33m > 0m 0x100004b80 < 556>: adcs x23 x23 xzr
+ 33m > 0m 0x100004b84 < 560>: adcs x23 x23 x30
+ 33m > 0m 0x100004b88 < 564>: mul x24 x5 x9
+ 33m > 0m 0x100004b8c < 568>: umulh x25 x5 x9
+ 33m > 0m 0x100004b90 < 572>: mul x28 x5 x10
+ 33m > 0m 0x100004b94 < 576>: mul x30 x6 x9
+ 33m > 0m 0x100004b98 < 580>: adds x25 x25 x28
+ 33m > 0m 0x100004b9c < 584>: adcs x26 xzr xzr
+ 33m > 0m 0x100004ba0 < 588>: adds x25 x25 x30
+ 33m > 0m 0x100004ba4 < 592>: adcs x26 x26 xzr
+ 33m > 0m 0x100004ba8 < 596>: adcs x27 xzr xzr
+ 33m > 0m 0x100004bac < 600>: umulh x28 x5 x10
+ 33m > 0m 0x100004bb0 < 604>: umulh x30 x6 x9
+ 33m > 0m 0x100004bb4 < 608>: adds x26 x28 x26
+ 33m > 0m 0x100004bb8 < 612>: adcs x27 x27 xzr
+ 33m > 0m 0x100004bbc < 616>: adds x26 x26 x30
+ 33m > 0m 0x100004bc0 < 620>: adcs x27 x27 xzr
+ 33m > 0m 0x100004bc4 < 624>: mul x28 x6 x10
+ 33m > 0m 0x100004bc8 < 628>: umulh x30 x6 x10
+ 33m > 0m 0x100004bcc < 632>: adds x26 x26 x28
+ 33m > 0m 0x100004bd0 < 636>: adcs x27 x27 xzr
+ 33m > 0m 0x100004bd4 < 640>: adcs x27 x27 x30
+ 33m > 0m 0x100004bd8 < 644>: adds x28 x22 x20
+ 33m > 0m 0x100004bdc < 648>: adcs x30 x23 x21
+ 33m > 0m 0x100004be0 < 652>: adcs x11 x24 x22
+ 33m > 0m 0x100004be4 < 656>: adcs x12 x25 x23
+ 33m > 0m 0x100004be8 < 660>: adc x13 xzr xzr
+ 33m > 0m 0x100004bec < 664>: adds x22 x28 x24
+ 33m > 0m 0x100004bf0 < 668>: adcs x23 x30 x25
+ 33m > 0m 0x100004bf4 < 672>: adcs x24 x11 x26
+ 33m > 0m 0x100004bf8 < 676>: adcs x25 x12 x27
+ 33m > 0m 0x100004bfc < 680>: adcs x26 x13 x26
+ 33m > 0m 0x100004c00 < 684>: adcs x27 xzr x27
+ 33m > 0m 0x100004c04 < 688>: subs x3 x5 x3
+ 33m > 0m 0x100004c08 < 692>: sbcs x4 x6 x4
+ 33m > 0m 0x100004c0c < 696>: cinv x3 x3 lo
+ 33m > 0m 0x100004c10 < 700>: cinv x4 x4 lo
+ 33m > 0m 0x100004c14 < 704>: cset x5 lo
+ 33m > 0m 0x100004c18 < 708>: adds x3 x3 x5
+ 33m > 0m 0x100004c1c < 712>: adc x4 x4 xzr
+ 33m > 0m 0x100004c20 < 716>: subs x7 x9 x7
+ 33m > 0m 0x100004c24 < 720>: sbcs x8 x10 x8
+ 33m > 0m 0x100004c28 < 724>: cinv x7 x7 lo
+ 33m > 0m 0x100004c2c < 728>: cinv x8 x8 lo
+ 33m > 0m 0x100004c30 < 732>: cset x9 lo
+ 33m > 0m 0x100004c34 < 736>: adds x7 x7 x9
+ 33m > 0m 0x100004c38 < 740>: adc x8 x8 xzr
+ 33m > 0m 0x100004c3c < 744>: eor x5 x5 x9
+ 33m > 0m 0x100004c40 < 748>: sub x5 x5 0x1
+ 33m > 0m 0x100004c44 < 752>: mul x28 x3 x7
+ 33m > 0m 0x100004c48 < 756>: umulh x30 x3 x7
+ 33m > 0m 0x100004c4c < 760>: mul x13 x3 x8
+ 33m > 0m 0x100004c50 < 764>: mul x9 x4 x7
+ 33m > 0m 0x100004c54 < 768>: adds x30 x30 x13
+ 33m > 0m 0x100004c58 < 772>: adcs x11 xzr xzr
+ 33m > 0m 0x100004c5c < 776>: adds x30 x30 x9
+ 33m > 0m 0x100004c60 < 780>: adcs x11 x11 xzr
+ 33m > 0m 0x100004c64 < 784>: adcs x12 xzr xzr
+ 33m > 0m 0x100004c68 < 788>: umulh x13 x3 x8
+ 33m > 0m 0x100004c6c < 792>: umulh x9 x4 x7
+ 33m > 0m 0x100004c70 < 796>: adds x11 x13 x11
+ 33m > 0m 0x100004c74 < 800>: adcs x12 x12 xzr
+ 33m > 0m 0x100004c78 < 804>: adds x11 x11 x9
+ 33m > 0m 0x100004c7c < 808>: adcs x12 x12 xzr
+ 33m > 0m 0x100004c80 < 812>: mul x13 x4 x8
+ 33m > 0m 0x100004c84 < 816>: umulh x9 x4 x8
+ 33m > 0m 0x100004c88 < 820>: adds x11 x11 x13
+ 33m > 0m 0x100004c8c < 824>: adcs x12 x12 xzr
+ 33m > 0m 0x100004c90 < 828>: adcs x12 x12 x9
+ 33m > 0m 0x100004c94 < 832>: eor x28 x28 x5
+ 33m > 0m 0x100004c98 < 836>: eor x30 x30 x5
+ 33m > 0m 0x100004c9c < 840>: eor x11 x11 x5
+ 33m > 0m 0x100004ca0 < 844>: eor x12 x12 x5
+ 33m > 0m 0x100004ca4 < 848>: and x13 x5 0x1
+ 33m > 0m 0x100004ca8 < 852>: adds x28 x28 x13
+ 33m > 0m 0x100004cac < 856>: adcs x30 x30 xzr
+ 33m > 0m 0x100004cb0 < 860>: adcs x11 x11 xzr
+ 33m > 0m 0x100004cb4 < 864>: adcs x12 x12 xzr
+ 33m > 0m 0x100004cb8 < 868>: adcs x13 x5 xzr
+ 33m > 0m 0x100004cbc < 872>: adds x22 x22 x28
+ 33m > 0m 0x100004cc0 < 876>: adcs x23 x23 x30
+ 33m > 0m 0x100004cc4 < 880>: adcs x24 x24 x11
+ 33m > 0m 0x100004cc8 < 884>: adcs x25 x25 x12
+ 33m > 0m 0x100004ccc < 888>: adcs x26 x26 x13
+ 33m > 0m 0x100004cd0 < 892>: adcs x26 x26 x13
+ 33m > 0m 0x100004cd4 < 896>: ldp x11 x12 x2 
+ 33m > 0m 0x100004cd8 < 900>: ldp x13 x14 x2 0x10 
+ 33m > 0m 0x100004cdc < 904>: adds x3 x15 x11
+ 33m > 0m 0x100004ce0 < 908>: adcs x4 x16 x12
+ 33m > 0m 0x100004ce4 < 912>: adcs x5 x17 x13
+ 33m > 0m 0x100004ce8 < 916>: adcs x6 x19 x14
+ 33m > 0m 0x100004cec < 920>: adcs x7 x20 x15
+ 33m > 0m 0x100004cf0 < 924>: adcs x8 x21 x16
+ 33m > 0m 0x100004cf4 < 928>: adcs x9 x22 x17
+ 33m > 0m 0x100004cf8 < 932>: adcs x10 x23 x19
+ 33m > 0m 0x100004cfc < 936>: adcs x30 xzr xzr
+ 33m > 0m 0x100004d00 < 940>: adds x15 x3 x20
+ 33m > 0m 0x100004d04 < 944>: adcs x16 x4 x21
+ 33m > 0m 0x100004d08 < 948>: adcs x17 x5 x22
+ 33m > 0m 0x100004d0c < 952>: adcs x19 x6 x23
+ 33m > 0m 0x100004d10 < 956>: adcs x20 x7 x24
+ 33m > 0m 0x100004d14 < 960>: adcs x21 x8 x25
+ 33m > 0m 0x100004d18 < 964>: adcs x22 x9 x26
+ 33m > 0m 0x100004d1c < 968>: adcs x23 x10 x27
+ 33m > 0m 0x100004d20 < 972>: adcs x24 x30 x24
+ 33m > 0m 0x100004d24 < 976>: adcs x25 x25 xzr
+ 33m > 0m 0x100004d28 < 980>: adcs x26 x26 xzr
+ 33m > 0m 0x100004d2c < 984>: adcs x27 x27 xzr
+ 33m > 0m 0x100004d30 < 988>: stp x24 x25 x2 0x60 
+ 33m > 0m 0x100004d34 < 992>: stp x26 x27 x2 0x70 
+ 33m > 0m 0x100004d38 < 996>: ldp x3 x4 x0 
+ 33m > 0m 0x100004d3c < 1000>: ldp x5 x6 x0 0x10 
+ 33m > 0m 0x100004d40 < 1004>: ldp x7 x8 x0 0x20 
+ 33m > 0m 0x100004d44 < 1008>: ldp x9 x10 x0 0x30 
+ 33m > 0m 0x100004d48 < 1012>: subs x3 x3 x7
+ 33m > 0m 0x100004d4c < 1016>: sbcs x4 x4 x8
+ 33m > 0m 0x100004d50 < 1020>: sbcs x5 x5 x9
+ 33m > 0m 0x100004d54 < 1024>: sbcs x6 x6 x10
+ 33m > 0m 0x100004d58 < 1028>: cinv x3 x3 lo
+ 33m > 0m 0x100004d5c < 1032>: cinv x4 x4 lo
+ 33m > 0m 0x100004d60 < 1036>: cinv x5 x5 lo
+ 33m > 0m 0x100004d64 < 1040>: cinv x6 x6 lo
+ 33m > 0m 0x100004d68 < 1044>: cset x30 lo
+ 33m > 0m 0x100004d6c < 1048>: adds x3 x3 x30
+ 33m > 0m 0x100004d70 < 1052>: adcs x4 x4 xzr
+ 33m > 0m 0x100004d74 < 1056>: adcs x5 x5 xzr
+ 33m > 0m 0x100004d78 < 1060>: adcs x6 x6 xzr
+ 33m > 0m 0x100004d7c < 1064>: ldp x7 x8 x1 
+ 33m > 0m 0x100004d80 < 1068>: ldp x9 x10 x1 0x10 
+ 33m > 0m 0x100004d84 < 1072>: ldp x11 x12 x1 0x20 
+ 33m > 0m 0x100004d88 < 1076>: ldp x13 x14 x1 0x30 
+ 33m > 0m 0x100004d8c < 1080>: subs x7 x7 x11
+ 33m > 0m 0x100004d90 < 1084>: sbcs x8 x8 x12
+ 33m > 0m 0x100004d94 < 1088>: sbcs x9 x9 x13
+ 33m > 0m 0x100004d98 < 1092>: sbcs x10 x10 x14
+ 33m > 0m 0x100004d9c < 1096>: cinv x7 x7 lo
+ 33m > 0m 0x100004da0 < 1100>: cinv x8 x8 lo
+ 33m > 0m 0x100004da4 < 1104>: cinv x9 x9 lo
+ 33m > 0m 0x100004da8 < 1108>: cinv x10 x10 lo
+ 33m > 0m 0x100004dac < 1112>: cset x11 lo
+ 33m > 0m 0x100004db0 < 1116>: adds x7 x7 x11
+ 33m > 0m 0x100004db4 < 1120>: adcs x8 x8 xzr
+ 33m > 0m 0x100004db8 < 1124>: adcs x9 x9 xzr
+ 33m > 0m 0x100004dbc < 1128>: adcs x10 x10 xzr
+ 33m > 0m 0x100004dc0 < 1132>: eor x30 x30 x11
+ 33m > 0m 0x100004dc4 < 1136>: sub x30 x30 0x1
+ 33m > 0m 0x100004dc8 < 1140>: str x19 x2 0x38 
+ 33m > 0m 0x100004dcc < 1144>: stp x20 x21 x2 0x40 
+ 33m > 0m 0x100004dd0 < 1148>: stp x22 x23 x2 0x50 
+ 33m > 0m 0x100004dd4 < 1152>: mul x11 x3 x7
+ 33m > 0m 0x100004dd8 < 1156>: umulh x12 x3 x7
+ 33m > 0m 0x100004ddc < 1160>: mul x19 x3 x8
+ 33m > 0m 0x100004de0 < 1164>: mul x20 x4 x7
+ 33m > 0m 0x100004de4 < 1168>: adds x12 x12 x19
+ 33m > 0m 0x100004de8 < 1172>: adcs x13 xzr xzr
+ 33m > 0m 0x100004dec < 1176>: adds x12 x12 x20
+ 33m > 0m 0x100004df0 < 1180>: adcs x13 x13 xzr
+ 33m > 0m 0x100004df4 < 1184>: adcs x14 xzr xzr
+ 33m > 0m 0x100004df8 < 1188>: umulh x19 x3 x8
+ 33m > 0m 0x100004dfc < 1192>: umulh x20 x4 x7
+ 33m > 0m 0x100004e00 < 1196>: adds x13 x19 x13
+ 33m > 0m 0x100004e04 < 1200>: adcs x14 x14 xzr
+ 33m > 0m 0x100004e08 < 1204>: adds x13 x13 x20
+ 33m > 0m 0x100004e0c < 1208>: adcs x14 x14 xzr
+ 33m > 0m 0x100004e10 < 1212>: mul x19 x4 x8
+ 33m > 0m 0x100004e14 < 1216>: umulh x20 x4 x8
+ 33m > 0m 0x100004e18 < 1220>: adds x13 x13 x19
+ 33m > 0m 0x100004e1c < 1224>: adcs x14 x14 xzr
+ 33m > 0m 0x100004e20 < 1228>: adcs x14 x14 x20
+ 33m > 0m 0x100004e24 < 1232>: mul x25 x5 x9
+ 33m > 0m 0x100004e28 < 1236>: umulh x26 x5 x9
+ 33m > 0m 0x100004e2c < 1240>: mul x19 x5 x10
+ 33m > 0m 0x100004e30 < 1244>: mul x20 x6 x9
+ 33m > 0m 0x100004e34 < 1248>: adds x26 x26 x19
+ 33m > 0m 0x100004e38 < 1252>: adcs x27 xzr xzr
+ 33m > 0m 0x100004e3c < 1256>: adds x26 x26 x20
+ 33m > 0m 0x100004e40 < 1260>: adcs x27 x27 xzr
+ 33m > 0m 0x100004e44 < 1264>: adcs x28 xzr xzr
+ 33m > 0m 0x100004e48 < 1268>: umulh x19 x5 x10
+ 33m > 0m 0x100004e4c < 1272>: umulh x20 x6 x9
+ 33m > 0m 0x100004e50 < 1276>: adds x27 x19 x27
+ 33m > 0m 0x100004e54 < 1280>: adcs x28 x28 xzr
+ 33m > 0m 0x100004e58 < 1284>: adds x27 x27 x20
+ 33m > 0m 0x100004e5c < 1288>: adcs x28 x28 xzr
+ 33m > 0m 0x100004e60 < 1292>: mul x19 x6 x10
+ 33m > 0m 0x100004e64 < 1296>: umulh x20 x6 x10
+ 33m > 0m 0x100004e68 < 1300>: adds x27 x27 x19
+ 33m > 0m 0x100004e6c < 1304>: adcs x28 x28 xzr
+ 33m > 0m 0x100004e70 < 1308>: adcs x28 x28 x20
+ 33m > 0m 0x100004e74 < 1312>: adds x19 x13 x11
+ 33m > 0m 0x100004e78 < 1316>: adcs x20 x14 x12
+ 33m > 0m 0x100004e7c < 1320>: adcs x21 x25 x13
+ 33m > 0m 0x100004e80 < 1324>: adcs x22 x26 x14
+ 33m > 0m 0x100004e84 < 1328>: adc x23 xzr xzr
+ 33m > 0m 0x100004e88 < 1332>: adds x13 x19 x25
+ 33m > 0m 0x100004e8c < 1336>: adcs x14 x20 x26
+ 33m > 0m 0x100004e90 < 1340>: adcs x25 x21 x27
+ 33m > 0m 0x100004e94 < 1344>: adcs x26 x22 x28
+ 33m > 0m 0x100004e98 < 1348>: adcs x27 x23 x27
+ 33m > 0m 0x100004e9c < 1352>: adcs x28 xzr x28
+ 33m > 0m 0x100004ea0 < 1356>: subs x3 x5 x3
+ 33m > 0m 0x100004ea4 < 1360>: sbcs x4 x6 x4
+ 33m > 0m 0x100004ea8 < 1364>: cinv x3 x3 lo
+ 33m > 0m 0x100004eac < 1368>: cinv x4 x4 lo
+ 33m > 0m 0x100004eb0 < 1372>: cset x5 lo
+ 33m > 0m 0x100004eb4 < 1376>: adds x3 x3 x5
+ 33m > 0m 0x100004eb8 < 1380>: adc x4 x4 xzr
+ 33m > 0m 0x100004ebc < 1384>: subs x7 x9 x7
+ 33m > 0m 0x100004ec0 < 1388>: sbcs x8 x10 x8
+ 33m > 0m 0x100004ec4 < 1392>: cinv x7 x7 lo
+ 33m > 0m 0x100004ec8 < 1396>: cinv x8 x8 lo
+ 33m > 0m 0x100004ecc < 1400>: cset x9 lo
+ 33m > 0m 0x100004ed0 < 1404>: adds x7 x7 x9
+ 33m > 0m 0x100004ed4 < 1408>: adc x8 x8 xzr
+ 33m > 0m 0x100004ed8 < 1412>: eor x5 x5 x9
+ 33m > 0m 0x100004edc < 1416>: sub x5 x5 0x1
+ 33m > 0m 0x100004ee0 < 1420>: mul x19 x3 x7
+ 33m > 0m 0x100004ee4 < 1424>: umulh x20 x3 x7
+ 33m > 0m 0x100004ee8 < 1428>: mul x23 x3 x8
+ 33m > 0m 0x100004eec < 1432>: mul x9 x4 x7
+ 33m > 0m 0x100004ef0 < 1436>: adds x20 x20 x23
+ 33m > 0m 0x100004ef4 < 1440>: adcs x21 xzr xzr
+ 33m > 0m 0x100004ef8 < 1444>: adds x20 x20 x9
+ 33m > 0m 0x100004efc < 1448>: adcs x21 x21 xzr
+ 33m > 0m 0x100004f00 < 1452>: adcs x22 xzr xzr
+ 33m > 0m 0x100004f04 < 1456>: umulh x23 x3 x8
+ 33m > 0m 0x100004f08 < 1460>: umulh x9 x4 x7
+ 33m > 0m 0x100004f0c < 1464>: adds x21 x23 x21
+ 33m > 0m 0x100004f10 < 1468>: adcs x22 x22 xzr
+ 33m > 0m 0x100004f14 < 1472>: adds x21 x21 x9
+ 33m > 0m 0x100004f18 < 1476>: adcs x22 x22 xzr
+ 33m > 0m 0x100004f1c < 1480>: mul x23 x4 x8
+ 33m > 0m 0x100004f20 < 1484>: umulh x9 x4 x8
+ 33m > 0m 0x100004f24 < 1488>: adds x21 x21 x23
+ 33m > 0m 0x100004f28 < 1492>: adcs x22 x22 xzr
+ 33m > 0m 0x100004f2c < 1496>: adcs x22 x22 x9
+ 33m > 0m 0x100004f30 < 1500>: eor x19 x19 x5
+ 33m > 0m 0x100004f34 < 1504>: eor x20 x20 x5
+ 33m > 0m 0x100004f38 < 1508>: eor x21 x21 x5
+ 33m > 0m 0x100004f3c < 1512>: eor x22 x22 x5
+ 33m > 0m 0x100004f40 < 1516>: and x23 x5 0x1
+ 33m > 0m 0x100004f44 < 1520>: adds x19 x19 x23
+ 33m > 0m 0x100004f48 < 1524>: adcs x20 x20 xzr
+ 33m > 0m 0x100004f4c < 1528>: adcs x21 x21 xzr
+ 33m > 0m 0x100004f50 < 1532>: adcs x22 x22 xzr
+ 33m > 0m 0x100004f54 < 1536>: adcs x23 x5 xzr
+ 33m > 0m 0x100004f58 < 1540>: adds x13 x13 x19
+ 33m > 0m 0x100004f5c < 1544>: adcs x14 x14 x20
+ 33m > 0m 0x100004f60 < 1548>: adcs x25 x25 x21
+ 33m > 0m 0x100004f64 < 1552>: adcs x26 x26 x22
+ 33m > 0m 0x100004f68 < 1556>: adcs x27 x27 x23
+ 33m > 0m 0x100004f6c < 1560>: adcs x27 x27 x23
+ 33m > 0m 0x100004f70 < 1564>: ldr x19 x2 0x38 
+ 33m > 0m 0x100004f74 < 1568>: ldp x20 x21 x2 0x40 
+ 33m > 0m 0x100004f78 < 1572>: ldp x22 x23 x2 0x50 
+ 33m > 0m 0x100004f7c < 1576>: eor x3 x11 x30
+ 33m > 0m 0x100004f80 < 1580>: eor x4 x12 x30
+ 33m > 0m 0x100004f84 < 1584>: eor x5 x13 x30
+ 33m > 0m 0x100004f88 < 1588>: eor x6 x14 x30
+ 33m > 0m 0x100004f8c < 1592>: eor x7 x25 x30
+ 33m > 0m 0x100004f90 < 1596>: eor x8 x26 x30
+ 33m > 0m 0x100004f94 < 1600>: eor x9 x27 x30
+ 33m > 0m 0x100004f98 < 1604>: eor x10 x28 x30
+ 33m > 0m 0x100004f9c < 1608>: and x28 x30 0x1
+ 33m > 0m 0x100004fa0 < 1612>: adds x3 x3 x28
+ 33m > 0m 0x100004fa4 < 1616>: adcs x4 x4 xzr
+ 33m > 0m 0x100004fa8 < 1620>: adcs x5 x5 xzr
+ 33m > 0m 0x100004fac < 1624>: adcs x6 x6 xzr
+ 33m > 0m 0x100004fb0 < 1628>: adcs x7 x7 xzr
+ 33m > 0m 0x100004fb4 < 1632>: adcs x8 x8 xzr
+ 33m > 0m 0x100004fb8 < 1636>: adcs x9 x9 xzr
+ 33m > 0m 0x100004fbc < 1640>: adcs x10 x10 xzr
+ 33m > 0m 0x100004fc0 < 1644>: adcs x30 x30 xzr
+ 33m > 0m 0x100004fc4 < 1648>: ldp x24 x25 x2 0x60 
+ 33m > 0m 0x100004fc8 < 1652>: ldp x26 x27 x2 0x70 
+ 33m > 0m 0x100004fcc < 1656>: adds x15 x15 x3
+ 33m > 0m 0x100004fd0 < 1660>: adcs x16 x16 x4
+ 33m > 0m 0x100004fd4 < 1664>: stp x15 x16 x2 0x20 
+ 33m > 0m 0x100004fd8 < 1668>: adcs x17 x17 x5
+ 33m > 0m 0x100004fdc < 1672>: adcs x19 x19 x6
+ 33m > 0m 0x100004fe0 < 1676>: stp x17 x19 x2 0x30 
+ 33m > 0m 0x100004fe4 < 1680>: adcs x20 x20 x7
+ 33m > 0m 0x100004fe8 < 1684>: adcs x21 x21 x8
+ 33m > 0m 0x100004fec < 1688>: stp x20 x21 x2 0x40 
+ 33m > 0m 0x100004ff0 < 1692>: adcs x22 x22 x9
+ 33m > 0m 0x100004ff4 < 1696>: adcs x23 x23 x10
+ 33m > 0m 0x100004ff8 < 1700>: stp x22 x23 x2 0x50 
+ 33m > 0m 0x100004ffc < 1704>: adcs x24 x24 x30
+ 33m > 0m 0x100005000 < 1708>: adcs x25 x25 x30
+ 33m > 0m 0x100005004 < 1712>: stp x24 x25 x2 0x60 
+ 33m > 0m 0x100005008 < 1716>: adcs x26 x26 x30
+ 33m > 0m 0x10000500c < 1720>: adcs x27 x27 x30
+ 33m > 0m 0x100005010 < 1724>: stp x26 x27 x2 0x70 
+ 33m > 0m 0x100005014 < 1728>: ldp x30 x0 sp 
+ 33m > 0m 0x100005018 < 1732>: ldp x1 x2 sp 0x10 
+ 33m > 0m 0x10000501c < 1736>: ldp x19 x20 sp 0x20 
+ 33m > 0m 0x100005020 < 1740>: ldp x21 x22 sp 0x30 
+ 33m > 0m 0x100005024 < 1744>: ldp x23 x24 sp 0x40 
+ 33m > 0m 0x100005028 < 1748>: ldp x25 x26 sp 0x50 
+ 33m > 0m 0x10000502c < 1752>: ldp x27 x28 sp 0x60 
+ 33m > 0m 0x100005030 < 1756>: add sp sp 0x70
+ 33m > 0m 0x100005034 < 1760>: ret 
+ 33m > 0m 0x10000477c < 28>: mov x1 x2
+ 33m > 0m 0x100004780 < 32>: adrp x0 3
+ 33m > 0m 0x100004784 < 36>: add x0 x0 0x9b0
+ 33m > 0m 0x100004788 < 40>: add x2 sp 0x98
+ 33m > 0m 0x10000478c < 44>: bl 0x100004954 ; uint mul 512x512
+ 33m > 0m 0x100004954 < 0>: sub sp sp 0x70
+ 33m > 0m 0x100004958 < 4>: stp x30 x0 sp 
+ 33m > 0m 0x10000495c < 8>: stp x1 x2 sp 0x10 
+ 33m > 0m 0x100004960 < 12>: stp x19 x20 sp 0x20 
+ 33m > 0m 0x100004964 < 16>: stp x21 x22 sp 0x30 
+ 33m > 0m 0x100004968 < 20>: stp x23 x24 sp 0x40 
+ 33m > 0m 0x10000496c < 24>: stp x25 x26 sp 0x50 
+ 33m > 0m 0x100004970 < 28>: stp x27 x28 sp 0x60 
+ 33m > 0m 0x100004974 < 32>: ldp x3 x4 x0 
+ 33m > 0m 0x100004978 < 36>: ldp x5 x6 x0 0x10 
+ 33m > 0m 0x10000497c < 40>: ldp x7 x8 x1 
+ 33m > 0m 0x100004980 < 44>: ldp x9 x10 x1 0x10 
+ 33m > 0m 0x100004984 < 48>: mul x11 x3 x7
+ 33m > 0m 0x100004988 < 52>: umulh x12 x3 x7
+ 33m > 0m 0x10000498c < 56>: mul x20 x3 x8
+ 33m > 0m 0x100004990 < 60>: mul x21 x4 x7
+ 33m > 0m 0x100004994 < 64>: adds x12 x12 x20
+ 33m > 0m 0x100004998 < 68>: adcs x13 xzr xzr
+ 33m > 0m 0x10000499c < 72>: adds x12 x12 x21
+ 33m > 0m 0x1000049a0 < 76>: adcs x13 x13 xzr
+ 33m > 0m 0x1000049a4 < 80>: adcs x14 xzr xzr
+ 33m > 0m 0x1000049a8 < 84>: umulh x20 x3 x8
+ 33m > 0m 0x1000049ac < 88>: umulh x21 x4 x7
+ 33m > 0m 0x1000049b0 < 92>: adds x13 x20 x13
+ 33m > 0m 0x1000049b4 < 96>: adcs x14 x14 xzr
+ 33m > 0m 0x1000049b8 < 100>: adds x13 x13 x21
+ 33m > 0m 0x1000049bc < 104>: adcs x14 x14 xzr
+ 33m > 0m 0x1000049c0 < 108>: mul x20 x4 x8
+ 33m > 0m 0x1000049c4 < 112>: umulh x21 x4 x8
+ 33m > 0m 0x1000049c8 < 116>: adds x13 x13 x20
+ 33m > 0m 0x1000049cc < 120>: adcs x14 x14 xzr
+ 33m > 0m 0x1000049d0 < 124>: adcs x14 x14 x21
+ 33m > 0m 0x1000049d4 < 128>: mul x15 x5 x9
+ 33m > 0m 0x1000049d8 < 132>: umulh x16 x5 x9
+ 33m > 0m 0x1000049dc < 136>: mul x20 x5 x10
+ 33m > 0m 0x1000049e0 < 140>: mul x21 x6 x9
+ 33m > 0m 0x1000049e4 < 144>: adds x16 x16 x20
+ 33m > 0m 0x1000049e8 < 148>: adcs x17 xzr xzr
+ 33m > 0m 0x1000049ec < 152>: adds x16 x16 x21
+ 33m > 0m 0x1000049f0 < 156>: adcs x17 x17 xzr
+ 33m > 0m 0x1000049f4 < 160>: adcs x19 xzr xzr
+ 33m > 0m 0x1000049f8 < 164>: umulh x20 x5 x10
+ 33m > 0m 0x1000049fc < 168>: umulh x21 x6 x9
+ 33m > 0m 0x100004a00 < 172>: adds x17 x20 x17
+ 33m > 0m 0x100004a04 < 176>: adcs x19 x19 xzr
+ 33m > 0m 0x100004a08 < 180>: adds x17 x17 x21
+ 33m > 0m 0x100004a0c < 184>: adcs x19 x19 xzr
+ 33m > 0m 0x100004a10 < 188>: mul x20 x6 x10
+ 33m > 0m 0x100004a14 < 192>: umulh x21 x6 x10
+ 33m > 0m 0x100004a18 < 196>: adds x17 x17 x20
+ 33m > 0m 0x100004a1c < 200>: adcs x19 x19 xzr
+ 33m > 0m 0x100004a20 < 204>: adcs x19 x19 x21
+ 33m > 0m 0x100004a24 < 208>: adds x20 x13 x11
+ 33m > 0m 0x100004a28 < 212>: adcs x21 x14 x12
+ 33m > 0m 0x100004a2c < 216>: adcs x22 x15 x13
+ 33m > 0m 0x100004a30 < 220>: adcs x23 x16 x14
+ 33m > 0m 0x100004a34 < 224>: adc x30 xzr xzr
+ 33m > 0m 0x100004a38 < 228>: adds x13 x20 x15
+ 33m > 0m 0x100004a3c < 232>: adcs x14 x21 x16
+ 33m > 0m 0x100004a40 < 236>: adcs x15 x22 x17
+ 33m > 0m 0x100004a44 < 240>: adcs x16 x23 x19
+ 33m > 0m 0x100004a48 < 244>: adcs x17 x30 x17
+ 33m > 0m 0x100004a4c < 248>: adcs x19 xzr x19
+ 33m > 0m 0x100004a50 < 252>: subs x3 x5 x3
+ 33m > 0m 0x100004a54 < 256>: sbcs x4 x6 x4
+ 33m > 0m 0x100004a58 < 260>: cinv x3 x3 lo
+ 33m > 0m 0x100004a5c < 264>: cinv x4 x4 lo
+ 33m > 0m 0x100004a60 < 268>: cset x5 lo
+ 33m > 0m 0x100004a64 < 272>: adds x3 x3 x5
+ 33m > 0m 0x100004a68 < 276>: adc x4 x4 xzr
+ 33m > 0m 0x100004a6c < 280>: subs x7 x9 x7
+ 33m > 0m 0x100004a70 < 284>: sbcs x8 x10 x8
+ 33m > 0m 0x100004a74 < 288>: cinv x7 x7 lo
+ 33m > 0m 0x100004a78 < 292>: cinv x8 x8 lo
+ 33m > 0m 0x100004a7c < 296>: cset x9 lo
+ 33m > 0m 0x100004a80 < 300>: adds x7 x7 x9
+ 33m > 0m 0x100004a84 < 304>: adc x8 x8 xzr
+ 33m > 0m 0x100004a88 < 308>: eor x5 x5 x9
+ 33m > 0m 0x100004a8c < 312>: sub x5 x5 0x1
+ 33m > 0m 0x100004a90 < 316>: mul x20 x3 x7
+ 33m > 0m 0x100004a94 < 320>: umulh x21 x3 x7
+ 33m > 0m 0x100004a98 < 324>: mul x30 x3 x8
+ 33m > 0m 0x100004a9c < 328>: mul x9 x4 x7
+ 33m > 0m 0x100004aa0 < 332>: adds x21 x21 x30
+ 33m > 0m 0x100004aa4 < 336>: adcs x22 xzr xzr
+ 33m > 0m 0x100004aa8 < 340>: adds x21 x21 x9
+ 33m > 0m 0x100004aac < 344>: adcs x22 x22 xzr
+ 33m > 0m 0x100004ab0 < 348>: adcs x23 xzr xzr
+ 33m > 0m 0x100004ab4 < 352>: umulh x30 x3 x8
+ 33m > 0m 0x100004ab8 < 356>: umulh x9 x4 x7
+ 33m > 0m 0x100004abc < 360>: adds x22 x30 x22
+ 33m > 0m 0x100004ac0 < 364>: adcs x23 x23 xzr
+ 33m > 0m 0x100004ac4 < 368>: adds x22 x22 x9
+ 33m > 0m 0x100004ac8 < 372>: adcs x23 x23 xzr
+ 33m > 0m 0x100004acc < 376>: mul x30 x4 x8
+ 33m > 0m 0x100004ad0 < 380>: umulh x9 x4 x8
+ 33m > 0m 0x100004ad4 < 384>: adds x22 x22 x30
+ 33m > 0m 0x100004ad8 < 388>: adcs x23 x23 xzr
+ 33m > 0m 0x100004adc < 392>: adcs x23 x23 x9
+ 33m > 0m 0x100004ae0 < 396>: eor x20 x20 x5
+ 33m > 0m 0x100004ae4 < 400>: eor x21 x21 x5
+ 33m > 0m 0x100004ae8 < 404>: eor x22 x22 x5
+ 33m > 0m 0x100004aec < 408>: eor x23 x23 x5
+ 33m > 0m 0x100004af0 < 412>: and x30 x5 0x1
+ 33m > 0m 0x100004af4 < 416>: adds x20 x20 x30
+ 33m > 0m 0x100004af8 < 420>: adcs x21 x21 xzr
+ 33m > 0m 0x100004afc < 424>: adcs x22 x22 xzr
+ 33m > 0m 0x100004b00 < 428>: adcs x23 x23 xzr
+ 33m > 0m 0x100004b04 < 432>: adcs x30 x5 xzr
+ 33m > 0m 0x100004b08 < 436>: adds x13 x13 x20
+ 33m > 0m 0x100004b0c < 440>: adcs x14 x14 x21
+ 33m > 0m 0x100004b10 < 444>: adcs x15 x15 x22
+ 33m > 0m 0x100004b14 < 448>: adcs x16 x16 x23
+ 33m > 0m 0x100004b18 < 452>: adcs x17 x17 x30
+ 33m > 0m 0x100004b1c < 456>: adcs x17 x17 x30
+ 33m > 0m 0x100004b20 < 460>: stp x11 x12 x2 
+ 33m > 0m 0x100004b24 < 464>: stp x13 x14 x2 0x10 
+ 33m > 0m 0x100004b28 < 468>: ldp x3 x4 x0 0x20 
+ 33m > 0m 0x100004b2c < 472>: ldp x5 x6 x0 0x30 
+ 33m > 0m 0x100004b30 < 476>: ldp x7 x8 x1 0x20 
+ 33m > 0m 0x100004b34 < 480>: ldp x9 x10 x1 0x30 
+ 33m > 0m 0x100004b38 < 484>: mul x20 x3 x7
+ 33m > 0m 0x100004b3c < 488>: umulh x21 x3 x7
+ 33m > 0m 0x100004b40 < 492>: mul x28 x3 x8
+ 33m > 0m 0x100004b44 < 496>: mul x30 x4 x7
+ 33m > 0m 0x100004b48 < 500>: adds x21 x21 x28
+ 33m > 0m 0x100004b4c < 504>: adcs x22 xzr xzr
+ 33m > 0m 0x100004b50 < 508>: adds x21 x21 x30
+ 33m > 0m 0x100004b54 < 512>: adcs x22 x22 xzr
+ 33m > 0m 0x100004b58 < 516>: adcs x23 xzr xzr
+ 33m > 0m 0x100004b5c < 520>: umulh x28 x3 x8
+ 33m > 0m 0x100004b60 < 524>: umulh x30 x4 x7
+ 33m > 0m 0x100004b64 < 528>: adds x22 x28 x22
+ 33m > 0m 0x100004b68 < 532>: adcs x23 x23 xzr
+ 33m > 0m 0x100004b6c < 536>: adds x22 x22 x30
+ 33m > 0m 0x100004b70 < 540>: adcs x23 x23 xzr
+ 33m > 0m 0x100004b74 < 544>: mul x28 x4 x8
+ 33m > 0m 0x100004b78 < 548>: umulh x30 x4 x8
+ 33m > 0m 0x100004b7c < 552>: adds x22 x22 x28
+ 33m > 0m 0x100004b80 < 556>: adcs x23 x23 xzr
+ 33m > 0m 0x100004b84 < 560>: adcs x23 x23 x30
+ 33m > 0m 0x100004b88 < 564>: mul x24 x5 x9
+ 33m > 0m 0x100004b8c < 568>: umulh x25 x5 x9
+ 33m > 0m 0x100004b90 < 572>: mul x28 x5 x10
+ 33m > 0m 0x100004b94 < 576>: mul x30 x6 x9
+ 33m > 0m 0x100004b98 < 580>: adds x25 x25 x28
+ 33m > 0m 0x100004b9c < 584>: adcs x26 xzr xzr
+ 33m > 0m 0x100004ba0 < 588>: adds x25 x25 x30
+ 33m > 0m 0x100004ba4 < 592>: adcs x26 x26 xzr
+ 33m > 0m 0x100004ba8 < 596>: adcs x27 xzr xzr
+ 33m > 0m 0x100004bac < 600>: umulh x28 x5 x10
+ 33m > 0m 0x100004bb0 < 604>: umulh x30 x6 x9
+ 33m > 0m 0x100004bb4 < 608>: adds x26 x28 x26
+ 33m > 0m 0x100004bb8 < 612>: adcs x27 x27 xzr
+ 33m > 0m 0x100004bbc < 616>: adds x26 x26 x30
+ 33m > 0m 0x100004bc0 < 620>: adcs x27 x27 xzr
+ 33m > 0m 0x100004bc4 < 624>: mul x28 x6 x10
+ 33m > 0m 0x100004bc8 < 628>: umulh x30 x6 x10
+ 33m > 0m 0x100004bcc < 632>: adds x26 x26 x28
+ 33m > 0m 0x100004bd0 < 636>: adcs x27 x27 xzr
+ 33m > 0m 0x100004bd4 < 640>: adcs x27 x27 x30
+ 33m > 0m 0x100004bd8 < 644>: adds x28 x22 x20
+ 33m > 0m 0x100004bdc < 648>: adcs x30 x23 x21
+ 33m > 0m 0x100004be0 < 652>: adcs x11 x24 x22
+ 33m > 0m 0x100004be4 < 656>: adcs x12 x25 x23
+ 33m > 0m 0x100004be8 < 660>: adc x13 xzr xzr
+ 33m > 0m 0x100004bec < 664>: adds x22 x28 x24
+ 33m > 0m 0x100004bf0 < 668>: adcs x23 x30 x25
+ 33m > 0m 0x100004bf4 < 672>: adcs x24 x11 x26
+ 33m > 0m 0x100004bf8 < 676>: adcs x25 x12 x27
+ 33m > 0m 0x100004bfc < 680>: adcs x26 x13 x26
+ 33m > 0m 0x100004c00 < 684>: adcs x27 xzr x27
+ 33m > 0m 0x100004c04 < 688>: subs x3 x5 x3
+ 33m > 0m 0x100004c08 < 692>: sbcs x4 x6 x4
+ 33m > 0m 0x100004c0c < 696>: cinv x3 x3 lo
+ 33m > 0m 0x100004c10 < 700>: cinv x4 x4 lo
+ 33m > 0m 0x100004c14 < 704>: cset x5 lo
+ 33m > 0m 0x100004c18 < 708>: adds x3 x3 x5
+ 33m > 0m 0x100004c1c < 712>: adc x4 x4 xzr
+ 33m > 0m 0x100004c20 < 716>: subs x7 x9 x7
+ 33m > 0m 0x100004c24 < 720>: sbcs x8 x10 x8
+ 33m > 0m 0x100004c28 < 724>: cinv x7 x7 lo
+ 33m > 0m 0x100004c2c < 728>: cinv x8 x8 lo
+ 33m > 0m 0x100004c30 < 732>: cset x9 lo
+ 33m > 0m 0x100004c34 < 736>: adds x7 x7 x9
+ 33m > 0m 0x100004c38 < 740>: adc x8 x8 xzr
+ 33m > 0m 0x100004c3c < 744>: eor x5 x5 x9
+ 33m > 0m 0x100004c40 < 748>: sub x5 x5 0x1
+ 33m > 0m 0x100004c44 < 752>: mul x28 x3 x7
+ 33m > 0m 0x100004c48 < 756>: umulh x30 x3 x7
+ 33m > 0m 0x100004c4c < 760>: mul x13 x3 x8
+ 33m > 0m 0x100004c50 < 764>: mul x9 x4 x7
+ 33m > 0m 0x100004c54 < 768>: adds x30 x30 x13
+ 33m > 0m 0x100004c58 < 772>: adcs x11 xzr xzr
+ 33m > 0m 0x100004c5c < 776>: adds x30 x30 x9
+ 33m > 0m 0x100004c60 < 780>: adcs x11 x11 xzr
+ 33m > 0m 0x100004c64 < 784>: adcs x12 xzr xzr
+ 33m > 0m 0x100004c68 < 788>: umulh x13 x3 x8
+ 33m > 0m 0x100004c6c < 792>: umulh x9 x4 x7
+ 33m > 0m 0x100004c70 < 796>: adds x11 x13 x11
+ 33m > 0m 0x100004c74 < 800>: adcs x12 x12 xzr
+ 33m > 0m 0x100004c78 < 804>: adds x11 x11 x9
+ 33m > 0m 0x100004c7c < 808>: adcs x12 x12 xzr
+ 33m > 0m 0x100004c80 < 812>: mul x13 x4 x8
+ 33m > 0m 0x100004c84 < 816>: umulh x9 x4 x8
+ 33m > 0m 0x100004c88 < 820>: adds x11 x11 x13
+ 33m > 0m 0x100004c8c < 824>: adcs x12 x12 xzr
+ 33m > 0m 0x100004c90 < 828>: adcs x12 x12 x9
+ 33m > 0m 0x100004c94 < 832>: eor x28 x28 x5
+ 33m > 0m 0x100004c98 < 836>: eor x30 x30 x5
+ 33m > 0m 0x100004c9c < 840>: eor x11 x11 x5
+ 33m > 0m 0x100004ca0 < 844>: eor x12 x12 x5
+ 33m > 0m 0x100004ca4 < 848>: and x13 x5 0x1
+ 33m > 0m 0x100004ca8 < 852>: adds x28 x28 x13
+ 33m > 0m 0x100004cac < 856>: adcs x30 x30 xzr
+ 33m > 0m 0x100004cb0 < 860>: adcs x11 x11 xzr
+ 33m > 0m 0x100004cb4 < 864>: adcs x12 x12 xzr
+ 33m > 0m 0x100004cb8 < 868>: adcs x13 x5 xzr
+ 33m > 0m 0x100004cbc < 872>: adds x22 x22 x28
+ 33m > 0m 0x100004cc0 < 876>: adcs x23 x23 x30
+ 33m > 0m 0x100004cc4 < 880>: adcs x24 x24 x11
+ 33m > 0m 0x100004cc8 < 884>: adcs x25 x25 x12
+ 33m > 0m 0x100004ccc < 888>: adcs x26 x26 x13
+ 33m > 0m 0x100004cd0 < 892>: adcs x26 x26 x13
+ 33m > 0m 0x100004cd4 < 896>: ldp x11 x12 x2 
+ 33m > 0m 0x100004cd8 < 900>: ldp x13 x14 x2 0x10 
+ 33m > 0m 0x100004cdc < 904>: adds x3 x15 x11
+ 33m > 0m 0x100004ce0 < 908>: adcs x4 x16 x12
+ 33m > 0m 0x100004ce4 < 912>: adcs x5 x17 x13
+ 33m > 0m 0x100004ce8 < 916>: adcs x6 x19 x14
+ 33m > 0m 0x100004cec < 920>: adcs x7 x20 x15
+ 33m > 0m 0x100004cf0 < 924>: adcs x8 x21 x16
+ 33m > 0m 0x100004cf4 < 928>: adcs x9 x22 x17
+ 33m > 0m 0x100004cf8 < 932>: adcs x10 x23 x19
+ 33m > 0m 0x100004cfc < 936>: adcs x30 xzr xzr
+ 33m > 0m 0x100004d00 < 940>: adds x15 x3 x20
+ 33m > 0m 0x100004d04 < 944>: adcs x16 x4 x21
+ 33m > 0m 0x100004d08 < 948>: adcs x17 x5 x22
+ 33m > 0m 0x100004d0c < 952>: adcs x19 x6 x23
+ 33m > 0m 0x100004d10 < 956>: adcs x20 x7 x24
+ 33m > 0m 0x100004d14 < 960>: adcs x21 x8 x25
+ 33m > 0m 0x100004d18 < 964>: adcs x22 x9 x26
+ 33m > 0m 0x100004d1c < 968>: adcs x23 x10 x27
+ 33m > 0m 0x100004d20 < 972>: adcs x24 x30 x24
+ 33m > 0m 0x100004d24 < 976>: adcs x25 x25 xzr
+ 33m > 0m 0x100004d28 < 980>: adcs x26 x26 xzr
+ 33m > 0m 0x100004d2c < 984>: adcs x27 x27 xzr
+ 33m > 0m 0x100004d30 < 988>: stp x24 x25 x2 0x60 
+ 33m > 0m 0x100004d34 < 992>: stp x26 x27 x2 0x70 
+ 33m > 0m 0x100004d38 < 996>: ldp x3 x4 x0 
+ 33m > 0m 0x100004d3c < 1000>: ldp x5 x6 x0 0x10 
+ 33m > 0m 0x100004d40 < 1004>: ldp x7 x8 x0 0x20 
+ 33m > 0m 0x100004d44 < 1008>: ldp x9 x10 x0 0x30 
+ 33m > 0m 0x100004d48 < 1012>: subs x3 x3 x7
+ 33m > 0m 0x100004d4c < 1016>: sbcs x4 x4 x8
+ 33m > 0m 0x100004d50 < 1020>: sbcs x5 x5 x9
+ 33m > 0m 0x100004d54 < 1024>: sbcs x6 x6 x10
+ 33m > 0m 0x100004d58 < 1028>: cinv x3 x3 lo
+ 33m > 0m 0x100004d5c < 1032>: cinv x4 x4 lo
+ 33m > 0m 0x100004d60 < 1036>: cinv x5 x5 lo
+ 33m > 0m 0x100004d64 < 1040>: cinv x6 x6 lo
+ 33m > 0m 0x100004d68 < 1044>: cset x30 lo
+ 33m > 0m 0x100004d6c < 1048>: adds x3 x3 x30
+ 33m > 0m 0x100004d70 < 1052>: adcs x4 x4 xzr
+ 33m > 0m 0x100004d74 < 1056>: adcs x5 x5 xzr
+ 33m > 0m 0x100004d78 < 1060>: adcs x6 x6 xzr
+ 33m > 0m 0x100004d7c < 1064>: ldp x7 x8 x1 
+ 33m > 0m 0x100004d80 < 1068>: ldp x9 x10 x1 0x10 
+ 33m > 0m 0x100004d84 < 1072>: ldp x11 x12 x1 0x20 
+ 33m > 0m 0x100004d88 < 1076>: ldp x13 x14 x1 0x30 
+ 33m > 0m 0x100004d8c < 1080>: subs x7 x7 x11
+ 33m > 0m 0x100004d90 < 1084>: sbcs x8 x8 x12
+ 33m > 0m 0x100004d94 < 1088>: sbcs x9 x9 x13
+ 33m > 0m 0x100004d98 < 1092>: sbcs x10 x10 x14
+ 33m > 0m 0x100004d9c < 1096>: cinv x7 x7 lo
+ 33m > 0m 0x100004da0 < 1100>: cinv x8 x8 lo
+ 33m > 0m 0x100004da4 < 1104>: cinv x9 x9 lo
+ 33m > 0m 0x100004da8 < 1108>: cinv x10 x10 lo
+ 33m > 0m 0x100004dac < 1112>: cset x11 lo
+ 33m > 0m 0x100004db0 < 1116>: adds x7 x7 x11
+ 33m > 0m 0x100004db4 < 1120>: adcs x8 x8 xzr
+ 33m > 0m 0x100004db8 < 1124>: adcs x9 x9 xzr
+ 33m > 0m 0x100004dbc < 1128>: adcs x10 x10 xzr
+ 33m > 0m 0x100004dc0 < 1132>: eor x30 x30 x11
+ 33m > 0m 0x100004dc4 < 1136>: sub x30 x30 0x1
+ 33m > 0m 0x100004dc8 < 1140>: str x19 x2 0x38 
+ 33m > 0m 0x100004dcc < 1144>: stp x20 x21 x2 0x40 
+ 33m > 0m 0x100004dd0 < 1148>: stp x22 x23 x2 0x50 
+ 33m > 0m 0x100004dd4 < 1152>: mul x11 x3 x7
+ 33m > 0m 0x100004dd8 < 1156>: umulh x12 x3 x7
+ 33m > 0m 0x100004ddc < 1160>: mul x19 x3 x8
+ 33m > 0m 0x100004de0 < 1164>: mul x20 x4 x7
+ 33m > 0m 0x100004de4 < 1168>: adds x12 x12 x19
+ 33m > 0m 0x100004de8 < 1172>: adcs x13 xzr xzr
+ 33m > 0m 0x100004dec < 1176>: adds x12 x12 x20
+ 33m > 0m 0x100004df0 < 1180>: adcs x13 x13 xzr
+ 33m > 0m 0x100004df4 < 1184>: adcs x14 xzr xzr
+ 33m > 0m 0x100004df8 < 1188>: umulh x19 x3 x8
+ 33m > 0m 0x100004dfc < 1192>: umulh x20 x4 x7
+ 33m > 0m 0x100004e00 < 1196>: adds x13 x19 x13
+ 33m > 0m 0x100004e04 < 1200>: adcs x14 x14 xzr
+ 33m > 0m 0x100004e08 < 1204>: adds x13 x13 x20
+ 33m > 0m 0x100004e0c < 1208>: adcs x14 x14 xzr
+ 33m > 0m 0x100004e10 < 1212>: mul x19 x4 x8
+ 33m > 0m 0x100004e14 < 1216>: umulh x20 x4 x8
+ 33m > 0m 0x100004e18 < 1220>: adds x13 x13 x19
+ 33m > 0m 0x100004e1c < 1224>: adcs x14 x14 xzr
+ 33m > 0m 0x100004e20 < 1228>: adcs x14 x14 x20
+ 33m > 0m 0x100004e24 < 1232>: mul x25 x5 x9
+ 33m > 0m 0x100004e28 < 1236>: umulh x26 x5 x9
+ 33m > 0m 0x100004e2c < 1240>: mul x19 x5 x10
+ 33m > 0m 0x100004e30 < 1244>: mul x20 x6 x9
+ 33m > 0m 0x100004e34 < 1248>: adds x26 x26 x19
+ 33m > 0m 0x100004e38 < 1252>: adcs x27 xzr xzr
+ 33m > 0m 0x100004e3c < 1256>: adds x26 x26 x20
+ 33m > 0m 0x100004e40 < 1260>: adcs x27 x27 xzr
+ 33m > 0m 0x100004e44 < 1264>: adcs x28 xzr xzr
+ 33m > 0m 0x100004e48 < 1268>: umulh x19 x5 x10
+ 33m > 0m 0x100004e4c < 1272>: umulh x20 x6 x9
+ 33m > 0m 0x100004e50 < 1276>: adds x27 x19 x27
+ 33m > 0m 0x100004e54 < 1280>: adcs x28 x28 xzr
+ 33m > 0m 0x100004e58 < 1284>: adds x27 x27 x20
+ 33m > 0m 0x100004e5c < 1288>: adcs x28 x28 xzr
+ 33m > 0m 0x100004e60 < 1292>: mul x19 x6 x10
+ 33m > 0m 0x100004e64 < 1296>: umulh x20 x6 x10
+ 33m > 0m 0x100004e68 < 1300>: adds x27 x27 x19
+ 33m > 0m 0x100004e6c < 1304>: adcs x28 x28 xzr
+ 33m > 0m 0x100004e70 < 1308>: adcs x28 x28 x20
+ 33m > 0m 0x100004e74 < 1312>: adds x19 x13 x11
+ 33m > 0m 0x100004e78 < 1316>: adcs x20 x14 x12
+ 33m > 0m 0x100004e7c < 1320>: adcs x21 x25 x13
+ 33m > 0m 0x100004e80 < 1324>: adcs x22 x26 x14
+ 33m > 0m 0x100004e84 < 1328>: adc x23 xzr xzr
+ 33m > 0m 0x100004e88 < 1332>: adds x13 x19 x25
+ 33m > 0m 0x100004e8c < 1336>: adcs x14 x20 x26
+ 33m > 0m 0x100004e90 < 1340>: adcs x25 x21 x27
+ 33m > 0m 0x100004e94 < 1344>: adcs x26 x22 x28
+ 33m > 0m 0x100004e98 < 1348>: adcs x27 x23 x27
+ 33m > 0m 0x100004e9c < 1352>: adcs x28 xzr x28
+ 33m > 0m 0x100004ea0 < 1356>: subs x3 x5 x3
+ 33m > 0m 0x100004ea4 < 1360>: sbcs x4 x6 x4
+ 33m > 0m 0x100004ea8 < 1364>: cinv x3 x3 lo
+ 33m > 0m 0x100004eac < 1368>: cinv x4 x4 lo
+ 33m > 0m 0x100004eb0 < 1372>: cset x5 lo
+ 33m > 0m 0x100004eb4 < 1376>: adds x3 x3 x5
+ 33m > 0m 0x100004eb8 < 1380>: adc x4 x4 xzr
+ 33m > 0m 0x100004ebc < 1384>: subs x7 x9 x7
+ 33m > 0m 0x100004ec0 < 1388>: sbcs x8 x10 x8
+ 33m > 0m 0x100004ec4 < 1392>: cinv x7 x7 lo
+ 33m > 0m 0x100004ec8 < 1396>: cinv x8 x8 lo
+ 33m > 0m 0x100004ecc < 1400>: cset x9 lo
+ 33m > 0m 0x100004ed0 < 1404>: adds x7 x7 x9
+ 33m > 0m 0x100004ed4 < 1408>: adc x8 x8 xzr
+ 33m > 0m 0x100004ed8 < 1412>: eor x5 x5 x9
+ 33m > 0m 0x100004edc < 1416>: sub x5 x5 0x1
+ 33m > 0m 0x100004ee0 < 1420>: mul x19 x3 x7
+ 33m > 0m 0x100004ee4 < 1424>: umulh x20 x3 x7
+ 33m > 0m 0x100004ee8 < 1428>: mul x23 x3 x8
+ 33m > 0m 0x100004eec < 1432>: mul x9 x4 x7
+ 33m > 0m 0x100004ef0 < 1436>: adds x20 x20 x23
+ 33m > 0m 0x100004ef4 < 1440>: adcs x21 xzr xzr
+ 33m > 0m 0x100004ef8 < 1444>: adds x20 x20 x9
+ 33m > 0m 0x100004efc < 1448>: adcs x21 x21 xzr
+ 33m > 0m 0x100004f00 < 1452>: adcs x22 xzr xzr
+ 33m > 0m 0x100004f04 < 1456>: umulh x23 x3 x8
+ 33m > 0m 0x100004f08 < 1460>: umulh x9 x4 x7
+ 33m > 0m 0x100004f0c < 1464>: adds x21 x23 x21
+ 33m > 0m 0x100004f10 < 1468>: adcs x22 x22 xzr
+ 33m > 0m 0x100004f14 < 1472>: adds x21 x21 x9
+ 33m > 0m 0x100004f18 < 1476>: adcs x22 x22 xzr
+ 33m > 0m 0x100004f1c < 1480>: mul x23 x4 x8
+ 33m > 0m 0x100004f20 < 1484>: umulh x9 x4 x8
+ 33m > 0m 0x100004f24 < 1488>: adds x21 x21 x23
+ 33m > 0m 0x100004f28 < 1492>: adcs x22 x22 xzr
+ 33m > 0m 0x100004f2c < 1496>: adcs x22 x22 x9
+ 33m > 0m 0x100004f30 < 1500>: eor x19 x19 x5
+ 33m > 0m 0x100004f34 < 1504>: eor x20 x20 x5
+ 33m > 0m 0x100004f38 < 1508>: eor x21 x21 x5
+ 33m > 0m 0x100004f3c < 1512>: eor x22 x22 x5
+ 33m > 0m 0x100004f40 < 1516>: and x23 x5 0x1
+ 33m > 0m 0x100004f44 < 1520>: adds x19 x19 x23
+ 33m > 0m 0x100004f48 < 1524>: adcs x20 x20 xzr
+ 33m > 0m 0x100004f4c < 1528>: adcs x21 x21 xzr
+ 33m > 0m 0x100004f50 < 1532>: adcs x22 x22 xzr
+ 33m > 0m 0x100004f54 < 1536>: adcs x23 x5 xzr
+ 33m > 0m 0x100004f58 < 1540>: adds x13 x13 x19
+ 33m > 0m 0x100004f5c < 1544>: adcs x14 x14 x20
+ 33m > 0m 0x100004f60 < 1548>: adcs x25 x25 x21
+ 33m > 0m 0x100004f64 < 1552>: adcs x26 x26 x22
+ 33m > 0m 0x100004f68 < 1556>: adcs x27 x27 x23
+ 33m > 0m 0x100004f6c < 1560>: adcs x27 x27 x23
+ 33m > 0m 0x100004f70 < 1564>: ldr x19 x2 0x38 
+ 33m > 0m 0x100004f74 < 1568>: ldp x20 x21 x2 0x40 
+ 33m > 0m 0x100004f78 < 1572>: ldp x22 x23 x2 0x50 
+ 33m > 0m 0x100004f7c < 1576>: eor x3 x11 x30
+ 33m > 0m 0x100004f80 < 1580>: eor x4 x12 x30
+ 33m > 0m 0x100004f84 < 1584>: eor x5 x13 x30
+ 33m > 0m 0x100004f88 < 1588>: eor x6 x14 x30
+ 33m > 0m 0x100004f8c < 1592>: eor x7 x25 x30
+ 33m > 0m 0x100004f90 < 1596>: eor x8 x26 x30
+ 33m > 0m 0x100004f94 < 1600>: eor x9 x27 x30
+ 33m > 0m 0x100004f98 < 1604>: eor x10 x28 x30
+ 33m > 0m 0x100004f9c < 1608>: and x28 x30 0x1
+ 33m > 0m 0x100004fa0 < 1612>: adds x3 x3 x28
+ 33m > 0m 0x100004fa4 < 1616>: adcs x4 x4 xzr
+ 33m > 0m 0x100004fa8 < 1620>: adcs x5 x5 xzr
+ 33m > 0m 0x100004fac < 1624>: adcs x6 x6 xzr
+ 33m > 0m 0x100004fb0 < 1628>: adcs x7 x7 xzr
+ 33m > 0m 0x100004fb4 < 1632>: adcs x8 x8 xzr
+ 33m > 0m 0x100004fb8 < 1636>: adcs x9 x9 xzr
+ 33m > 0m 0x100004fbc < 1640>: adcs x10 x10 xzr
+ 33m > 0m 0x100004fc0 < 1644>: adcs x30 x30 xzr
+ 33m > 0m 0x100004fc4 < 1648>: ldp x24 x25 x2 0x60 
+ 33m > 0m 0x100004fc8 < 1652>: ldp x26 x27 x2 0x70 
+ 33m > 0m 0x100004fcc < 1656>: adds x15 x15 x3
+ 33m > 0m 0x100004fd0 < 1660>: adcs x16 x16 x4
+ 33m > 0m 0x100004fd4 < 1664>: stp x15 x16 x2 0x20 
+ 33m > 0m 0x100004fd8 < 1668>: adcs x17 x17 x5
+ 33m > 0m 0x100004fdc < 1672>: adcs x19 x19 x6
+ 33m > 0m 0x100004fe0 < 1676>: stp x17 x19 x2 0x30 
+ 33m > 0m 0x100004fe4 < 1680>: adcs x20 x20 x7
+ 33m > 0m 0x100004fe8 < 1684>: adcs x21 x21 x8
+ 33m > 0m 0x100004fec < 1688>: stp x20 x21 x2 0x40 
+ 33m > 0m 0x100004ff0 < 1692>: adcs x22 x22 x9
+ 33m > 0m 0x100004ff4 < 1696>: adcs x23 x23 x10
+ 33m > 0m 0x100004ff8 < 1700>: stp x22 x23 x2 0x50 
+ 33m > 0m 0x100004ffc < 1704>: adcs x24 x24 x30
+ 33m > 0m 0x100005000 < 1708>: adcs x25 x25 x30
+ 33m > 0m 0x100005004 < 1712>: stp x24 x25 x2 0x60 
+ 33m > 0m 0x100005008 < 1716>: adcs x26 x26 x30
+ 33m > 0m 0x10000500c < 1720>: adcs x27 x27 x30
+ 33m > 0m 0x100005010 < 1724>: stp x26 x27 x2 0x70 
+ 33m > 0m 0x100005014 < 1728>: ldp x30 x0 sp 
+ 33m > 0m 0x100005018 < 1732>: ldp x1 x2 sp 0x10 
+ 33m > 0m 0x10000501c < 1736>: ldp x19 x20 sp 0x20 
+ 33m > 0m 0x100005020 < 1740>: ldp x21 x22 sp 0x30 
+ 33m > 0m 0x100005024 < 1744>: ldp x23 x24 sp 0x40 
+ 33m > 0m 0x100005028 < 1748>: ldp x25 x26 sp 0x50 
+ 33m > 0m 0x10000502c < 1752>: ldp x27 x28 sp 0x60 
+ 33m > 0m 0x100005030 < 1756>: add sp sp 0x70
+ 33m > 0m 0x100005034 < 1760>: ret 
+ 33m > 0m 0x100004790 < 48>: mov x0 x2
+ 33m > 0m 0x100004794 < 52>: ldr x1 sp 0x10 
+ 33m > 0m 0x100004798 < 56>: add x2 sp 0x118
+ 33m > 0m 0x10000479c < 60>: bl 0x100004850 ; add2 16 words
+ 33m > 0m 0x100004850 < 0>: ldr x4 x0 
+ 33m > 0m 0x100004854 < 4>: ldr x5 x1 
+ 33m > 0m 0x100004858 < 8>: adds x6 x4 x5
+ 33m > 0m 0x10000485c < 12>: str x6 x2 
+ 33m > 0m 0x100004860 < 16>: ldr x4 x0 0x8 
+ 33m > 0m 0x100004864 < 20>: ldr x5 x1 0x8 
+ 33m > 0m 0x100004868 < 24>: adcs x6 x4 x5
+ 33m > 0m 0x10000486c < 28>: str x6 x2 0x8 
+ 33m > 0m 0x100004870 < 32>: ldr x4 x0 0x10 
+ 33m > 0m 0x100004874 < 36>: ldr x5 x1 0x10 
+ 33m > 0m 0x100004878 < 40>: adcs x6 x4 x5
+ 33m > 0m 0x10000487c < 44>: str x6 x2 0x10 
+ 33m > 0m 0x100004880 < 48>: ldr x4 x0 0x18 
+ 33m > 0m 0x100004884 < 52>: ldr x5 x1 0x18 
+ 33m > 0m 0x100004888 < 56>: adcs x6 x4 x5
+ 33m > 0m 0x10000488c < 60>: str x6 x2 0x18 
+ 33m > 0m 0x100004890 < 64>: ldr x4 x0 0x20 
+ 33m > 0m 0x100004894 < 68>: ldr x5 x1 0x20 
+ 33m > 0m 0x100004898 < 72>: adcs x6 x4 x5
+ 33m > 0m 0x10000489c < 76>: str x6 x2 0x20 
+ 33m > 0m 0x1000048a0 < 80>: ldr x4 x0 0x28 
+ 33m > 0m 0x1000048a4 < 84>: ldr x5 x1 0x28 
+ 33m > 0m 0x1000048a8 < 88>: adcs x6 x4 x5
+ 33m > 0m 0x1000048ac < 92>: str x6 x2 0x28 
+ 33m > 0m 0x1000048b0 < 96>: ldr x4 x0 0x30 
+ 33m > 0m 0x1000048b4 < 100>: ldr x5 x1 0x30 
+ 33m > 0m 0x1000048b8 < 104>: adcs x6 x4 x5
+ 33m > 0m 0x1000048bc < 108>: str x6 x2 0x30 
+ 33m > 0m 0x1000048c0 < 112>: ldr x4 x0 0x38 
+ 33m > 0m 0x1000048c4 < 116>: ldr x5 x1 0x38 
+ 33m > 0m 0x1000048c8 < 120>: adcs x6 x4 x5
+ 33m > 0m 0x1000048cc < 124>: str x6 x2 0x38 
+ 33m > 0m 0x1000048d0 < 128>: ldr x4 x0 0x40 
+ 33m > 0m 0x1000048d4 < 132>: ldr x5 x1 0x40 
+ 33m > 0m 0x1000048d8 < 136>: adcs x6 x4 x5
+ 33m > 0m 0x1000048dc < 140>: str x6 x2 0x40 
+ 33m > 0m 0x1000048e0 < 144>: ldr x4 x0 0x48 
+ 33m > 0m 0x1000048e4 < 148>: ldr x5 x1 0x48 
+ 33m > 0m 0x1000048e8 < 152>: adcs x6 x4 x5
+ 33m > 0m 0x1000048ec < 156>: str x6 x2 0x48 
+ 33m > 0m 0x1000048f0 < 160>: ldr x4 x0 0x50 
+ 33m > 0m 0x1000048f4 < 164>: ldr x5 x1 0x50 
+ 33m > 0m 0x1000048f8 < 168>: adcs x6 x4 x5
+ 33m > 0m 0x1000048fc < 172>: str x6 x2 0x50 
+ 33m > 0m 0x100004900 < 176>: ldr x4 x0 0x58 
+ 33m > 0m 0x100004904 < 180>: ldr x5 x1 0x58 
+ 33m > 0m 0x100004908 < 184>: adcs x6 x4 x5
+ 33m > 0m 0x10000490c < 188>: str x6 x2 0x58 
+ 33m > 0m 0x100004910 < 192>: ldr x4 x0 0x60 
+ 33m > 0m 0x100004914 < 196>: ldr x5 x1 0x60 
+ 33m > 0m 0x100004918 < 200>: adcs x6 x4 x5
+ 33m > 0m 0x10000491c < 204>: str x6 x2 0x60 
+ 33m > 0m 0x100004920 < 208>: ldr x4 x0 0x68 
+ 33m > 0m 0x100004924 < 212>: ldr x5 x1 0x68 
+ 33m > 0m 0x100004928 < 216>: adcs x6 x4 x5
+ 33m > 0m 0x10000492c < 220>: str x6 x2 0x68 
+ 33m > 0m 0x100004930 < 224>: ldr x4 x0 0x70 
+ 33m > 0m 0x100004934 < 228>: ldr x5 x1 0x70 
+ 33m > 0m 0x100004938 < 232>: adcs x6 x4 x5
+ 33m > 0m 0x10000493c < 236>: str x6 x2 0x70 
+ 33m > 0m 0x100004940 < 240>: ldr x4 x0 0x78 
+ 33m > 0m 0x100004944 < 244>: ldr x5 x1 0x78 
+ 33m > 0m 0x100004948 < 248>: adcs x6 x4 x5
+ 33m > 0m 0x10000494c < 252>: str x6 x2 0x78 
+ 33m > 0m 0x100004950 < 256>: ret 
+ 33m > 0m 0x1000047a0 < 64>: add x2 x2 0x40
+ 33m > 0m 0x1000047a4 < 68>: ldp x3 x4 x2 
+ 33m > 0m 0x1000047a8 < 72>: ldp x5 x6 x2 0x10 
+ 33m > 0m 0x1000047ac < 76>: ldp x7 x8 x2 0x20 
+ 33m > 0m 0x1000047b0 < 80>: ldp x9 x10 x2 0x30 
+ 33m > 0m 0x1000047b4 < 84>: adrp x20 3
+ 33m > 0m 0x1000047b8 < 88>: add x20 x20 0x9b0
+ 33m > 0m 0x1000047bc < 92>: ldp x12 x13 x20 
+ 33m > 0m 0x1000047c0 < 96>: ldp x14 x15 x20 0x10 
+ 33m > 0m 0x1000047c4 < 100>: ldp x16 x17 x20 0x20 
+ 33m > 0m 0x1000047c8 < 104>: ldp x19 x20 x20 0x30 
+ 33m > 0m 0x1000047cc < 108>: subs x3 x3 x12
+ 33m > 0m 0x1000047d0 < 112>: sbcs x4 x4 x13
+ 33m > 0m 0x1000047d4 < 116>: sbcs x5 x5 x14
+ 33m > 0m 0x1000047d8 < 120>: sbcs x6 x6 x15
+ 33m > 0m 0x1000047dc < 124>: sbcs x7 x7 x16
+ 33m > 0m 0x1000047e0 < 128>: sbcs x8 x8 x17
+ 33m > 0m 0x1000047e4 < 132>: sbcs x9 x9 x19
+ 33m > 0m 0x1000047e8 < 136>: sbcs x10 x10 x20
+ 33m > 0m 0x1000047ec < 140>: ngcs x21 xzr
+ 33m > 0m 0x1000047f0 < 144>: and x12 x12 x21
+ 33m > 0m 0x1000047f4 < 148>: and x13 x13 x21
+ 33m > 0m 0x1000047f8 < 152>: and x14 x14 x21
+ 33m > 0m 0x1000047fc < 156>: and x15 x15 x21
+ 33m > 0m 0x100004800 < 160>: and x16 x16 x21
+ 33m > 0m 0x100004804 < 164>: and x17 x17 x21
+ 33m > 0m 0x100004808 < 168>: and x19 x19 x21
+ 33m > 0m 0x10000480c < 172>: and x20 x20 x21
+ 33m > 0m 0x100004810 < 176>: ldr x1 sp 0x8 
+ 33m > 0m 0x100004814 < 180>: adds x3 x3 x12
+ 33m > 0m 0x100004818 < 184>: adcs x4 x4 x13
+ 33m > 0m 0x10000481c < 188>: stp x3 x4 x1 
+ 33m > 0m 0x100004820 < 192>: adcs x5 x5 x14
+ 33m > 0m 0x100004824 < 196>: adcs x6 x6 x15
+ 33m > 0m 0x100004828 < 200>: stp x5 x6 x1 0x10 
+ 33m > 0m 0x10000482c < 204>: adcs x7 x7 x16
+ 33m > 0m 0x100004830 < 208>: adcs x8 x8 x17
+ 33m > 0m 0x100004834 < 212>: stp x7 x8 x1 0x20 
+ 33m > 0m 0x100004838 < 216>: adcs x9 x9 x19
+ 33m > 0m 0x10000483c < 220>: adcs x10 x10 x20
+ 33m > 0m 0x100004840 < 224>: stp x9 x10 x1 0x30 
+ 33m > 0m 0x100004844 < 228>: ldr x30 sp 
+ 33m > 0m 0x100004848 < 232>: add sp sp 0x200
+ 33m > 0m 0x10000484c < 236>: ret 
+ 33m > 0m 0x100004744 < 68>: ldp x30 x0 sp 
+ 33m > 0m 0x100004748 < 72>: ldp x19 x20 sp 0x10 
+ 33m > 0m 0x10000474c < 76>: ldp x21 x22 sp 0x20 
+ 33m > 0m 0x100004750 < 80>: add sp sp 0xe0
+ 33m > 0m 0x100004754 < 84>: sub sp sp 0x71
