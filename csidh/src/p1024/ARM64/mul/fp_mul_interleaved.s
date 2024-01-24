@@ -221,6 +221,15 @@
 */
 .global _fp_mul3
 _fp_mul3: 
+	adrp x3, _fp_mul_counter@PAGE
+	add x3, x3, _fp_mul_counter@PAGEOFF
+	ldr x3, [x3, #0]  // load counter pointer 
+	cbz x3, 0f // skip to 0f if pointer to mul_counter is 0 
+	ldr x4, [x3, #0]  // load counter value 
+	adds x4, x4, #1  // increase counter value 
+	str x4, [x3, #0]
+
+	0: // skip label
 	sub sp, sp, #240
 	stp lr, x0, [sp, #0]
 	stp x19, x20, [sp, #16]
