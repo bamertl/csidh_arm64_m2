@@ -31,8 +31,8 @@ all: default timecop
 clean:
 	@rm -rf *.dSYM *.o *.a *.out 
 	@rm -f bench512cycles bench512mults bench512untuned test512 tunemults512 ubench512 tunecycles512 testrandom checkct512cycles checkct512mults checkct512untuned umults512
-	@rm -f bench1024cycles bench1024mults bench1024untuned test1024 tunemults1024 ubench1024 tunecycles1024 testrandom checkct1024cycles checkct1024mults checkct1024untuned umults1024
-	@rm -f bench2048cycles bench2048mults bench2048untuned test2048 tunemults2048 ubench2048 tunecycles2048 testrandom checkct2048cycles checkct2048mults checkct2048untuned umults2048
+	@rm -f test1024 ubench1024 testrandom checkct1024cycles checkct1024mults umults1024
+	@rm -f test2048 ubench2048 testrandom checkct2048cycles checkct2048mults umults2048
 
 generic: testrandom.out
 

@@ -138,6 +138,9 @@ int main(int argc,char **argv)
   printf("Mean ctidh in ns: %lf\n",mean(times_csidh,its));
   printf("Mediam ctidh in ns: %llu\n",median(times_csidh,its));
   printf("Mean ctidh in ms: %lf\n",mean(times_csidh,its)/1000000);
+  printf("Multiplications: %lld\n",fp_mulsq_count);  
+  printf("Squarings: %lld\n",fp_sq_count);
+  printf("Additions/subtractions: %lld\n",fp_addsub_count);
 
   fflush(stdout);
   return 0;
