@@ -49,7 +49,7 @@ def write_markdown_table(file_names, instructions_counts, markdown_file_path):
 
 if __name__ == "__main__":
     # Replace with your actual file paths
-    file_paths = ["monte_interleaved.txt", "monte_karatsuba.txt", "monte_schoolbook.txt", "monte_subtractive.txt"]
+    file_paths = ["instruction_outputs.txt"]
 
     file_names = [os.path.basename(file_path) for file_path in file_paths]
     instructions_counts = {file_name: count_arm_instructions([file_path]) for file_name, file_path in zip(file_names, file_paths)}
