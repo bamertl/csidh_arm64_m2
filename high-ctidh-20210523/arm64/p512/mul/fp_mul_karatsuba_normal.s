@@ -1,3 +1,16 @@
+#include "../../../fp_namespace.h"
+#include "../../../uintbig_namespace.h"
+
+.extern uintbig_p
+.extern fp_mulsq_count
+
+_mu:
+    .quad 0x66c1301f632e294d,0xfe025ed7d0d3b1aa,0xf6fe2bc33e915395,0x34ed3ea7f1de34c4
+    .quad 0xb081b3aba7d05f85,0x1232b9eb013dee1e,0x3512da337a97b345,0xd8c3904b18371bcd
+
+.text
+.align 4
+
 /*
 This file contains the fp_mul3 method for montgomery reduction with first a subtractive karatsuba multiplication
 of 256*256 -> 512 bits and then a reduction
@@ -17,8 +30,8 @@ of 256*256 -> 512 bits and then a reduction
 .endm
 
 .macro LOAD_511_PRIME42, reg1, reg2, reg3, reg4, reg5, reg6, reg7, reg8
-    adrp \reg8, _p@PAGE
-    add \reg8, \reg8, _p@PAGEOFF
+    adrp \reg8, uintbig_p@PAGE
+    add \reg8, \reg8, uintbig_p@PAGEOFF
     LDP \reg1, \reg2, [\reg8, #0]
     LDP \reg3, \reg4, [\reg8, #16]
     LDP \reg5, \reg6, [\reg8, #32]
@@ -41,8 +54,8 @@ of 256*256 -> 512 bits and then a reduction
 .endm
 
 .macro LOAD_511_PRIME, reg1, reg2, reg3, reg4, reg5, reg6, reg7, reg8
-    adrp \reg8, _p@PAGE
-    add \reg8, \reg8, _p@PAGEOFF
+    adrp \reg8, uinbig_p@PAGE
+    add \reg8, \reg8, uintbig_p@PAGEOFF
     LDP \reg1, \reg2, [\reg8, #0]
     LDP \reg3, \reg4, [\reg8, #16]
     LDP \reg5, \reg6, [\reg8, #32]
@@ -152,9 +165,17 @@ Montgomery multiplication
 x0 = x1 * x2
 void fp_mul3(fp *x, fp const *y, fp const *z)
 */
-.global _fp_mul3
-_fp_mul3:
+.global fp_mul2
+fp_mul2:
+mov x2, x0
 
+.global fp_mul3
+fp_mul3:
+    adrp x3, fp_mulsq_count@PAGE
+    add x3, x3, fp_mulsq_count@PAGEOFF
+    ldr x4, [x3]
+    add x4, x4, #1
+    str x4, [x3]
     sub sp, sp, #224 // make space in the stack for 56 words
     stp lr, x0, [sp, #0] // store lr and result address
     stp x19, x20, [sp, #16] //store x19 and x20 to avoid segmentation fault
@@ -203,8 +224,8 @@ _monte_reduce:
     // q = lower 8 words of x1
     // C ← (a + p*q)/R
     // x0 = p
-    adrp x0, _p@PAGE
-    add x0, x0, _p@PAGEOFF
+    adrp x0, uintbig_p@PAGE
+    add x0, x0, uintbig_p@PAGEOFF
     add x2, sp, #152 // result of multiplication p*q 16 words from sp#152-280
     bl _uint_mul_512x512
     mov x0, x2 // x0 = p*q

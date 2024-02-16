@@ -3,7 +3,7 @@
 BITS?=512
 
 .PHONY: main bench clean tests
- CC = clang -O3 -g -Os -march=native 
+ CC = clang -O3 -Os -march=native 
 
 
 ifndef ARCH

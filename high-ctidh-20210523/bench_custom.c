@@ -7,12 +7,25 @@
 #include "primes.h"
 #include "csidh.h"
 #include "cpucycles.h"
+#include <unistd.h>
+#include <fcntl.h>
 
 // gets current time in ns
 static inline unsigned long long get_time_ns(void) {
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
     return (int64_t)(time.tv_sec*1e9 + time.tv_nsec);
+}
+
+void randombytes(void *x, size_t l)
+{
+    static int fd = -1;
+    ssize_t n;
+    if (fd < 0 && 0 > (fd = open("/dev/urandom", O_RDONLY)))
+        exit(1);
+    for (size_t i = 0; i < l; i += n)
+        if (0 >= (n = read(fd, (char *) x + i, l - i)))
+            exit(2);
 }
 
 
@@ -68,7 +81,7 @@ void test_nike_1(void)
     abort();
   }
 }
-const size_t stacksz = 0x8000;  /* 32k */
+const size_t stacksz = 0x80000;  /* 32k */
 #define KEYS 65
 
 private_key priv_bob[KEYS];
@@ -79,6 +92,7 @@ public_key action_output[KEYS];
 int main(int argc,char **argv)
 {
   uint64_t t0_private, t1_private, t0_csidh, t1_csidh;
+  size_t bytes = 0;
   long long target = -1;
   if (argc >= 2) target = atoll(argv[1]);
   unsigned char *stack;
@@ -93,9 +107,6 @@ int main(int argc,char **argv)
 
   uint64_t *times_csidh = calloc(its, sizeof(uint64_t));
   uint64_t *times_private = calloc(KEYS, sizeof(uint64_t));  
-
-   __asm__ __volatile__ ("mov %0, sp" : "=r"(stack));
-  stack -= stacksz;
 
   for (long long key = 0;key < KEYS;++key) {
     t0_private = get_time_ns();
@@ -126,6 +137,7 @@ int main(int argc,char **argv)
 
   //int total = KEYS*target;    
   int i = 0;
+
   for (long long loop = 0;loop != target;++loop) {
 
     test_nike_1();
@@ -138,6 +150,14 @@ int main(int argc,char **argv)
         csidh_statsucceeded[b] = csidh_stattried[b] = 0;
       fp_mulsq_count = fp_sq_count = fp_addsub_count = 0;
       fp_inv_count = 0;
+      __asm__ __volatile__ ("mov %0, sp" : "=r"(stack));
+      stack -= stacksz;
+      /* spray stack */
+      unsigned char canary;
+      randombytes(&canary, 1);
+      for (size_t j = 0; j < stacksz; ++j)
+        stack[j] = canary;
+
       t0_csidh = get_time_ns();
       action(&action_output[key],&pub_bob[key],&priv_alice[key]);
       t1_csidh = get_time_ns();
@@ -148,6 +168,15 @@ int main(int argc,char **argv)
       addsubs[i] = fp_addsub_count;
       //set loop*key element of timing to cycles
       i = i + 1;
+      if (*stack != canary) { /* make sure we sprayed enough */
+        //fprintf(stderr, "\x1b[31moops!\x1b[0m used more stack than expected.\n");
+        //exit(1);
+      }
+      for (size_t j = 0; j < stacksz - bytes; ++j)
+        if (stack[j] != canary)
+          bytes = stacksz - j;
+
+
       for (long long b = 0;b < primes_batches;++b)
         assert(csidh_statsucceeded[b] == primes_batchbound[b]);
     }
@@ -156,6 +185,7 @@ int main(int argc,char **argv)
     fflush(stdout);
   }
  
+  printf("maximum stack usage:    %6lu b\n\n", bytes);
   printf("Mean private Key gen in ns: %lf\n",mean(times_private,KEYS));
   printf("Median private Key gen in ns: %llu\n",median(times_private,KEYS));
   printf("Mean private Key gen in ms: %lf\n",mean(times_private,KEYS)/1000000);
@@ -165,8 +195,13 @@ int main(int argc,char **argv)
   printf("Median ctidh in ns: %llu\n",median(times_csidh,its));
   printf("Median ctidh in ms: %llu\n",median(times_csidh,its)/1000000);
 
-  printf("Mean Multiplications and Squarings: %lf\n",mean_long(mulss,its));
-  printf("Median Multiplications and Squarings: %f\n",median_long(mulss,its));
+  double mean_squarings = mean_long(sqss,its);
+  double median_squaring = median_long(sqss,its);
+  printf("Mean squarings: %lf\n",mean_squarings);
+  printf("Median Squarings: %f\n",median_squaring);
+  printf("Mean Multiplications: %lf\n",(mean_long(mulss,its) - mean_squarings));
+  printf("Median Multiplications: %f\n",(median_long(mulss,its) - median_squaring));
+
 
   printf("Mean Additions/subtractions: %lf\n",mean_long(addsubs,its));
   printf("Median Additions/subtractions: %f\n",median_long(addsubs,its));
